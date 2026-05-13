@@ -1,0 +1,251 @@
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import api from '../api'
+import { Scissors, CheckCheck, Download, Plus, SplitSquareHorizontal } from 'lucide-react'
+import ThemeToggle from '../components/ThemeToggle'
+import UserMenu from '../components/UserMenu'
+import CreditsBadge from '../components/CreditsBadge'
+import ClipCard from '../components/ClipCard'
+import ClipCardSkeleton from '../components/ClipCardSkeleton'
+import Timeline from '../components/Timeline'
+import ExportModal from '../components/ExportModal'
+import MoreClipsModal from '../components/MoreClipsModal'
+import ManualClipper from '../components/ManualClipper'
+import useStore from '../store'
+
+export default function Review() {
+  const { jobId } = useParams()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { setCurrentJob, setClips, selectedClipId, setSelectedClipId } = useStore()
+  const [exportQueue, setExportQueue] = useState([])
+  const [exportIndex, setExportIndex] = useState(0)
+  const [showMoreClipsModal, setShowMoreClipsModal] = useState(false)
+  const [showManualClipper, setShowManualClipper] = useState(false)
+
+  const startExport = (ids) => {
+    setExportIndex(0)
+    setExportQueue(ids)
+  }
+  const closeExport = () => {
+    setExportQueue([])
+    setExportIndex(0)
+  }
+
+  const { data: job, isLoading, error } = useQuery({
+    queryKey: ['job', jobId],
+    queryFn: () => api.get(`/api/jobs/${jobId}`).then((r) => r.data),
+    refetchInterval: (data) => {
+      if (!data) return false
+      const hasRendering = (data.clips || []).some((c) => c.status === 'rendering')
+      return hasRendering ? 3000 : false
+    },
+  })
+
+  useEffect(() => {
+    if (job) {
+      setCurrentJob(job)
+      setClips(job.clips || [])
+    }
+  }, [job, setCurrentJob, setClips])
+
+  const approveAllMutation = useMutation({
+    mutationFn: (clips) =>
+      Promise.all(
+        clips.map((c) => api.patch(`/api/clips/${c.id}`, { user_approved: true }))
+      ),
+    onSuccess: () => queryClient.invalidateQueries(['job', jobId]),
+  })
+
+  const moreClipsMutation = useMutation({
+    mutationFn: (options) => api.post(`/api/jobs/${jobId}/more-clips`, options),
+    onSuccess: () => {
+      setShowMoreClipsModal(false)
+      queryClient.removeQueries(['job', jobId])
+      navigate(`/processing/${jobId}`, { state: { moreClips: true } })
+    },
+  })
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <header className="sticky top-0 z-10 glass border-b border-forge-border px-6 py-3 flex items-center gap-4">
+          <button onClick={() => navigate('/')} className="flex items-center gap-2 text-forge-muted hover:text-forge-text transition-colors cursor-pointer">
+            <Scissors size={18} className="text-violet-400" />
+            <span className="font-bold text-sm gradient-text">ClipForge</span>
+          </button>
+          <div className="h-4 w-px bg-forge-border" />
+          <div className="h-4 w-48 bg-forge-border rounded animate-pulse" />
+        </header>
+        <main className="flex-1 px-6 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => <ClipCardSkeleton key={i} />)}
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (error || !job) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-400">Failed to load job.</p>
+          <button onClick={() => navigate('/')} className="mt-3 text-violet-400 hover:underline text-sm cursor-pointer">
+            Go home
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const clips = job.clips || []
+  const approvedClips = clips.filter((c) => c.user_approved)
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* ── Header ─────────────────────────────────────────── */}
+      <header className="sticky top-0 z-10 glass border-b border-forge-border px-6 py-3 flex items-center gap-4">
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-forge-muted hover:text-forge-text transition-colors group cursor-pointer"
+        >
+          <div className="w-7 h-7 rounded-lg bg-violet-500/12 border border-violet-500/22 flex items-center justify-center group-hover:bg-violet-500/22 group-hover:shadow-glow-violet-sm transition-all">
+            <Scissors size={13} className="text-violet-400" />
+          </div>
+          <span className="font-black text-sm gradient-text">ClipForge</span>
+        </button>
+
+        <div className="w-px h-4 bg-forge-border" />
+
+        <h1 className="text-sm text-forge-muted truncate flex-1">{job.video_title || jobId}</h1>
+
+        {approvedClips.length > 0 && (
+          <span className="hidden sm:flex items-center gap-1.5 text-xs text-forge-dim px-2.5 py-1 rounded-full bg-forge-surface border border-forge-border">
+            <span className="font-bold text-violet-400">{approvedClips.length}</span> approved
+          </span>
+        )}
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => approveAllMutation.mutate(clips)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-forge-border rounded-lg text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-all cursor-pointer"
+          >
+            <CheckCheck size={12} />
+            Approve all
+          </button>
+
+          {job.video_duration_seconds && (
+            <button
+              onClick={() => setShowManualClipper((v) => !v)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg transition-all cursor-pointer ${
+                showManualClipper
+                  ? 'border-violet-500/60 text-violet-400 bg-violet-500/10'
+                  : 'border-forge-border text-forge-muted hover:text-forge-text hover:border-forge-border-bright'
+              }`}
+            >
+              <SplitSquareHorizontal size={12} />
+              Manual clip
+            </button>
+          )}
+
+          <button
+            onClick={() => setShowMoreClipsModal(true)}
+            disabled={job.status === 'analyzing'}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-forge-border rounded-lg text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <Plus size={12} />
+            More clips
+          </button>
+
+          {approvedClips.length > 0 && (
+            <button
+              onClick={() => startExport(approvedClips.map((c) => c.id))}
+              className="btn-primary flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-lg cursor-pointer"
+            >
+              <Download size={12} />
+              Export {approvedClips.length}
+            </button>
+          )}
+
+          <CreditsBadge />
+          <ThemeToggle />
+          <UserMenu />
+        </div>
+      </header>
+
+      {/* ── Timeline ───────────────────────────────────────── */}
+      {job.video_duration_seconds && clips.length > 0 && (
+        <div className="px-6 py-4 border-b border-forge-border">
+          <Timeline
+            duration={job.video_duration_seconds}
+            clips={clips}
+            selectedClipId={selectedClipId}
+            onClipClick={setSelectedClipId}
+          />
+        </div>
+      )}
+
+      {/* ── Manual clipper ─────────────────────────────────── */}
+      {showManualClipper && job.video_duration_seconds && (
+        <div className="px-6 py-4 border-b border-forge-border">
+          <ManualClipper
+            duration={job.video_duration_seconds}
+            jobId={jobId}
+            onCreated={() => {
+              setShowManualClipper(false)
+              queryClient.invalidateQueries(['job', jobId])
+            }}
+          />
+        </div>
+      )}
+
+      {/* ── Clip grid ──────────────────────────────────────── */}
+      <main className="flex-1 px-6 py-6">
+        {clips.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-forge-surface border border-forge-border flex items-center justify-center">
+              <Scissors size={22} className="text-forge-muted" />
+            </div>
+            <p className="text-forge-muted text-sm">No clips found for this job.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {clips.map((clip) =>
+              clip.status === 'rendering' ? (
+                <ClipCardSkeleton key={clip.id} rank={clip.rank} />
+              ) : (
+                <ClipCard
+                  key={clip.id}
+                  clip={clip}
+                  isSelected={selectedClipId === clip.id}
+                  onSelect={() => setSelectedClipId(clip.id)}
+                  onExport={() => startExport([clip.id])}
+                  onUpdate={() => queryClient.invalidateQueries(['job', jobId])}
+                />
+              )
+            )}
+          </div>
+        )}
+      </main>
+
+      {showMoreClipsModal && (
+        <MoreClipsModal
+          loading={moreClipsMutation.isPending}
+          onConfirm={(opts) => moreClipsMutation.mutate(opts)}
+          onClose={() => setShowMoreClipsModal(false)}
+        />
+      )}
+
+      {exportQueue.length > 0 && (
+        <ExportModal
+          clipIds={exportQueue}
+          index={exportIndex}
+          onIndexChange={setExportIndex}
+          onClose={closeExport}
+        />
+      )}
+    </div>
+  )
+}
