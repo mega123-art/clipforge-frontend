@@ -108,6 +108,19 @@ export default function Processing() {
     },
   })
 
+  const showDebug = import.meta.env.VITE_APP_ENV === 'development' && (job?.status || 'pending') === 'pending' && elapsedSeconds > 60
+
+  const { data: debugHealth } = useQuery({
+    queryKey: ['debug-health'],
+    queryFn: () => api.get('/api/debug/health').then((r) => r.data),
+    enabled: showDebug,
+    refetchInterval: showDebug ? 10000 : false,
+  })
+
+  const rerunJob = async () => {
+    await api.post(`/api/debug/jobs/${jobId}/rerun`)
+  }
+
   useEffect(() => {
     if (job) {
       setCurrentJob(job)
@@ -329,6 +342,28 @@ export default function Processing() {
             <p className="text-xs text-red-300/70">{job?.error_message || 'Unknown error'}</p>
             <button onClick={() => navigate('/')} className="mt-3 text-xs text-violet-400 hover:text-violet-300 transition-colors cursor-pointer">
               Try again →
+            </button>
+          </div>
+        )}
+
+        {showDebug && (
+          <div className="mt-6 p-5 bg-yellow-500/10 border border-yellow-500/25 rounded-2xl">
+            <p className="text-yellow-300 font-bold text-sm mb-1">Still queued</p>
+            <p className="text-xs text-yellow-100/70 mb-3">
+              The backend has not moved this job into downloading yet. In development, this usually means the worker/broker path is not running.
+            </p>
+            {debugHealth && (
+              <div className="text-[11px] font-mono text-yellow-100/60 space-y-1 mb-3">
+                <p>inline: {String(debugHealth.run_jobs_inline)}</p>
+                <p>redis DNS: {String(debugHealth.redis_dns_ok)}</p>
+                <p>worker: {debugHealth.celery_worker_ping ? 'online' : 'not responding'}</p>
+              </div>
+            )}
+            <button
+              onClick={rerunJob}
+              className="px-3 py-2 text-xs font-semibold border border-yellow-500/35 rounded-xl text-yellow-200 hover:text-yellow-100 transition-colors cursor-pointer"
+            >
+              Rerun in backend
             </button>
           </div>
         )}
