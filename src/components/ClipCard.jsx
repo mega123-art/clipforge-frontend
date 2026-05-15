@@ -65,13 +65,9 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
   const typeClass = CLIP_TYPE_COLOR[clip.clip_type] || 'text-violet-500 bg-violet-500/10 border-violet-500/22'
   const TypeIcon = CLIP_TYPE_ICON[clip.clip_type] || Zap
 
+  const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000'
   const videoUrl = clip.final_clip_path
-    ? (() => {
-        const idx = clip.final_clip_path.indexOf('storage/')
-        return idx >= 0
-          ? `/storage/${clip.final_clip_path.slice(idx + 'storage/'.length)}`
-          : `/storage/${clip.final_clip_path}`
-      })()
+    ? `${API_BASE}/api/clips/${clip.id}/stream`
     : null
 
   const handleApprove = async () => {
