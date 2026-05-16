@@ -96,15 +96,16 @@ const CAPTION_STYLES: CaptionStyleOption[] = [
 ]
 
 interface FocusModeOption {
-  id: 'none' | 'speaker' | 'center'
+  id: 'none' | 'speaker' | 'center' | 'face'
   label: string
   desc: string
 }
 
 const FOCUS_MODES: FocusModeOption[] = [
-  { id: 'none', label: 'Blurred BG', desc: 'Fit + blur background' },
-  { id: 'speaker', label: 'Speaker focus', desc: 'Auto-track active speaker (slower)' },
+  { id: 'face', label: 'Face Focus (Pro)', desc: 'TikTok-style: locks on face, ultra-smooth, no shake, max quality' },
+  { id: 'speaker', label: 'Speaker focus', desc: 'Auto-track active speaker (multi-speaker podcasts)' },
   { id: 'center', label: 'Center crop', desc: 'Crop to center' },
+  { id: 'none', label: 'Blurred BG', desc: 'Fit + blur background' },
 ]
 
 interface ExportModalProps {
@@ -123,7 +124,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [aspectRatio, setAspectRatio] = useState<string>('9:16')
   const [captionStyle, setCaptionStyle] = useState<string>('word_highlight')
   const [includeCaptions, setIncludeCaptions] = useState(true)
-  const [focusMode, setFocusMode] = useState<'none' | 'speaker' | 'center'>('none')
+  const [focusMode, setFocusMode] = useState<'none' | 'speaker' | 'center' | 'face'>('face')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
@@ -344,6 +345,12 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             <div className="flex items-start gap-2 p-2.5 bg-amber-950/40 border border-amber-800/50 rounded-lg text-xs text-amber-200">
               <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
               <span>Speaker focus runs face detection — first export per job adds ~10–30s.</span>
+            </div>
+          )}
+          {focusMode === 'face' && (
+            <div className="flex items-start gap-2 p-2.5 bg-violet-950/40 border border-violet-800/50 rounded-lg text-xs text-violet-200">
+              <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <span>Face Focus uses MediaPipe + One-Euro smoothing + scene-cut locking + max-quality encode. First export adds ~30–60s.</span>
             </div>
           )}
 
