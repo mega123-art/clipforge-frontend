@@ -1,6 +1,12 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, MouseEvent } from 'react'
+import type { ClipOut } from '../types/api'
 
-const CLIP_TYPE_COLORS = {
+interface ColorPair {
+  from: string
+  to: string
+}
+
+const CLIP_TYPE_COLORS: Record<string, ColorPair> = {
   controversy: { from: '#ef4444', to: '#b91c1c' },
   hook_intro: { from: '#f97316', to: '#c2410c' },
   quotable: { from: '#eab308', to: '#a16207' },
@@ -11,15 +17,15 @@ const CLIP_TYPE_COLORS = {
   story_arc: { from: '#3b82f6', to: '#1d4ed8' },
 }
 
-const DEFAULT_COLOR = { from: '#7c3aed', to: '#5b21b6' }
+const DEFAULT_COLOR: ColorPair = { from: '#7c3aed', to: '#5b21b6' }
 
-function formatTime(seconds) {
+function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60)
   const s = Math.floor(seconds % 60)
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-function tickInterval(duration) {
+function tickInterval(duration: number): number {
   if (duration <= 60) return 10
   if (duration <= 300) return 30
   if (duration <= 1200) return 60
@@ -27,21 +33,28 @@ function tickInterval(duration) {
   return 600
 }
 
-export default function Timeline({ duration, clips, selectedClipId, onClipClick }) {
-  const [hoverX, setHoverX] = useState(null)
-  const trackRef = useRef(null)
+interface TimelineProps {
+  duration: number
+  clips: ClipOut[]
+  selectedClipId: string | null
+  onClipClick: (id: string) => void
+}
+
+export default function Timeline({ duration, clips, selectedClipId, onClipClick }: TimelineProps) {
+  const [hoverX, setHoverX] = useState<number | null>(null)
+  const trackRef = useRef<HTMLDivElement | null>(null)
 
   const tick = tickInterval(duration)
-  const ticks = []
+  const ticks: number[] = []
   for (let t = 0; t <= duration; t += tick) ticks.push(t)
 
-  const onMouseMove = (e) => {
+  const onMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     const rect = trackRef.current?.getBoundingClientRect()
     if (!rect) return
     const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left))
     setHoverX(x)
   }
-  const hoverTime = hoverX !== null && trackRef.current
+  const hoverTime: number | null = hoverX !== null && trackRef.current
     ? (hoverX / trackRef.current.getBoundingClientRect().width) * duration
     : null
 
@@ -85,7 +98,7 @@ export default function Timeline({ duration, clips, selectedClipId, onClipClick 
         </svg>
 
         {/* Hover scrubber */}
-        {hoverX !== null && (
+        {hoverX !== null && hoverTime !== null && (
           <>
             <div
               className="absolute top-0 bottom-0 w-px bg-violet-400/70 pointer-events-none z-20"

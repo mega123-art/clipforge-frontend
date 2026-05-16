@@ -1,28 +1,43 @@
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Scissors, Coins, Users, FileText, Search, Plus, ShieldCheck,
   ArrowLeft, AlertCircle, CheckCircle2, ServerCog, Lock,
+  LucideIcon,
 } from 'lucide-react'
+import type { AxiosError } from 'axios'
 import api from '../api'
 import useStore from '../store'
 import ThemeToggle from '../components/ThemeToggle'
+import type {
+  AuthOut,
+  AdminStats,
+  AdminLog,
+  CreditTxn,
+  User,
+  GrantCreditsResponse,
+} from '../types/api'
 
-function AdminPasswordGate({ onUnlock }) {
+interface AdminPasswordGateProps {
+  onUnlock: (data: AuthOut) => void
+}
+
+function AdminPasswordGate({ onUnlock }: AdminPasswordGateProps) {
   const [password, setPassword] = useState('')
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     try {
-      const { data } = await api.post('/api/admin/unlock', { password })
+      const { data } = await api.post<AuthOut>('/api/admin/unlock', { password })
       onUnlock(data)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid password')
+      const ax = err as AxiosError<{ detail?: string }>
+      setError(ax.response?.data?.detail || 'Invalid password')
     } finally {
       setLoading(false)
     }
@@ -83,7 +98,15 @@ function AdminPasswordGate({ onUnlock }) {
   )
 }
 
-function StatTile({ icon: Icon, label, value, hint, accent }) {
+interface StatTileProps {
+  icon: LucideIcon
+  label: string
+  value: string | number
+  hint?: string
+  accent?: string
+}
+
+function StatTile({ icon: Icon, label, value, hint, accent }: StatTileProps) {
   return (
     <div className="glass-card rounded-2xl p-5 border border-forge-border">
       <div className="flex items-center gap-2.5 mb-2">
@@ -96,49 +119,57 @@ function StatTile({ icon: Icon, label, value, hint, accent }) {
   )
 }
 
+interface GrantPayload {
+  email: string
+  amount: number
+  note?: string
+}
+
 export default function Admin() {
   const { user, setAuth } = useStore()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [grantEmail, setGrantEmail] = useState('')
-  const [grantAmount, setGrantAmount] = useState(10)
+  const [grantAmount, setGrantAmount] = useState<number | string>(10)
   const [grantNote, setGrantNote] = useState('')
-  const [flash, setFlash] = useState(null)
-  const [error, setError] = useState(null)
+  const [flash, setFlash] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!user?.is_admin) {
-    return (
-      <AdminPasswordGate
-        onUnlock={(data) => {
-          setAuth({ access_token: data.access_token, user: data.user })
-        }}
-      />
-    )
-  }
+  // Hooks must always run in the same order — call them before any early returns,
+  // but disable when not yet an admin so we don't hit the API.
+  const isAdmin = !!user?.is_admin
 
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<AdminStats>({
     queryKey: ['admin-stats'],
-    queryFn: () => api.get('/api/admin/stats').then((r) => r.data),
+    queryFn: () => api.get<AdminStats>('/api/admin/stats').then((r) => r.data),
+    enabled: isAdmin,
   })
 
-  const { data: users = [] } = useQuery({
+  const { data: users = [] } = useQuery<User[]>({
     queryKey: ['admin-users', search],
-    queryFn: () => api.get('/api/admin/users', { params: { q: search || undefined } }).then((r) => r.data),
+    queryFn: () =>
+      api
+        .get<User[]>('/api/admin/users', { params: { q: search || undefined } })
+        .then((r) => r.data),
+    enabled: isAdmin,
   })
 
-  const { data: logs = [] } = useQuery({
+  const { data: logs = [] } = useQuery<AdminLog[]>({
     queryKey: ['admin-logs'],
-    queryFn: () => api.get('/api/admin/logs').then((r) => r.data),
+    queryFn: () => api.get<AdminLog[]>('/api/admin/logs').then((r) => r.data),
+    enabled: isAdmin,
   })
 
-  const { data: txns = [] } = useQuery({
+  const { data: txns = [] } = useQuery<CreditTxn[]>({
     queryKey: ['admin-txns'],
-    queryFn: () => api.get('/api/admin/credits/transactions').then((r) => r.data),
+    queryFn: () => api.get<CreditTxn[]>('/api/admin/credits/transactions').then((r) => r.data),
+    enabled: isAdmin,
   })
 
-  const grantMutation = useMutation({
-    mutationFn: (body) => api.post('/api/admin/credits/grant', body).then((r) => r.data),
+  const grantMutation = useMutation<GrantCreditsResponse, AxiosError<{ detail?: string }>, GrantPayload>({
+    mutationFn: (body) =>
+      api.post<GrantCreditsResponse>('/api/admin/credits/grant', body).then((r) => r.data),
     onSuccess: (data) => {
       setFlash(`Granted ${data.granted} credits to ${data.user_email}. New balance: ${data.new_balance}`)
       setError(null)
@@ -157,13 +188,23 @@ export default function Admin() {
     },
   })
 
-  const handleGrant = (e) => {
+  if (!isAdmin) {
+    return (
+      <AdminPasswordGate
+        onUnlock={(data) => {
+          setAuth({ access_token: data.access_token, user: data.user })
+        }}
+      />
+    )
+  }
+
+  const handleGrant = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
     grantMutation.mutate({ email: grantEmail, amount: Number(grantAmount), note: grantNote || undefined })
   }
 
-  const fmtDate = (d) => new Date(d).toLocaleString()
+  const fmtDate = (d: string): string => new Date(d).toLocaleString()
 
   return (
     <div className="min-h-screen flex flex-col page-enter">
@@ -319,7 +360,7 @@ export default function Admin() {
                     <td className="px-4 py-3 text-forge-muted">{u.auth_provider}</td>
                     <td className="px-4 py-3 text-right font-bold tabular-nums text-violet-300">{u.credits}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-forge-muted">{u.job_count}</td>
-                    <td className="px-4 py-3 text-forge-muted">{fmtDate(u.created_at)}</td>
+                    <td className="px-4 py-3 text-forge-muted">{u.created_at ? fmtDate(u.created_at) : '—'}</td>
                     <td className="px-4 py-3 text-forge-muted">{u.last_login_at ? fmtDate(u.last_login_at) : '—'}</td>
                     <td className="px-4 py-3">
                       <button
@@ -333,7 +374,7 @@ export default function Admin() {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan="7" className="text-center text-forge-muted py-8">No users found.</td>
+                    <td colSpan={7} className="text-center text-forge-muted py-8">No users found.</td>
                   </tr>
                 )}
               </tbody>

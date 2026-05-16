@@ -1,8 +1,19 @@
 import { create } from 'zustand'
+import type { ClipOut, JobOut, User, AuthOut } from './types/api'
 
-const getSavedTheme = () => localStorage.getItem('theme') || 'dark'
+type Theme = 'light' | 'dark'
 
-const applyTheme = (theme) => {
+interface RecentJob {
+  id: string
+  title?: string | null
+  status: string
+  created_at: string
+}
+
+const getSavedTheme = (): Theme =>
+  (localStorage.getItem('theme') as Theme) || 'dark'
+
+const applyTheme = (theme: Theme) => {
   const html = document.documentElement
   if (theme === 'light') {
     html.classList.add('light')
@@ -14,16 +25,41 @@ const applyTheme = (theme) => {
 
 applyTheme(getSavedTheme())
 
-const getSavedUser = () => {
+const getSavedUser = (): User | null => {
   try {
     const raw = localStorage.getItem('auth_user')
-    return raw ? JSON.parse(raw) : null
+    return raw ? (JSON.parse(raw) as User) : null
   } catch {
     return null
   }
 }
 
-const useStore = create((set, get) => ({
+interface StoreState {
+  currentJob: JobOut | null
+  clips: ClipOut[]
+  selectedClipId: string | null
+  theme: Theme
+
+  user: User | null
+  token: string | null
+
+  setCurrentJob: (job: JobOut | null) => void
+  setClips: (clips: ClipOut[]) => void
+  setSelectedClipId: (id: string | null) => void
+
+  toggleTheme: () => void
+
+  setAuth: (payload: AuthOut) => void
+  logout: () => void
+  refreshUser: () => Promise<void>
+
+  updateClip: (clipId: string, updates: Partial<ClipOut>) => void
+
+  getRecentJobs: () => RecentJob[]
+  addRecentJob: (job: { job_id: string; video_title?: string | null; status?: string }) => void
+}
+
+const useStore = create<StoreState>((set, get) => ({
   // ── App state ──
   currentJob: null,
   clips: [],
@@ -39,7 +75,7 @@ const useStore = create((set, get) => ({
   setSelectedClipId: (id) => set({ selectedClipId: id }),
 
   toggleTheme: () => {
-    const next = get().theme === 'dark' ? 'light' : 'dark'
+    const next: Theme = get().theme === 'dark' ? 'light' : 'dark'
     applyTheme(next)
     set({ theme: next })
   },
@@ -61,9 +97,9 @@ const useStore = create((set, get) => ({
     const token = get().token
     if (!token) return
     try {
-      // Lazy import to avoid circular dep with api.js
+      // Lazy import to avoid circular dep with api.ts
       const api = (await import('./api')).default
-      const { data } = await api.get('/api/auth/me')
+      const { data } = await api.get<User>('/api/auth/me')
       localStorage.setItem('auth_user', JSON.stringify(data))
       set({ user: data })
     } catch {
@@ -78,7 +114,7 @@ const useStore = create((set, get) => ({
 
   getRecentJobs: () => {
     try {
-      const all = JSON.parse(localStorage.getItem('recentJobs') || '[]')
+      const all = JSON.parse(localStorage.getItem('recentJobs') || '[]') as RecentJob[]
       return all.filter((j) => j.status === 'ready')
     } catch {
       return []
@@ -87,8 +123,13 @@ const useStore = create((set, get) => ({
 
   addRecentJob: (job) => {
     const recent = get().getRecentJobs()
-    const updated = [
-      { id: job.job_id, title: job.video_title, status: job.status, created_at: new Date().toISOString() },
+    const updated: RecentJob[] = [
+      {
+        id: job.job_id,
+        title: job.video_title ?? null,
+        status: job.status ?? 'ready',
+        created_at: new Date().toISOString(),
+      },
       ...recent.filter((j) => j.id !== job.job_id),
     ].slice(0, 10)
     localStorage.setItem('recentJobs', JSON.stringify(updated))

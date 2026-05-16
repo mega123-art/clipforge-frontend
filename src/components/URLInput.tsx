@@ -1,19 +1,26 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, ChangeEvent, DragEvent } from 'react'
 import { Link2, Upload, X, FileVideo, CloudUpload } from 'lucide-react'
 
-export default function URLInput({ value, onChange, onFileSelect, uploadedFile }) {
-  const [dragOver, setDragOver] = useState(false)
-  const inputRef = useRef(null)
+interface URLInputProps {
+  value: string
+  onChange: (value: string) => void
+  onFileSelect: (file: File | null) => void
+  uploadedFile: File | null
+}
 
-  const handleDrop = (e) => {
+export default function URLInput({ value, onChange, onFileSelect, uploadedFile }: URLInputProps) {
+  const [dragOver, setDragOver] = useState(false)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     setDragOver(false)
     const file = e.dataTransfer.files[0]
     if (file) onFileSelect(file)
   }
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0]
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (file) onFileSelect(file)
   }
 

@@ -1,56 +1,63 @@
-import { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { GoogleLogin } from '@react-oauth/google'
-import { Scissors, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react'
+import { useState, useEffect, FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
+import { Scissors, Mail, Lock, User as UserIcon, ArrowRight, AlertCircle } from 'lucide-react'
+import type { AxiosError } from 'axios'
 import api from '../api'
 import useStore from '../store'
 import ThemeToggle from '../components/ThemeToggle'
+import type { AuthOut } from '../types/api'
 
-export default function SignIn() {
+export default function SignUp() {
   const navigate = useNavigate()
-  const location = useLocation()
   const { setAuth, token } = useStore()
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-
-  const redirectAfter = location.state?.from?.pathname || '/'
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (token) { navigate(redirectAfter, { replace: true }); return }
+    if (token) { navigate('/', { replace: true }); return }
     if (import.meta.env.VITE_APP_ENV === 'development') {
-      api.post('/api/auth/dev-login').then(({ data }) => {
+      api.post<AuthOut>('/api/auth/dev-login').then(({ data }) => {
         setAuth(data)
-        navigate(redirectAfter, { replace: true })
+        navigate('/', { replace: true })
       }).catch(() => {})
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
+      return
+    }
     setLoading(true)
     setError(null)
     try {
-      const { data } = await api.post('/api/auth/signin', { email, password })
+      const { data } = await api.post<AuthOut>('/api/auth/signup', { email, password, name: name || undefined })
       setAuth(data)
-      navigate(redirectAfter, { replace: true })
+      navigate('/', { replace: true })
     } catch (err) {
-      setError(err.response?.data?.detail || 'Sign in failed')
+      const ax = err as AxiosError<{ detail?: string }>
+      setError(ax.response?.data?.detail || 'Sign up failed')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleGoogleSuccess = async (credential) => {
+  const handleGoogleSuccess = async (credential: CredentialResponse) => {
     setLoading(true)
     setError(null)
     try {
-      const { data } = await api.post('/api/auth/google', { id_token: credential.credential })
+      const { data } = await api.post<AuthOut>('/api/auth/google', { id_token: credential.credential })
       setAuth(data)
-      navigate(redirectAfter, { replace: true })
+      navigate('/', { replace: true })
     } catch (err) {
-      setError(err.response?.data?.detail || 'Google sign in failed')
+      const ax = err as AxiosError<{ detail?: string }>
+      setError(ax.response?.data?.detail || 'Google sign up failed')
     } finally {
       setLoading(false)
     }
@@ -66,7 +73,6 @@ export default function SignIn() {
       <div className="fixed bottom-1/4 -right-32 w-[350px] h-[350px] rounded-full bg-indigo-600/8 blur-3xl animate-float-slow pointer-events-none" />
 
       <div className="w-full max-w-md relative">
-        {/* Logo */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="w-11 h-11 rounded-2xl bg-violet-600/20 border border-violet-500/35 flex items-center justify-center shadow-glow-violet-sm">
             <Scissors size={20} className="text-violet-400" />
@@ -75,23 +81,21 @@ export default function SignIn() {
         </div>
 
         <div className="glass-card rounded-2xl p-8 border border-forge-border">
-          <h1 className="text-2xl font-black text-forge-text mb-1">Welcome back</h1>
-          <p className="text-sm text-forge-muted mb-6">Sign in to continue creating viral clips.</p>
+          <h1 className="text-2xl font-black text-forge-text mb-1">Create account</h1>
+          <p className="text-sm text-forge-muted mb-6">Start turning videos into viral clips.</p>
 
-          {/* Google */}
           <div className="flex justify-center mb-5">
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
-              onError={() => setError('Google sign in failed')}
+              onError={() => setError('Google sign up failed')}
               theme={document.documentElement.classList.contains('light') ? 'outline' : 'filled_black'}
               size="large"
               shape="pill"
-              text="signin_with"
+              text="signup_with"
               width="320"
             />
           </div>
 
-          {/* Divider */}
           <div className="flex items-center gap-3 text-forge-dim text-xs mb-5">
             <div className="flex-1 h-px bg-forge-border" />
             <span className="font-semibold">or with email</span>
@@ -99,6 +103,17 @@ export default function SignIn() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
+            <div className="flex items-center gap-3 bg-forge-surface rounded-xl px-4 py-3 border border-forge-border focus-within:border-violet-500/50 transition-colors">
+              <UserIcon size={15} className="text-forge-dim shrink-0" />
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name (optional)"
+                className="flex-1 bg-transparent outline-none text-forge-text placeholder-forge-dim text-sm"
+              />
+            </div>
+
             <div className="flex items-center gap-3 bg-forge-surface rounded-xl px-4 py-3 border border-forge-border focus-within:border-violet-500/50 transition-colors">
               <Mail size={15} className="text-forge-dim shrink-0" />
               <input
@@ -117,7 +132,7 @@ export default function SignIn() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="At least 8 characters"
                 required
                 minLength={8}
                 className="flex-1 bg-transparent outline-none text-forge-text placeholder-forge-dim text-sm"
@@ -139,11 +154,11 @@ export default function SignIn() {
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in...
+                  Creating account...
                 </>
               ) : (
                 <>
-                  Sign In
+                  Create Account
                   <ArrowRight size={15} />
                 </>
               )}
@@ -151,9 +166,9 @@ export default function SignIn() {
           </form>
 
           <p className="text-center text-sm text-forge-muted mt-6">
-            New here?{' '}
-            <Link to="/signup" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
-              Create an account
+            Already have an account?{' '}
+            <Link to="/signin" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
+              Sign in
             </Link>
           </p>
         </div>

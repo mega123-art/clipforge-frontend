@@ -1,7 +1,11 @@
 import { Sun, Moon } from 'lucide-react'
 import useStore from '../store'
 
-export default function ThemeToggle({ className = '' }) {
+interface ThemeToggleProps {
+  className?: string
+}
+
+export default function ThemeToggle({ className = '' }: ThemeToggleProps) {
   const { theme, toggleTheme } = useStore()
   const isLight = theme === 'light'
 

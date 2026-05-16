@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { X, Plus } from 'lucide-react'
+import type { MoreClipsOptions } from '../types/api'
 
-const CLIP_TYPES = [
+interface ClipTypeOption {
+  id: string
+  label: string
+}
+
+const CLIP_TYPES: ClipTypeOption[] = [
   { id: 'controversy', label: 'Controversy' },
   { id: 'hook_intro', label: 'Hook Intro' },
   { id: 'quotable', label: 'Quotable' },
@@ -12,8 +18,14 @@ const CLIP_TYPES = [
   { id: 'story_arc', label: 'Story Arc' },
 ]
 
-export default function MoreClipsModal({ onConfirm, onClose, loading }) {
-  const [options, setOptions] = useState({
+interface MoreClipsModalProps {
+  onConfirm: (options: MoreClipsOptions) => void
+  onClose: () => void
+  loading?: boolean
+}
+
+export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClipsModalProps) {
+  const [options, setOptions] = useState<MoreClipsOptions>({
     max_clips: 5,
     clip_types: ['controversy', 'hook_intro', 'quotable', 'shocking_stat', 'myth_bust'],
     min_clip_duration: 20,
@@ -21,7 +33,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }) {
     target_aspect_ratio: '9:16',
   })
 
-  const toggleClipType = (id) => {
+  const toggleClipType = (id: string) => {
     setOptions((o) => ({
       ...o,
       clip_types: o.clip_types.includes(id)

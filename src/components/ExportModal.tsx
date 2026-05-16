@@ -1,10 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, CSSProperties } from 'react'
 import api from '../api'
 import { X, Download, Loader, Info, ChevronLeft, ChevronRight } from 'lucide-react'
+import type { AxiosError } from 'axios'
+import type { ExportResponse } from '../types/api'
 
-const ASPECT_RATIOS = ['9:16', '1:1', '16:9']
+const ASPECT_RATIOS: string[] = ['9:16', '1:1', '16:9']
 
-const CAPTION_STYLES = [
+interface CaptionStyleOption {
+  id: string
+  label: string
+  sample: string
+  css: CSSProperties
+  bg: string
+}
+
+const CAPTION_STYLES: CaptionStyleOption[] = [
   {
     id: 'word_highlight',
     label: 'Word highlight',
@@ -85,25 +95,38 @@ const CAPTION_STYLES = [
   },
 ]
 
-const FOCUS_MODES = [
+interface FocusModeOption {
+  id: 'none' | 'speaker' | 'center'
+  label: string
+  desc: string
+}
+
+const FOCUS_MODES: FocusModeOption[] = [
   { id: 'none', label: 'Blurred BG', desc: 'Fit + blur background' },
   { id: 'speaker', label: 'Speaker focus', desc: 'Auto-track active speaker (slower)' },
   { id: 'center', label: 'Center crop', desc: 'Crop to center' },
 ]
 
-export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose }) {
+interface ExportModalProps {
+  clipIds: string[]
+  index?: number
+  onIndexChange?: (i: number) => void
+  onClose: () => void
+}
+
+export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose }: ExportModalProps) {
   const safeIds = Array.isArray(clipIds) ? clipIds : []
   const total = safeIds.length
   const safeIndex = Math.max(0, Math.min(index, total - 1))
-  const clipId = safeIds[safeIndex]
+  const clipId: string | undefined = safeIds[safeIndex]
 
-  const [aspectRatio, setAspectRatio] = useState('9:16')
-  const [captionStyle, setCaptionStyle] = useState('word_highlight')
+  const [aspectRatio, setAspectRatio] = useState<string>('9:16')
+  const [captionStyle, setCaptionStyle] = useState<string>('word_highlight')
   const [includeCaptions, setIncludeCaptions] = useState(true)
-  const [focusMode, setFocusMode] = useState('none')
+  const [focusMode, setFocusMode] = useState<'none' | 'speaker' | 'center'>('none')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [downloadUrl, setDownloadUrl] = useState(null)
+  const [error, setError] = useState<string | null>(null)
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
 
   // Reset per-clip state when navigating between clips.
   useEffect(() => {
@@ -127,7 +150,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     setError(null)
     const targetId = clipId
     try {
-      const { data } = await api.post(`/api/clips/${targetId}/export`, {
+      const { data } = await api.post<ExportResponse>(`/api/clips/${targetId}/export`, {
         aspect_ratio: aspectRatio,
         caption_style: captionStyle,
         include_captions: includeCaptions,
@@ -137,7 +160,8 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
       if (targetId !== clipId) return
       setDownloadUrl(data.download_url || `/api/clips/${targetId}/download`)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Export failed.')
+      const ax = err as AxiosError<{ detail?: string }>
+      setError(ax.response?.data?.detail || 'Export failed.')
     } finally {
       setLoading(false)
     }
@@ -148,7 +172,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     setDownloading(true)
     setError(null)
     try {
-      const res = await api.get(downloadUrl, { responseType: 'blob' })
+      const res = await api.get<Blob>(downloadUrl, { responseType: 'blob' })
       const blob = new Blob([res.data], { type: 'video/mp4' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -159,7 +183,8 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
       a.remove()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'Download failed.')
+      const ax = err as AxiosError<{ detail?: string }>
+      setError(ax.response?.data?.detail || ax.message || 'Download failed.')
     } finally {
       setDownloading(false)
     }

@@ -10,20 +10,26 @@ import Admin from './pages/Admin'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import useStore from './store'
+import type { AuthOut } from './types/api'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
-function AuthHydrator() {
+function AuthHydrator(): null {
   const { token, refreshUser, setAuth } = useStore()
   useEffect(() => {
     if (token) {
       refreshUser()
     } else if (import.meta.env.VITE_APP_ENV === 'development') {
       import('./api').then(({ default: api }) => {
-        api.post('/api/auth/dev-login').then(({ data }) => setAuth(data)).catch(() => {})
+        api
+          .post<AuthOut>('/api/auth/dev-login')
+          .then(({ data }) => setAuth(data))
+          .catch(() => {})
       })
     }
-    const onFocus = () => { if (useStore.getState().token) refreshUser() }
+    const onFocus = () => {
+      if (useStore.getState().token) refreshUser()
+    }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
   }, [token, refreshUser, setAuth])

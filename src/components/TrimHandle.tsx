@@ -1,23 +1,34 @@
 import { useRef } from 'react'
 
-function formatTime(s) {
+interface TrimHandleProps {
+  start: number
+  end: number
+  duration: number
+  onStartChange: (v: number) => void
+  onEndChange: (v: number) => void
+}
+
+function formatTime(s: number): string {
   const m = Math.floor(s / 60)
   const sec = Math.floor(s % 60)
   return `${m}:${sec.toString().padStart(2, '0')}`
 }
 
-export default function TrimHandle({ start, end, duration, onStartChange, onEndChange }) {
-  const barRef = useRef(null)
+export default function TrimHandle({ start, end, duration, onStartChange, onEndChange }: TrimHandleProps) {
+  const barRef = useRef<HTMLDivElement | null>(null)
 
-  const getPositionFromEvent = (e) => {
-    const rect = barRef.current.getBoundingClientRect()
-    const x = e.touches ? e.touches[0].clientX : e.clientX
+  const getPositionFromEvent = (e: MouseEvent | TouchEvent): number => {
+    const rect = barRef.current!.getBoundingClientRect()
+    const x = 'touches' in e ? e.touches[0].clientX : e.clientX
     return Math.max(0, Math.min(1, (x - rect.left) / rect.width))
   }
 
-  const startDrag = (e, type) => {
+  const startDrag = (
+    e: React.MouseEvent | React.TouchEvent,
+    type: 'start' | 'end',
+  ) => {
     e.preventDefault()
-    const move = (me) => {
+    const move = (me: MouseEvent | TouchEvent) => {
       const pos = getPositionFromEvent(me)
       const time = pos * duration
       if (type === 'start') {
@@ -27,14 +38,14 @@ export default function TrimHandle({ start, end, duration, onStartChange, onEndC
       }
     }
     const up = () => {
-      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mousemove', move as EventListener)
       window.removeEventListener('mouseup', up)
-      window.removeEventListener('touchmove', move)
+      window.removeEventListener('touchmove', move as EventListener)
       window.removeEventListener('touchend', up)
     }
-    window.addEventListener('mousemove', move)
+    window.addEventListener('mousemove', move as EventListener)
     window.addEventListener('mouseup', up)
-    window.addEventListener('touchmove', move)
+    window.addEventListener('touchmove', move as EventListener)
     window.addEventListener('touchend', up)
   }
 

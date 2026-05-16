@@ -1,7 +1,13 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check } from 'lucide-react'
 
-export default function ProgressStepper({ currentStage, stages, stageLabels }) {
+interface ProgressStepperProps {
+  currentStage: string
+  stages: string[]
+  stageLabels: Record<string, string>
+}
+
+export default function ProgressStepper({ currentStage, stages, stageLabels }: ProgressStepperProps) {
   const currentIndex = stages.indexOf(currentStage)
   const isReady = currentStage === 'ready'
   const lastIdx = stages.length - 1

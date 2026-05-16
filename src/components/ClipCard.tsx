@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useState, MouseEvent } from 'react'
 import ReactPlayer from 'react-player'
 import api from '../api'
 import {
   Check, Scissors, Download, ChevronDown, ChevronUp,
   Flame, Zap, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
+  LucideIcon,
 } from 'lucide-react'
 import TrimHandle from './TrimHandle'
+import type { ClipOut } from '../types/api'
 
-const CLIP_TYPE_ICON = {
+const CLIP_TYPE_ICON: Record<string, LucideIcon> = {
   controversy:    Flame,
   hook_intro:     Zap,
   quotable:       MessageSquare,
@@ -18,7 +20,7 @@ const CLIP_TYPE_ICON = {
   story_arc:      BookOpen,
 }
 
-const CLIP_TYPE_COLOR = {
+const CLIP_TYPE_COLOR: Record<string, string> = {
   controversy:    'text-red-500    bg-red-500/10    border-red-500/22',
   hook_intro:     'text-orange-500 bg-orange-500/10 border-orange-500/22',
   quotable:       'text-amber-500  bg-amber-500/10  border-amber-500/22',
@@ -29,13 +31,17 @@ const CLIP_TYPE_COLOR = {
   story_arc:      'text-blue-500   bg-blue-500/10   border-blue-500/22',
 }
 
-function formatTime(s) {
+function formatTime(s: number): string {
   const m = Math.floor(s / 60)
   const sec = Math.floor(s % 60)
   return `${m}:${sec.toString().padStart(2, '0')}`
 }
 
-function ScoreBar({ score }) {
+interface ScoreBarProps {
+  score: number
+}
+
+function ScoreBar({ score }: ScoreBarProps) {
   const pct = Math.round(score * 100)
   const gradient = score >= 0.8
     ? 'from-emerald-500 to-green-400'
@@ -55,15 +61,23 @@ function ScoreBar({ score }) {
   )
 }
 
-export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdate }) {
+interface ClipCardProps {
+  clip: ClipOut
+  isSelected: boolean
+  onSelect: () => void
+  onExport: () => void
+  onUpdate: () => void
+}
+
+export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdate }: ClipCardProps) {
   const [trimMode, setTrimMode] = useState(false)
   const [showTranscript, setShowTranscript] = useState(false)
-  const [trimStart, setTrimStart] = useState(clip.user_start_seconds ?? clip.start_seconds)
-  const [trimEnd, setTrimEnd] = useState(clip.user_end_seconds ?? clip.end_seconds)
+  const [trimStart, setTrimStart] = useState<number>(clip.user_start_seconds ?? clip.start_seconds)
+  const [trimEnd, setTrimEnd] = useState<number>(clip.user_end_seconds ?? clip.end_seconds)
   const [saving, setSaving] = useState(false)
 
   const typeClass = CLIP_TYPE_COLOR[clip.clip_type] || 'text-violet-500 bg-violet-500/10 border-violet-500/22'
-  const TypeIcon = CLIP_TYPE_ICON[clip.clip_type] || Zap
+  const TypeIcon: LucideIcon = CLIP_TYPE_ICON[clip.clip_type] || Zap
 
   const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000'
   const videoUrl = clip.final_clip_path
@@ -88,6 +102,8 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
       setSaving(false)
     }
   }
+
+  const stop = (e: MouseEvent) => e.stopPropagation()
 
   return (
     <div
@@ -176,7 +192,7 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
         {/* Actions */}
         <div className="flex items-center gap-2 pt-1">
           <button
-            onClick={(e) => { e.stopPropagation(); handleApprove() }}
+            onClick={(e) => { stop(e); handleApprove() }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               clip.user_approved
                 ? 'bg-green-500/15 border border-green-500/45 text-green-400'
@@ -188,7 +204,7 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
           </button>
 
           <button
-            onClick={(e) => { e.stopPropagation(); setTrimMode((t) => !t) }}
+            onClick={(e) => { stop(e); setTrimMode((t) => !t) }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-forge-border text-forge-muted hover:border-forge-border-bright hover:text-forge-text transition-all cursor-pointer"
           >
             <Scissors size={11} />
@@ -197,7 +213,7 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
 
           {trimMode && (
             <button
-              onClick={(e) => { e.stopPropagation(); handleSaveTrim() }}
+              onClick={(e) => { stop(e); handleSaveTrim() }}
               disabled={saving}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-600/80 hover:bg-violet-600 text-white disabled:opacity-50 transition-all border border-violet-500/55 cursor-pointer"
             >
@@ -206,7 +222,7 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
           )}
 
           <button
-            onClick={(e) => { e.stopPropagation(); onExport() }}
+            onClick={(e) => { stop(e); onExport() }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-forge-border text-forge-muted hover:border-violet-500/55 hover:text-violet-400 hover:bg-violet-500/8 transition-all ml-auto cursor-pointer"
           >
             <Download size={11} />

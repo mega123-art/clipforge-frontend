@@ -1,53 +1,50 @@
 import { useState, useRef } from 'react'
 import { Scissors, Plus, Clock, Wand2, Check } from 'lucide-react'
+import type { AxiosError } from 'axios'
 
-function toSeconds(str) {
+function toSeconds(str: string): number {
   const parts = str.split(':').map(Number)
   if (parts.length === 2) return parts[0] * 60 + (parts[1] || 0)
   if (parts.length === 1) return parts[0] || 0
   return 0
 }
 
-function toMMSS(s) {
-  s = Math.max(0, Math.floor(s))
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+function toMMSS(s: number): string {
+  const sec = Math.max(0, Math.floor(s))
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
 }
 
 // Extract a single timestamp from a text fragment.
-// Supports: m:ss  |  m.ss (m.02 = 3min 2sec)  |  Xm Ys  |  X minutes  |  X seconds  |  plain number
-function extractTimestamp(text) {
-  text = text.trim()
+function extractTimestamp(text: string): number | null {
+  const t = text.trim()
 
-  // mm:ss
-  let m = text.match(/(\d{1,3}):(\d{2})/)
+  let m = t.match(/(\d{1,3}):(\d{2})/)
   if (m) return parseInt(m[1]) * 60 + parseInt(m[2])
 
-  // m.ss — treat decimal part as seconds only when <= 59 (e.g. 3.02 = 3m2s, not 3.02s)
-  m = text.match(/(\d{1,3})\.(\d{2})\b/)
+  m = t.match(/(\d{1,3})\.(\d{2})\b/)
   if (m && parseInt(m[2]) <= 59) return parseInt(m[1]) * 60 + parseInt(m[2])
 
-  // Xm Ys combined (e.g. "1m30s", "1 min 30 sec")
-  m = text.match(/(\d+)\s*m(?:in(?:utes?)?)?\s*(\d+)\s*s(?:ec(?:onds?)?)?/i)
+  m = t.match(/(\d+)\s*m(?:in(?:utes?)?)?\s*(\d+)\s*s(?:ec(?:onds?)?)?/i)
   if (m) return parseInt(m[1]) * 60 + parseInt(m[2])
 
-  // X minutes only
-  m = text.match(/(\d+)\s*m(?:in(?:utes?)?)?(?!\s*\d)/i)
+  m = t.match(/(\d+)\s*m(?:in(?:utes?)?)?(?!\s*\d)/i)
   if (m) return parseInt(m[1]) * 60
 
-  // X seconds only
-  m = text.match(/(\d+)\s*s(?:ec(?:onds?)?)?/i)
+  m = t.match(/(\d+)\s*s(?:ec(?:onds?)?)?/i)
   if (m) return parseInt(m[1])
 
-  // Plain integer — treat as seconds
-  m = text.match(/(\d+)/)
+  m = t.match(/(\d+)/)
   if (m) return parseInt(m[1])
 
   return null
 }
 
-// Parse natural language into {start, end} seconds.
-// Splits on "to", "and", "-", "–", "—" then extracts one timestamp per side.
-function parseNLP(text) {
+interface ParsedRange {
+  start: number
+  end: number
+}
+
+function parseNLP(text: string): ParsedRange | null {
   const halves = text.split(/\bto\b|\band\b|[-–—]/i)
   if (halves.length >= 2) {
     const s = extractTimestamp(halves[0])
@@ -55,12 +52,11 @@ function parseNLP(text) {
     if (s !== null && e !== null) return { start: s, end: e }
   }
 
-  // Fallback: find all standalone timestamps in order
-  const tokens = []
+  const tokens: number[] = []
   const combined = text.matchAll(/(\d{1,3}:\d{2}|\d{1,3}\.\d{2}|\d+\s*m(?:in)?(?:\s*\d+\s*s(?:ec)?)?|\d+\s*s(?:ec(?:onds?)?)?|\d+)/gi)
   for (const match of combined) {
-    const t = extractTimestamp(match[0])
-    if (t !== null) tokens.push(t)
+    const tok = extractTimestamp(match[0])
+    if (tok !== null) tokens.push(tok)
     if (tokens.length === 2) break
   }
   if (tokens.length === 2) return { start: tokens[0], end: tokens[1] }
@@ -68,7 +64,14 @@ function parseNLP(text) {
   return null
 }
 
-function TimeInput({ label, value, max, onChange }) {
+interface TimeInputProps {
+  label: string
+  value: number
+  max: number
+  onChange: (v: number) => void
+}
+
+function TimeInput({ label, value, max, onChange }: TimeInputProps) {
   const [editing, setEditing] = useState(false)
   const [raw, setRaw] = useState('')
 
@@ -104,47 +107,57 @@ function TimeInput({ label, value, max, onChange }) {
   )
 }
 
-export default function ManualClipper({ duration, jobId, onCreated }) {
+interface ManualClipperProps {
+  duration: number
+  jobId: string
+  onCreated: () => void
+}
+
+type DragType = 'start' | 'end' | null
+
+export default function ManualClipper({ duration, jobId, onCreated }: ManualClipperProps) {
   const [start, setStart] = useState(0)
   const [end, setEnd] = useState(Math.min(60, duration))
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
   const [nlpText, setNlpText] = useState('')
   const [nlpParsed, setNlpParsed] = useState(false)
-  const barRef = useRef(null)
-  const dragging = useRef(null)
+  const barRef = useRef<HTMLDivElement | null>(null)
+  const dragging = useRef<DragType>(null)
 
-  const clampStart = (v) => setStart(Math.max(0, Math.min(v, end - 1)))
-  const clampEnd = (v) => setEnd(Math.min(duration, Math.max(v, start + 1)))
+  const clampStart = (v: number) => setStart(Math.max(0, Math.min(v, end - 1)))
+  const clampEnd = (v: number) => setEnd(Math.min(duration, Math.max(v, start + 1)))
 
-  const getPosFromEvent = (e) => {
-    const rect = barRef.current.getBoundingClientRect()
-    const x = e.touches ? e.touches[0].clientX : e.clientX
+  const getPosFromEvent = (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent): number => {
+    const rect = barRef.current!.getBoundingClientRect()
+    const x = 'touches' in e && e.touches.length
+      ? e.touches[0].clientX
+      : (e as MouseEvent).clientX
     return Math.max(0, Math.min(1, (x - rect.left) / rect.width))
   }
 
-  const startDrag = (e, type) => {
+  const startDrag = (e: React.MouseEvent | React.TouchEvent, type: 'start' | 'end') => {
     e.preventDefault()
     dragging.current = type
-    const move = (me) => {
+    const move = (me: MouseEvent | TouchEvent) => {
       const t = getPosFromEvent(me) * duration
       if (dragging.current === 'start') clampStart(t)
       else clampEnd(t)
     }
     const up = () => {
       dragging.current = null
-      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mousemove', move as EventListener)
       window.removeEventListener('mouseup', up)
-      window.removeEventListener('touchmove', move)
+      window.removeEventListener('touchmove', move as EventListener)
       window.removeEventListener('touchend', up)
     }
-    window.addEventListener('mousemove', move)
+    window.addEventListener('mousemove', move as EventListener)
     window.addEventListener('mouseup', up)
-    window.addEventListener('touchmove', move, { passive: false })
+    window.addEventListener('touchmove', move as EventListener, { passive: false })
     window.addEventListener('touchend', up)
   }
 
-  const handleBarClick = (e) => {
+  const handleBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (dragging.current) return
     const t = getPosFromEvent(e) * duration
     const dStart = Math.abs(t - start)
@@ -189,7 +202,8 @@ export default function ManualClipper({ duration, jobId, onCreated }) {
       })
       onCreated()
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to create clip')
+      const ax = err as AxiosError<{ detail?: string }>
+      setError(ax.response?.data?.detail || 'Failed to create clip')
     } finally {
       setLoading(false)
     }

@@ -1,15 +1,16 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, Query } from '@tanstack/react-query'
 import api from '../api'
 import { Scissors, Sparkles, CheckCircle2, Wand2, Zap } from 'lucide-react'
 import ProgressStepper from '../components/ProgressStepper'
 import MetaballLoader from '../components/MetaballLoader'
 import useStore from '../store'
+import type { JobOut, JobStatus, DebugHealth } from '../types/api'
 
-const STAGES = ['downloading', 'transcribing', 'diarizing', 'analyzing', 'clipping']
+const STAGES: string[] = ['downloading', 'transcribing', 'diarizing', 'analyzing', 'clipping']
 
-const STAGE_LABELS = {
+const STAGE_LABELS: Record<string, string> = {
   pending:      'Queued',
   downloading:  'Downloading',
   transcribing: 'Transcribing',
@@ -20,7 +21,7 @@ const STAGE_LABELS = {
   failed:       'Failed',
 }
 
-const STAGE_QUIPS = {
+const STAGE_QUIPS: Record<string, string[]> = {
   pending: [
     'Warming up the forge...',
     'Getting in queue. Standby.',
@@ -67,7 +68,7 @@ const STAGE_QUIPS = {
   ],
 }
 
-const STAGE_EMOJI = {
+const STAGE_EMOJI: Record<string, string> = {
   downloading:  '📥',
   transcribing: '🎙️',
   diarizing:    '👥',
@@ -77,7 +78,7 @@ const STAGE_EMOJI = {
   pending:      '⏳',
 }
 
-const MORE_CLIPS_MESSAGES = [
+const MORE_CLIPS_MESSAGES: string[] = [
   "Claude is hunting for moments you haven't seen yet...",
   'Scanning transcript for non-overlapping viral clips...',
   'Finding the hidden gems in the footage...',
@@ -86,33 +87,41 @@ const MORE_CLIPS_MESSAGES = [
   'Almost there — burning captions into new clips...',
 ]
 
+interface LocationState {
+  moreClips?: boolean
+}
+
 export default function Processing() {
-  const { jobId } = useParams()
+  const { jobId } = useParams<{ jobId: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  const isMoreClips = location.state?.moreClips === true
+  const isMoreClips = (location.state as LocationState | null)?.moreClips === true
   const { setCurrentJob, addRecentJob } = useStore()
 
   const [quipIdx, setQuipIdx] = useState(0)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [quipVisible, setQuipVisible] = useState(true)
-  const startRef = useRef(Date.now())
-  const prevStatus = useRef(null)
+  const startRef = useRef<number>(Date.now())
+  const prevStatus = useRef<string | null>(null)
 
-  const { data: job, error } = useQuery({
+  const { data: job, error } = useQuery<JobOut>({
     queryKey: ['job', jobId],
-    queryFn: () => api.get(`/api/jobs/${jobId}`).then((r) => r.data),
-    refetchInterval: (data) => {
+    queryFn: () => api.get<JobOut>(`/api/jobs/${jobId}`).then((r) => r.data),
+    refetchInterval: (query: Query<JobOut>) => {
+      const data = query.state.data
       if (!data) return 3000
       return data.status === 'ready' || data.status === 'failed' ? false : 3000
     },
   })
 
-  const showDebug = import.meta.env.VITE_APP_ENV === 'development' && (job?.status || 'pending') === 'pending' && elapsedSeconds > 60
+  const showDebug =
+    import.meta.env.VITE_APP_ENV === 'development' &&
+    (job?.status || 'pending') === 'pending' &&
+    elapsedSeconds > 60
 
-  const { data: debugHealth } = useQuery({
+  const { data: debugHealth } = useQuery<DebugHealth>({
     queryKey: ['debug-health'],
-    queryFn: () => api.get('/api/debug/health').then((r) => r.data),
+    queryFn: () => api.get<DebugHealth>('/api/debug/health').then((r) => r.data),
     enabled: showDebug,
     refetchInterval: showDebug ? 10000 : false,
   })
@@ -120,7 +129,6 @@ export default function Processing() {
   const rerunJob = async () => {
     await api.post(`/api/debug/jobs/${jobId}/rerun`)
   }
-  
 
   useEffect(() => {
     if (job) {
@@ -143,7 +151,7 @@ export default function Processing() {
 
   // Rotate quips with fade
   useEffect(() => {
-    const status = job?.status || (isMoreClips ? 'analyzing' : 'pending')
+    const status: JobStatus = job?.status || (isMoreClips ? 'analyzing' : 'pending')
     const quips = isMoreClips ? MORE_CLIPS_MESSAGES : (STAGE_QUIPS[status] || [])
     if (quips.length < 2) return
     const iv = setInterval(() => {
@@ -170,7 +178,7 @@ export default function Processing() {
     }
   }
 
-  const formatElapsed = (s) => {
+  const formatElapsed = (s: number): string => {
     if (s < 60) return `${s}s`
     return `${Math.floor(s / 60)}m ${s % 60}s`
   }
@@ -188,7 +196,7 @@ export default function Processing() {
     )
   }
 
-  const status = job?.status || 'pending'
+  const status: JobStatus = job?.status || 'pending'
   const progress = job?.stage_progress || 0
   const quips = isMoreClips ? MORE_CLIPS_MESSAGES : (STAGE_QUIPS[status] || [])
   const currentQuip = quips[quipIdx % Math.max(1, quips.length)] || ''

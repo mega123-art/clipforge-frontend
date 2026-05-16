@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, Query } from '@tanstack/react-query'
 import api from '../api'
 import { Scissors, CheckCheck, Download, Plus, SplitSquareHorizontal } from 'lucide-react'
 import ThemeToggle from '../components/ThemeToggle'
@@ -13,18 +13,19 @@ import ExportModal from '../components/ExportModal'
 import MoreClipsModal from '../components/MoreClipsModal'
 import ManualClipper from '../components/ManualClipper'
 import useStore from '../store'
+import type { ClipOut, JobOut, MoreClipsOptions } from '../types/api'
 
 export default function Review() {
-  const { jobId } = useParams()
+  const { jobId } = useParams<{ jobId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { setCurrentJob, setClips, selectedClipId, setSelectedClipId } = useStore()
-  const [exportQueue, setExportQueue] = useState([])
+  const [exportQueue, setExportQueue] = useState<string[]>([])
   const [exportIndex, setExportIndex] = useState(0)
   const [showMoreClipsModal, setShowMoreClipsModal] = useState(false)
   const [showManualClipper, setShowManualClipper] = useState(false)
 
-  const startExport = (ids) => {
+  const startExport = (ids: string[]) => {
     setExportIndex(0)
     setExportQueue(ids)
   }
@@ -33,10 +34,11 @@ export default function Review() {
     setExportIndex(0)
   }
 
-  const { data: job, isLoading, error } = useQuery({
+  const { data: job, isLoading, error } = useQuery<JobOut>({
     queryKey: ['job', jobId],
-    queryFn: () => api.get(`/api/jobs/${jobId}`).then((r) => r.data),
-    refetchInterval: (data) => {
+    queryFn: () => api.get<JobOut>(`/api/jobs/${jobId}`).then((r) => r.data),
+    refetchInterval: (query: Query<JobOut>) => {
+      const data = query.state.data
       if (!data) return false
       const hasRendering = (data.clips || []).some((c) => c.status === 'rendering')
       return hasRendering ? 3000 : false
@@ -51,18 +53,18 @@ export default function Review() {
   }, [job, setCurrentJob, setClips])
 
   const approveAllMutation = useMutation({
-    mutationFn: (clips) =>
+    mutationFn: (clips: ClipOut[]) =>
       Promise.all(
         clips.map((c) => api.patch(`/api/clips/${c.id}`, { user_approved: true }))
       ),
-    onSuccess: () => queryClient.invalidateQueries(['job', jobId]),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['job', jobId] }),
   })
 
   const moreClipsMutation = useMutation({
-    mutationFn: (options) => api.post(`/api/jobs/${jobId}/more-clips`, options),
+    mutationFn: (options: MoreClipsOptions) => api.post(`/api/jobs/${jobId}/more-clips`, options),
     onSuccess: () => {
       setShowMoreClipsModal(false)
-      queryClient.removeQueries(['job', jobId])
+      queryClient.removeQueries({ queryKey: ['job', jobId] })
       navigate(`/processing/${jobId}`, { state: { moreClips: true } })
     },
   })
@@ -100,7 +102,7 @@ export default function Review() {
     )
   }
 
-  const clips = job.clips || []
+  const clips: ClipOut[] = job.clips || []
   const approvedClips = clips.filter((c) => c.user_approved)
 
   return (
@@ -188,14 +190,14 @@ export default function Review() {
       )}
 
       {/* ── Manual clipper ─────────────────────────────────── */}
-      {showManualClipper && job.video_duration_seconds && (
+      {showManualClipper && job.video_duration_seconds && jobId && (
         <div className="px-6 py-4 border-b border-forge-border">
           <ManualClipper
             duration={job.video_duration_seconds}
             jobId={jobId}
             onCreated={() => {
               setShowManualClipper(false)
-              queryClient.invalidateQueries(['job', jobId])
+              queryClient.invalidateQueries({ queryKey: ['job', jobId] })
             }}
           />
         </div>
@@ -222,7 +224,7 @@ export default function Review() {
                   isSelected={selectedClipId === clip.id}
                   onSelect={() => setSelectedClipId(clip.id)}
                   onExport={() => startExport([clip.id])}
-                  onUpdate={() => queryClient.invalidateQueries(['job', jobId])}
+                  onUpdate={() => queryClient.invalidateQueries({ queryKey: ['job', jobId] })}
                 />
               )
             )}

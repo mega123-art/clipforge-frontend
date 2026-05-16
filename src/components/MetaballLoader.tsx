@@ -1,6 +1,10 @@
-import { Sparkles } from 'lucide-react'
+import { Sparkles, LucideIcon } from 'lucide-react'
 
-export default function MetaballLoader({ icon: Icon = Sparkles }) {
+interface MetaballLoaderProps {
+  icon?: LucideIcon
+}
+
+export default function MetaballLoader({ icon: Icon = Sparkles }: MetaballLoaderProps) {
   return (
     <div className="metaball-stage">
       {/* SVG goo filter */}

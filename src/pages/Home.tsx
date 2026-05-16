@@ -1,17 +1,26 @@
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import api from '../api'
 import {
-  Scissors, ChevronDown, ChevronUp, Clock, ArrowRight, Zap, Sparkles,
+  Scissors, ChevronDown, ChevronUp, Clock, ArrowRight, Zap,
   Flame, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
+  LucideIcon,
 } from 'lucide-react'
+import type { AxiosError } from 'axios'
+import api from '../api'
 import useStore from '../store'
 import URLInput from '../components/URLInput'
 import ThemeToggle from '../components/ThemeToggle'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
+import type { AspectRatio, JobCreateResponse } from '../types/api'
 
-const CLIP_TYPES = [
+interface ClipTypeDef {
+  id: string
+  label: string
+  Icon: LucideIcon
+}
+
+const CLIP_TYPES: ClipTypeDef[] = [
   { id: 'controversy',    label: 'Controversy',    Icon: Flame },
   { id: 'hook_intro',     label: 'Hook Intro',     Icon: Zap },
   { id: 'quotable',       label: 'Quotable',       Icon: MessageSquare },
@@ -22,10 +31,39 @@ const CLIP_TYPES = [
   { id: 'story_arc',      label: 'Story Arc',      Icon: BookOpen },
 ]
 
-const STATS = [
+interface StatDef {
+  value: string
+  label: string
+}
+
+const STATS: StatDef[] = [
   { value: '10M+', label: 'Clips Generated' },
   { value: '98%',  label: 'Accuracy Rate' },
   { value: '40x',  label: 'Faster Than Manual' },
+]
+
+interface HomeOptions {
+  source_url: string
+  max_clips: number
+  clip_types: string[]
+  min_clip_duration: number
+  max_clip_duration: number
+  target_aspect_ratio: AspectRatio | string
+}
+
+// Numeric-valued option keys for duration sliders.
+type NumericOptionKey = 'min_clip_duration' | 'max_clip_duration'
+
+interface DurationSliderDef {
+  key: NumericOptionKey
+  label: string
+  min: number
+  max: number
+}
+
+const DURATION_SLIDERS: DurationSliderDef[] = [
+  { key: 'min_clip_duration', label: 'Min duration', min: 10, max: 60 },
+  { key: 'max_clip_duration', label: 'Max duration', min: 30, max: 180 },
 ]
 
 export default function Home() {
@@ -33,8 +71,8 @@ export default function Home() {
   const { getRecentJobs, addRecentJob, refreshUser } = useStore()
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [options, setOptions] = useState({
+  const [error, setError] = useState<string | null>(null)
+  const [options, setOptions] = useState<HomeOptions>({
     source_url: '',
     max_clips: 5,
     clip_types: ['controversy', 'hook_intro', 'quotable', 'shocking_stat', 'myth_bust'],
@@ -42,9 +80,9 @@ export default function Home() {
     max_clip_duration: 90,
     target_aspect_ratio: '9:16',
   })
-  const [uploadedFile, setUploadedFile] = useState(null)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
 
-  const toggleClipType = (id) => {
+  const toggleClipType = (id: string) => {
     setOptions((o) => ({
       ...o,
       clip_types: o.clip_types.includes(id)
@@ -53,7 +91,7 @@ export default function Home() {
     }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!options.source_url && !uploadedFile) {
       setError('Paste a URL or upload a file.')
@@ -65,17 +103,18 @@ export default function Home() {
       const form = new FormData()
       if (options.source_url) form.append('source_url', options.source_url)
       if (uploadedFile) form.append('file', uploadedFile)
-      form.append('max_clips', options.max_clips)
+      form.append('max_clips', String(options.max_clips))
       form.append('clip_types', options.clip_types.join(','))
-      form.append('min_clip_duration', options.min_clip_duration)
-      form.append('max_clip_duration', options.max_clip_duration)
+      form.append('min_clip_duration', String(options.min_clip_duration))
+      form.append('max_clip_duration', String(options.max_clip_duration))
       form.append('target_aspect_ratio', options.target_aspect_ratio)
-      const { data } = await api.post('/api/jobs', form)
+      const { data } = await api.post<JobCreateResponse>('/api/jobs', form)
       addRecentJob({ job_id: data.job_id, video_title: options.source_url || uploadedFile?.name })
       refreshUser()
       navigate(`/processing/${data.job_id}`)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to start job.')
+      const ax = err as AxiosError<{ detail?: string }>
+      setError(ax.response?.data?.detail || 'Failed to start job.')
     } finally {
       setLoading(false)
     }
@@ -183,10 +222,7 @@ export default function Home() {
 
               {/* Duration sliders */}
               <div className="grid grid-cols-2 gap-5">
-                {[
-                  { key: 'min_clip_duration', label: 'Min duration', min: 10, max: 60 },
-                  { key: 'max_clip_duration', label: 'Max duration', min: 30, max: 180 },
-                ].map(({ key, label, min, max }) => (
+                {DURATION_SLIDERS.map(({ key, label, min, max }) => (
                   <div key={key}>
                     <div className="flex justify-between items-center mb-3">
                       <label className="text-sm font-semibold text-forge-text">{label}</label>
@@ -232,7 +268,7 @@ export default function Home() {
               <div>
                 <label className="block text-sm font-semibold text-forge-text mb-3">Aspect ratio</label>
                 <div className="flex gap-2">
-                  {['9:16', '1:1', '16:9'].map((ar) => (
+                  {(['9:16', '1:1', '16:9'] as AspectRatio[]).map((ar) => (
                     <button
                       key={ar}
                       type="button"

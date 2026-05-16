@@ -1,4 +1,8 @@
-export default function ClipCardSkeleton({ rank }) {
+interface ClipCardSkeletonProps {
+  rank?: number
+}
+
+export default function ClipCardSkeleton({ rank }: ClipCardSkeletonProps) {
   return (
     <div className="bg-forge-card border border-forge-border rounded-xl overflow-hidden">
       {/* Video placeholder */}
