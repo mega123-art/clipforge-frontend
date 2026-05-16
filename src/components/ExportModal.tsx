@@ -173,16 +173,42 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     setDownloading(true)
     setError(null)
     try {
-      const res = await api.get<Blob>(downloadUrl, { responseType: 'blob' })
-      const blob = new Blob([res.data], { type: 'video/mp4' })
-      const url = URL.createObjectURL(blob)
+      // Step 1: ask backend where the file is. Backend either returns
+      // {url: <R2 presigned URL>} (preferred) or streams the file inline.
+      const resp = await api.get(downloadUrl, { responseType: 'arraybuffer' })
+      const contentType = (resp.headers['content-type'] || '').toLowerCase()
+
+      let blobUrl: string
+      let cleanupBlob: (() => void) | null = null
+
+      if (contentType.includes('application/json')) {
+        // Decode JSON body → {url}. Fetch the R2 file directly with no
+        // Authorization header (axios would attach it and R2 rejects the
+        // combination of presigned URL + Auth header).
+        const text = new TextDecoder().decode(resp.data as ArrayBuffer)
+        const parsed = JSON.parse(text) as { url?: string }
+        if (!parsed.url) throw new Error('No download URL returned')
+        const r2Resp = await fetch(parsed.url)
+        if (!r2Resp.ok) {
+          throw new Error(`R2 download failed: ${r2Resp.status} ${r2Resp.statusText}`)
+        }
+        const blob = await r2Resp.blob()
+        blobUrl = URL.createObjectURL(blob)
+        cleanupBlob = () => URL.revokeObjectURL(blobUrl)
+      } else {
+        // Backend streamed the file directly (local fallback path).
+        const blob = new Blob([resp.data as ArrayBuffer], { type: 'video/mp4' })
+        blobUrl = URL.createObjectURL(blob)
+        cleanupBlob = () => URL.revokeObjectURL(blobUrl)
+      }
+
       const a = document.createElement('a')
-      a.href = url
+      a.href = blobUrl
       a.download = `clip_${clipId}.mp4`
       document.body.appendChild(a)
       a.click()
       a.remove()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      if (cleanupBlob) setTimeout(cleanupBlob, 1000)
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>
       setError(ax.response?.data?.detail || ax.message || 'Download failed.')

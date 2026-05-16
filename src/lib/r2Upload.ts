@@ -48,28 +48,49 @@ interface PartResult {
   etag: string
 }
 
-async function uploadPart(
+const PART_RETRY_ATTEMPTS = 4 // initial + 3 retries
+const PART_RETRY_BASE_MS = 1000
+
+async function uploadPartOnce(
   url: string,
   partNumber: number,
   blob: Blob,
   signal?: AbortSignal,
 ): Promise<PartResult> {
-  const resp = await fetch(url, {
-    method: 'PUT',
-    body: blob,
-    signal,
-  })
+  const resp = await fetch(url, { method: 'PUT', body: blob, signal })
   if (!resp.ok) {
     throw new Error(`Part ${partNumber} upload failed: ${resp.status} ${resp.statusText}`)
   }
   const etag = resp.headers.get('ETag') || resp.headers.get('etag')
   if (!etag) {
     throw new Error(
-      `Part ${partNumber}: ETag header missing. ` +
-      `Check R2 CORS exposes ETag.`,
+      `Part ${partNumber}: ETag header missing. Check R2 CORS exposes ETag.`,
     )
   }
   return { part_number: partNumber, etag: etag.replace(/"/g, '') }
+}
+
+async function uploadPart(
+  url: string,
+  partNumber: number,
+  blob: Blob,
+  signal?: AbortSignal,
+): Promise<PartResult> {
+  let lastErr: Error | null = null
+  for (let attempt = 1; attempt <= PART_RETRY_ATTEMPTS; attempt++) {
+    try {
+      return await uploadPartOnce(url, partNumber, blob, signal)
+    } catch (e) {
+      if (signal?.aborted) throw e
+      lastErr = e as Error
+      // Don't retry on CORS / config errors — they won't recover.
+      if (lastErr.message.includes('ETag header missing')) throw lastErr
+      if (attempt === PART_RETRY_ATTEMPTS) break
+      // Exponential backoff: 1s → 2s → 4s.
+      await new Promise((r) => setTimeout(r, PART_RETRY_BASE_MS * 2 ** (attempt - 1)))
+    }
+  }
+  throw lastErr || new Error(`Part ${partNumber} failed after retries`)
 }
 
 /**

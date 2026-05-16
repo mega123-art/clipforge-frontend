@@ -96,7 +96,7 @@ export default function Processing() {
   const navigate = useNavigate()
   const location = useLocation()
   const isMoreClips = (location.state as LocationState | null)?.moreClips === true
-  const { setCurrentJob, addRecentJob } = useStore()
+  const { setCurrentJob, addRecentJob, refreshUser } = useStore()
 
   const [quipIdx, setQuipIdx] = useState(0)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -109,8 +109,13 @@ export default function Processing() {
     queryFn: () => api.get<JobOut>(`/api/jobs/${jobId}`).then((r) => r.data),
     refetchInterval: (query: Query<JobOut>) => {
       const data = query.state.data
-      if (!data) return 3000
-      return data.status === 'ready' || data.status === 'failed' ? false : 3000
+      const failureCount = query.state.failureCount || 0
+      if (data?.status === 'ready' || data?.status === 'failed') return false
+      // Exponential backoff on consecutive failures: 3s → 6s → 12s → 30s cap.
+      if (failureCount > 0) {
+        return Math.min(3000 * 2 ** failureCount, 30000)
+      }
+      return 3000
     },
   })
 
@@ -135,10 +140,15 @@ export default function Processing() {
       setCurrentJob(job)
       if (job.status === 'ready') {
         addRecentJob(job)
+        // Refresh credit balance — deducted at job start, possibly refunded
+        // on partial failures. UI badge was stale until next tab focus.
+        refreshUser().catch(() => {})
         navigate(`/review/${jobId}`)
+      } else if (job.status === 'failed') {
+        refreshUser().catch(() => {})
       }
     }
-  }, [job, jobId, navigate, setCurrentJob, addRecentJob])
+  }, [job, jobId, navigate, setCurrentJob, addRecentJob, refreshUser])
 
   // Reset quip index when stage changes
   useEffect(() => {
@@ -184,10 +194,21 @@ export default function Processing() {
   }
 
   if (error) {
+    const ax = error as { response?: { status?: number; data?: { detail?: string } }; message?: string }
+    const status = ax.response?.status
+    const detail = ax.response?.data?.detail
+    let msg = 'Failed to load job status.'
+    if (status === 401) msg = 'Session expired. Please sign in again.'
+    else if (status === 403) msg = "You don't have access to this job."
+    else if (status === 404) msg = 'Job not found. It may have been deleted.'
+    else if (status && status >= 500) msg = `Server error (${status}). Try again in a moment.`
+    else if (detail) msg = detail
+    else if (ax.message) msg = ax.message
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 text-lg">Failed to load job status.</p>
+        <div className="text-center max-w-md px-4">
+          <p className="text-red-400 text-lg">{msg}</p>
+          {status ? <p className="text-zinc-500 text-xs mt-1">HTTP {status}</p> : null}
           <button onClick={() => navigate('/')} className="mt-4 text-violet-400 hover:underline cursor-pointer">
             Go back
           </button>

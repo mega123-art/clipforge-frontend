@@ -8,24 +8,37 @@ interface URLInputProps {
   uploadedFile: File | null
 }
 
+const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024 // 2 GB — must match backend MAX_FILE_SIZE_MB
+
 export default function URLInput({ value, onChange, onFileSelect, uploadedFile }: URLInputProps) {
   const [dragOver, setDragOver] = useState(false)
+  const [sizeError, setSizeError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+
+  const tryAccept = (file: File | undefined | null) => {
+    if (!file) return
+    if (file.size > MAX_FILE_BYTES) {
+      const gb = (file.size / (1024 * 1024 * 1024)).toFixed(2)
+      setSizeError(`File is ${gb} GB. Max is 2 GB.`)
+      return
+    }
+    setSizeError(null)
+    onFileSelect(file)
+  }
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     setDragOver(false)
-    const file = e.dataTransfer.files[0]
-    if (file) onFileSelect(file)
+    tryAccept(e.dataTransfer.files[0])
   }
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) onFileSelect(file)
+    tryAccept(e.target.files?.[0])
   }
 
   const clearFile = () => {
     onFileSelect(null)
+    setSizeError(null)
     if (inputRef.current) inputRef.current.value = ''
   }
 
@@ -102,6 +115,9 @@ export default function URLInput({ value, onChange, onFileSelect, uploadedFile }
             onChange={handleFileChange}
           />
         </div>
+      )}
+      {sizeError && (
+        <p className="text-xs text-red-400 px-1">{sizeError}</p>
       )}
     </div>
   )

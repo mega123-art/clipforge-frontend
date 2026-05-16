@@ -22,14 +22,29 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null)
 
   const state = location.state as LocationState | null
-  const redirectAfter = state?.from?.pathname || '/'
+  // Prefer the saved redirect from a 401 interceptor bounce, then the route
+  // state, then home. Cleared after use so it doesn't leak across logins.
+  let saved: string | null = null
+  try {
+    saved = sessionStorage.getItem('post_login_redirect')
+  } catch {
+    /* private mode — ignore */
+  }
+  const redirectAfter = saved || state?.from?.pathname || '/'
+  const consumeSavedRedirect = () => {
+    try {
+      sessionStorage.removeItem('post_login_redirect')
+    } catch {
+      /* ignore */
+    }
+  }
 
   useEffect(() => {
-    if (token) { navigate(redirectAfter, { replace: true }); return }
+    if (token) { consumeSavedRedirect(); navigate(redirectAfter, { replace: true }); return }
     if (import.meta.env.VITE_APP_ENV === 'development') {
       api.post<AuthOut>('/api/auth/dev-login').then(({ data }) => {
         setAuth(data)
-        navigate(redirectAfter, { replace: true })
+        consumeSavedRedirect(); navigate(redirectAfter, { replace: true })
       }).catch(() => {})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -42,7 +57,7 @@ export default function SignIn() {
     try {
       const { data } = await api.post<AuthOut>('/api/auth/signin', { email, password })
       setAuth(data)
-      navigate(redirectAfter, { replace: true })
+      consumeSavedRedirect(); navigate(redirectAfter, { replace: true })
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>
       setError(ax.response?.data?.detail || 'Sign in failed')
@@ -57,7 +72,7 @@ export default function SignIn() {
     try {
       const { data } = await api.post<AuthOut>('/api/auth/google', { id_token: credential.credential })
       setAuth(data)
-      navigate(redirectAfter, { replace: true })
+      consumeSavedRedirect(); navigate(redirectAfter, { replace: true })
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>
       setError(ax.response?.data?.detail || 'Google sign in failed')

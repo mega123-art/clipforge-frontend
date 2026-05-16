@@ -1,4 +1,4 @@
-import { useState, MouseEvent } from 'react'
+import { useState, useEffect, MouseEvent } from 'react'
 import ReactPlayer from 'react-player'
 import api from '../api'
 import {
@@ -80,9 +80,24 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
   const TypeIcon: LucideIcon = CLIP_TYPE_ICON[clip.clip_type] || Zap
 
   const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000'
-  const videoUrl = clip.final_clip_path
-    ? `${API_BASE}/api/clips/${clip.id}/stream`
-    : null
+
+  // Fetch a time-limited, HMAC-signed stream URL from the authenticated
+  // /stream-url endpoint. <video> tags can't send Authorization headers,
+  // so the token is embedded as a query-param instead.
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  useEffect(() => {
+    if (!clip.final_clip_path) return
+    let cancelled = false
+    api.get<{ stream_url: string }>(`/api/clips/${clip.id}/stream-url`)
+      .then(({ data }) => {
+        if (!cancelled) setVideoUrl(`${API_BASE}${data.stream_url}`)
+      })
+      .catch(() => {
+        // Fallback: unsigned URL (will 401 if backend requires token)
+        if (!cancelled) setVideoUrl(null)
+      })
+    return () => { cancelled = true }
+  }, [clip.id, clip.final_clip_path, API_BASE])
 
   const handleApprove = async () => {
     await api.patch(`/api/clips/${clip.id}`, { user_approved: !clip.user_approved })

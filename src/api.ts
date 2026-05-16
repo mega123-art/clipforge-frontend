@@ -18,10 +18,19 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('auth_token')
       localStorage.removeItem('auth_user')
-      if (
-        !window.location.pathname.startsWith('/signin') &&
-        !window.location.pathname.startsWith('/signup')
-      ) {
+      const path = window.location.pathname
+      if (!path.startsWith('/signin') && !path.startsWith('/signup')) {
+        // Preserve the page (and search) so we can bounce the user back
+        // after re-login. Without this, a 2-hour job page becomes orphaned
+        // the moment the JWT expires.
+        try {
+          sessionStorage.setItem(
+            'post_login_redirect',
+            path + window.location.search,
+          )
+        } catch {
+          /* sessionStorage may be unavailable in private mode — ignore */
+        }
         window.location.href = '/signin'
       }
     }

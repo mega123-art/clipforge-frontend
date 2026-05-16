@@ -41,7 +41,10 @@ export default function Review() {
       const data = query.state.data
       if (!data) return false
       const hasRendering = (data.clips || []).some((c) => c.status === 'rendering')
-      return hasRendering ? 3000 : false
+      const failureCount = query.state.failureCount || 0
+      if (!hasRendering) return false
+      if (failureCount > 0) return Math.min(3000 * 2 ** failureCount, 30000)
+      return 3000
     },
   })
 
@@ -90,10 +93,21 @@ export default function Review() {
   }
 
   if (error || !job) {
+    const ax = error as { response?: { status?: number; data?: { detail?: string } }; message?: string } | null
+    const httpStatus = ax?.response?.status
+    const detail = ax?.response?.data?.detail
+    let msg = 'Failed to load job.'
+    if (httpStatus === 401) msg = 'Session expired. Please sign in again.'
+    else if (httpStatus === 403) msg = "You don't have access to this job."
+    else if (httpStatus === 404) msg = 'Job not found. It may have been deleted.'
+    else if (httpStatus && httpStatus >= 500) msg = `Server error (${httpStatus}). Try again in a moment.`
+    else if (detail) msg = detail
+    else if (ax?.message) msg = ax.message
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400">Failed to load job.</p>
+        <div className="text-center max-w-md px-4">
+          <p className="text-red-400">{msg}</p>
+          {httpStatus ? <p className="text-zinc-500 text-xs mt-1">HTTP {httpStatus}</p> : null}
           <button onClick={() => navigate('/')} className="mt-3 text-violet-400 hover:underline text-sm cursor-pointer">
             Go home
           </button>
@@ -121,7 +135,23 @@ export default function Review() {
 
         <div className="w-px h-4 bg-forge-border" />
 
-        <h1 className="text-sm text-forge-muted truncate flex-1">{job.video_title || jobId}</h1>
+        <div className="flex-1 min-w-0 flex items-baseline gap-2">
+          <h1 className="text-sm text-forge-muted truncate">{job.video_title || jobId}</h1>
+          {(() => {
+            const meta: string[] = []
+            if (job.detected_language) meta.push(job.detected_language.toUpperCase())
+            if (job.video_duration_seconds) {
+              const s = Math.floor(job.video_duration_seconds)
+              const h = Math.floor(s / 3600)
+              const m = Math.floor((s % 3600) / 60)
+              const sec = s % 60
+              meta.push(h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${sec}s` : `${sec}s`)
+            }
+            return meta.length ? (
+              <span className="hidden md:inline text-xs text-forge-dim shrink-0">· {meta.join(' · ')}</span>
+            ) : null
+          })()}
+        </div>
 
         {approvedClips.length > 0 && (
           <span className="hidden sm:flex items-center gap-1.5 text-xs text-forge-dim px-2.5 py-1 rounded-full bg-forge-surface border border-forge-border">
