@@ -120,6 +120,7 @@ export default function Processing() {
   const rerunJob = async () => {
     await api.post(`/api/debug/jobs/${jobId}/rerun`)
   }
+  
 
   useEffect(() => {
     if (job) {
