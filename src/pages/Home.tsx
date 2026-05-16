@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import type { AxiosError } from 'axios'
 import api from '../api'
+import { uploadAndCreateJob } from '../lib/r2Upload'
 import useStore from '../store'
 import URLInput from '../components/URLInput'
 import ThemeToggle from '../components/ThemeToggle'
@@ -81,6 +82,7 @@ export default function Home() {
     target_aspect_ratio: '9:16',
   })
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [uploadPct, setUploadPct] = useState<number>(0)
 
   const toggleClipType = (id: string) => {
     setOptions((o) => ({
@@ -99,22 +101,42 @@ export default function Home() {
     }
     setError(null)
     setLoading(true)
+    setUploadPct(0)
     try {
-      const form = new FormData()
-      if (options.source_url) form.append('source_url', options.source_url)
-      if (uploadedFile) form.append('file', uploadedFile)
-      form.append('max_clips', String(options.max_clips))
-      form.append('clip_types', options.clip_types.join(','))
-      form.append('min_clip_duration', String(options.min_clip_duration))
-      form.append('max_clip_duration', String(options.max_clip_duration))
-      form.append('target_aspect_ratio', options.target_aspect_ratio)
-      const { data } = await api.post<JobCreateResponse>('/api/jobs', form)
-      addRecentJob({ job_id: data.job_id, video_title: options.source_url || uploadedFile?.name })
+      let jobId: string
+
+      if (uploadedFile) {
+        // Direct browser→R2 multipart upload (no Railway proxy bottleneck).
+        const res = await uploadAndCreateJob(
+          { file: uploadedFile, onProgress: setUploadPct },
+          {
+            max_clips: options.max_clips,
+            clip_types: options.clip_types,
+            min_clip_duration: options.min_clip_duration,
+            max_clip_duration: options.max_clip_duration,
+            target_aspect_ratio: options.target_aspect_ratio,
+          },
+        )
+        jobId = res.job_id
+      } else {
+        // URL flow unchanged — backend yt-dlp / cobalt / rapidapi handles it.
+        const form = new FormData()
+        if (options.source_url) form.append('source_url', options.source_url)
+        form.append('max_clips', String(options.max_clips))
+        form.append('clip_types', options.clip_types.join(','))
+        form.append('min_clip_duration', String(options.min_clip_duration))
+        form.append('max_clip_duration', String(options.max_clip_duration))
+        form.append('target_aspect_ratio', options.target_aspect_ratio)
+        const { data } = await api.post<JobCreateResponse>('/api/jobs', form)
+        jobId = data.job_id
+      }
+
+      addRecentJob({ job_id: jobId, video_title: options.source_url || uploadedFile?.name })
       refreshUser()
-      navigate(`/processing/${data.job_id}`)
+      navigate(`/processing/${jobId}`)
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>
-      setError(ax.response?.data?.detail || 'Failed to start job.')
+      setError(ax.response?.data?.detail || (err as Error).message || 'Failed to start job.')
     } finally {
       setLoading(false)
     }
@@ -301,7 +323,9 @@ export default function Home() {
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Starting analysis...
+                {uploadedFile && uploadPct > 0 && uploadPct < 100
+                  ? `Uploading ${uploadPct}%`
+                  : 'Starting analysis...'}
               </>
             ) : (
               <>
