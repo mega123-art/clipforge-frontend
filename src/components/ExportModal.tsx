@@ -1,6 +1,6 @@
 import { useState, useEffect, CSSProperties } from 'react'
 import api from '../api'
-import { X, Download, Loader, Info, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, Download, Loader, Info, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import type { AxiosError } from 'axios'
 import type { ExportResponse } from '../types/api'
 
@@ -95,6 +95,46 @@ const CAPTION_STYLES: CaptionStyleOption[] = [
   },
 ]
 
+interface HookStyleOption {
+  id: string
+  label: string
+  boxCss: CSSProperties
+  textCss: CSSProperties
+}
+
+const HOOK_STYLES: HookStyleOption[] = [
+  {
+    id: 'serif_white',
+    label: 'Serif card',
+    boxCss: { background: 'rgba(255,255,255,0.95)', borderRadius: 14, padding: '8px 14px', boxShadow: '0 4px 12px rgba(0,0,0,0.35)' },
+    textCss: { color: '#000', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 700 },
+  },
+  {
+    id: 'black_box',
+    label: 'Black box',
+    boxCss: { background: 'rgba(0,0,0,0.92)', borderRadius: 6, padding: '8px 14px', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' },
+    textCss: { color: '#fff', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 700 },
+  },
+  {
+    id: 'sticker_yellow',
+    label: 'Yellow sticker',
+    boxCss: { background: '#ffde00', borderRadius: 10, padding: '8px 14px', border: '3px solid #000', boxShadow: '0 4px 10px rgba(0,0,0,0.35)' },
+    textCss: { color: '#000', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 800 },
+  },
+  {
+    id: 'breaking_news',
+    label: 'Breaking news',
+    boxCss: { background: '#d21e1e', borderRadius: 0, padding: '8px 16px', boxShadow: '0 4px 10px rgba(0,0,0,0.35)' },
+    textCss: { color: '#fff', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase' },
+  },
+  {
+    id: 'outline_only',
+    label: 'No box',
+    boxCss: { background: 'transparent', padding: '4px 8px' },
+    textCss: { color: '#fff', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 800, WebkitTextStroke: '1.5px #000', textShadow: '0 0 2px #000' },
+  },
+]
+
 interface FocusModeOption {
   id: 'none' | 'speaker' | 'center' | 'face'
   label: string
@@ -116,6 +156,7 @@ interface PreviewPanelProps {
   hookText: string
   hookPosition: 'top' | 'center' | 'bottom'
   hookFontScale: number
+  hookStyle: string
 }
 
 function PreviewPanel({
@@ -126,8 +167,10 @@ function PreviewPanel({
   hookText,
   hookPosition,
   hookFontScale,
+  hookStyle,
 }: PreviewPanelProps) {
   const cs = CAPTION_STYLES.find((s) => s.id === captionStyle) ?? CAPTION_STYLES[0]
+  const hs = HOOK_STYLES.find((s) => s.id === hookStyle) ?? HOOK_STYLES[0]
   const aspectClass =
     aspectRatio === '1:1' ? 'aspect-square' :
     aspectRatio === '16:9' ? 'aspect-video' :
@@ -155,13 +198,12 @@ function PreviewPanel({
         {hookText.trim() && (
           <div className={`absolute left-0 right-0 px-4 flex justify-center pointer-events-none ${hookPosClass}`}>
             <div
-              className="bg-white/95 text-black rounded-xl shadow-lg text-center"
+              className="text-center"
               style={{
-                fontFamily: 'Georgia, "Times New Roman", serif',
-                fontWeight: 700,
+                ...hs.boxCss,
+                ...hs.textCss,
                 fontSize: `${10 * hookFontScale}px`,
                 lineHeight: 1.25,
-                padding: '8px 12px',
                 maxWidth: '90%',
               }}
             >
@@ -205,6 +247,27 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [hookText, setHookText] = useState<string>('')
   const [hookPosition, setHookPosition] = useState<'top' | 'center' | 'bottom'>('top')
   const [hookFontScale, setHookFontScale] = useState<number>(1.0)
+  const [hookStyle, setHookStyle] = useState<string>('serif_white')
+  const [hookSuggestions, setHookSuggestions] = useState<string[]>([])
+  const [hookGenLoading, setHookGenLoading] = useState(false)
+  const [hookGenError, setHookGenError] = useState<string | null>(null)
+
+  const handleGenerateHook = async () => {
+    if (!clipId) return
+    setHookGenLoading(true)
+    setHookGenError(null)
+    try {
+      const { data } = await api.post<{ suggestions: string[] }>(
+        `/api/clips/${clipId}/hook-suggestions`,
+      )
+      setHookSuggestions(data.suggestions || [])
+    } catch (err) {
+      const ax = err as AxiosError<{ detail?: string }>
+      setHookGenError(ax.response?.data?.detail || 'Generation failed.')
+    } finally {
+      setHookGenLoading(false)
+    }
+  }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
@@ -251,6 +314,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           hook_text: hookText.trim() || null,
           hook_position: hookPosition,
           hook_font_scale: hookFontScale,
+          hook_style: hookStyle,
         },
       )
       if (targetId !== clipId) return
@@ -399,6 +463,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             hookText={hookText}
             hookPosition={hookPosition}
             hookFontScale={hookFontScale}
+            hookStyle={hookStyle}
           />
 
           <div className="flex-1 space-y-5 overflow-y-auto pr-1 md:max-h-[75vh]">
@@ -555,9 +620,23 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
 
           {/* Viral hook */}
           <div>
-            <label htmlFor="hook-text" className="block text-sm text-gray-400 mb-2">
-              Viral hook <span className="text-gray-600">(optional)</span>
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="hook-text" className="block text-sm text-gray-400">
+                Viral hook <span className="text-gray-600">(optional)</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleGenerateHook}
+                disabled={hookGenLoading}
+                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-violet-600/20 border border-violet-600/40 text-violet-300 hover:bg-violet-600/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+              >
+                {hookGenLoading ? (
+                  <><Loader size={12} className="animate-spin" /> Generating</>
+                ) : (
+                  <><Sparkles size={12} /> Generate</>
+                )}
+              </button>
+            </div>
             <input
               id="hook-text"
               type="text"
@@ -567,8 +646,59 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               maxLength={140}
               className="w-full px-3 py-2 rounded-lg bg-forge-bg border border-forge-border text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500"
             />
+            {hookGenError && (
+              <p role="alert" className="text-xs text-red-400 mt-1">{hookGenError}</p>
+            )}
+            {hookSuggestions.length > 0 && (
+              <div className="mt-2 space-y-1">
+                <p className="text-[10px] uppercase tracking-wider text-gray-500">Suggestions — click to use</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {hookSuggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        setHookText(s)
+                        setHookSuggestions([])
+                      }}
+                      className="text-left text-xs px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-forge-border text-gray-200 cursor-pointer transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {hookText.trim() && (
               <div className="mt-2 space-y-2">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Style</label>
+                  <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Hook style">
+                    {HOOK_STYLES.map((hs) => (
+                      <button
+                        key={hs.id}
+                        role="radio"
+                        aria-checked={hookStyle === hs.id}
+                        aria-label={hs.label}
+                        onClick={() => setHookStyle(hs.id)}
+                        className={`relative rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 ${
+                          hookStyle === hs.id
+                            ? 'border-violet-500 ring-2 ring-violet-500/40'
+                            : 'border-forge-border hover:border-gray-500'
+                        }`}
+                      >
+                        <div className="aspect-video flex items-center justify-center bg-zinc-900">
+                          <span style={{ ...hs.boxCss, ...hs.textCss, fontSize: '9px', padding: '4px 8px' }}>
+                            HOOK
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-gray-200 py-1 px-1 truncate bg-forge-card">
+                          {hs.label}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex gap-2" role="radiogroup" aria-label="Hook position">
                   {(['top', 'center', 'bottom'] as const).map((pos) => (
                     <button
