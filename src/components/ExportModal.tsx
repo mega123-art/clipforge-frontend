@@ -151,15 +151,56 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     setError(null)
     const targetId = clipId
     try {
-      const { data } = await api.post<ExportResponse>(`/api/clips/${targetId}/export`, {
-        aspect_ratio: aspectRatio,
-        caption_style: captionStyle,
-        include_captions: includeCaptions,
-        focus_mode: focusMode,
-        output_format: 'mp4',
-      })
+      // Backend now dispatches asynchronously and returns 202 immediately
+      // (Railway proxy was killing sync 5min ffmpeg renders). Poll clip
+      // status until the export finishes server-side.
+      // Focus mode only meaningful for 9:16 (the picker is hidden otherwise).
+      // Force "none" for other aspects so backend doesn't run face_track on a
+      // 2hr source for no reason — that pegs CPU for many minutes and looks
+      // like a silent hang from the user's perspective.
+      const effectiveFocusMode = aspectRatio === '9:16' ? focusMode : 'none'
+      const { data } = await api.post<ExportResponse & { status?: string }>(
+        `/api/clips/${targetId}/export`,
+        {
+          aspect_ratio: aspectRatio,
+          caption_style: captionStyle,
+          include_captions: includeCaptions,
+          focus_mode: effectiveFocusMode,
+          output_format: 'mp4',
+        },
+      )
       if (targetId !== clipId) return
-      setDownloadUrl(data.download_url || `/api/clips/${targetId}/download`)
+
+      // If backend ran sync (old version) it already returned the URL.
+      if (data.status !== 'exporting' && data.download_url) {
+        setDownloadUrl(data.download_url)
+        return
+      }
+
+      // Poll clip status every 3s, max 10 min.
+      const deadline = Date.now() + 10 * 60 * 1000
+      while (Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 3000))
+        if (targetId !== clipId) return
+        let poll: { status?: string; error_message?: string } | null = null
+        try {
+          const r = await api.get<{ status?: string; error_message?: string }>(
+            `/api/clips/${targetId}`,
+          )
+          poll = r.data
+        } catch {
+          continue // transient; keep polling
+        }
+        if (poll?.status === 'exported') {
+          setDownloadUrl(data.download_url || `/api/clips/${targetId}/download`)
+          return
+        }
+        if (poll?.status === 'failed') {
+          setError(poll.error_message || 'Export failed.')
+          return
+        }
+      }
+      setError('Export timed out after 10 minutes. Try a shorter clip.')
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>
       setError(ax.response?.data?.detail || 'Export failed.')
