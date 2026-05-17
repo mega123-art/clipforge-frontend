@@ -321,13 +321,39 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             <label htmlFor="caption-toggle" className="text-sm text-gray-300 cursor-pointer">Include captions</label>
             <button
               id="caption-toggle"
+              type="button"
               role="switch"
               aria-checked={includeCaptions}
-              onClick={() => setIncludeCaptions((v) => !v)}
-              className={`w-10 h-5 rounded-full cursor-pointer transition-colors duration-200 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 ${includeCaptions ? 'bg-violet-600' : 'bg-forge-border'}`}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setIncludeCaptions((v) => !v)
+              }}
+              style={{
+                width: 40,
+                height: 20,
+                borderRadius: 9999,
+                position: 'relative',
+                cursor: 'pointer',
+                transition: 'background-color 200ms',
+                backgroundColor: includeCaptions ? '#7c3aed' : '#3f3f46',
+                border: 'none',
+                padding: 0,
+              }}
             >
               <span
-                className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${includeCaptions ? 'translate-x-5' : 'translate-x-0.5'}`}
+                style={{
+                  position: 'absolute',
+                  top: 2,
+                  left: includeCaptions ? 22 : 2,
+                  width: 16,
+                  height: 16,
+                  borderRadius: 9999,
+                  background: '#fff',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                  transition: 'left 200ms',
+                  pointerEvents: 'none',
+                }}
               />
             </button>
           </div>
