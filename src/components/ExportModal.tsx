@@ -108,6 +108,82 @@ const FOCUS_MODES: FocusModeOption[] = [
   { id: 'none', label: 'Blurred BG', desc: 'Fit + blur background' },
 ]
 
+interface PreviewPanelProps {
+  aspectRatio: string
+  captionStyle: string
+  captionPosition: 'top' | 'middle' | 'bottom'
+  includeCaptions: boolean
+  hookText: string
+  hookPosition: 'top' | 'center' | 'bottom'
+  hookFontScale: number
+}
+
+function PreviewPanel({
+  aspectRatio,
+  captionStyle,
+  captionPosition,
+  includeCaptions,
+  hookText,
+  hookPosition,
+  hookFontScale,
+}: PreviewPanelProps) {
+  const cs = CAPTION_STYLES.find((s) => s.id === captionStyle) ?? CAPTION_STYLES[0]
+  const aspectClass =
+    aspectRatio === '1:1' ? 'aspect-square' :
+    aspectRatio === '16:9' ? 'aspect-video' :
+    'aspect-[9/16]'
+
+  const captionPosClass =
+    captionPosition === 'top' ? 'top-6 justify-start' :
+    captionPosition === 'middle' ? 'top-0 bottom-0 justify-center' :
+    'bottom-10 justify-end'
+
+  const hookPosClass =
+    hookPosition === 'top' ? 'top-6' :
+    hookPosition === 'center' ? 'top-1/2 -translate-y-1/2' :
+    'bottom-24'
+
+  return (
+    <div className="shrink-0 w-full md:w-[280px] flex flex-col items-center">
+      <div className={`relative w-full ${aspectClass} max-h-[60vh] rounded-xl overflow-hidden border border-forge-border bg-gradient-to-br from-zinc-800 via-zinc-900 to-black`}>
+        {/* Mock subject silhouette */}
+        <div className="absolute inset-0 flex items-end justify-center pb-12 opacity-30 pointer-events-none">
+          <div className="w-32 h-32 rounded-full bg-zinc-600" />
+        </div>
+
+        {/* Hook overlay */}
+        {hookText.trim() && (
+          <div className={`absolute left-0 right-0 px-4 flex justify-center pointer-events-none ${hookPosClass}`}>
+            <div
+              className="bg-white/95 text-black rounded-xl shadow-lg text-center"
+              style={{
+                fontFamily: 'Georgia, "Times New Roman", serif',
+                fontWeight: 700,
+                fontSize: `${10 * hookFontScale}px`,
+                lineHeight: 1.25,
+                padding: '8px 12px',
+                maxWidth: '90%',
+              }}
+            >
+              {hookText}
+            </div>
+          </div>
+        )}
+
+        {/* Caption sample */}
+        {includeCaptions && (
+          <div className={`absolute left-0 right-0 px-3 flex flex-col items-center pointer-events-none ${captionPosClass}`}>
+            <span style={cs.css} className="text-xs whitespace-nowrap">
+              {cs.sample}
+            </span>
+          </div>
+        )}
+      </div>
+      <p className="mt-2 text-xs text-gray-500">Live preview</p>
+    </div>
+  )
+}
+
 interface ExportModalProps {
   clipIds: string[]
   index?: number
@@ -123,8 +199,12 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
 
   const [aspectRatio, setAspectRatio] = useState<string>('9:16')
   const [captionStyle, setCaptionStyle] = useState<string>('word_highlight')
+  const [captionPosition, setCaptionPosition] = useState<'top' | 'middle' | 'bottom'>('bottom')
   const [includeCaptions, setIncludeCaptions] = useState(true)
   const [focusMode, setFocusMode] = useState<'none' | 'speaker' | 'center' | 'face'>('face')
+  const [hookText, setHookText] = useState<string>('')
+  const [hookPosition, setHookPosition] = useState<'top' | 'center' | 'bottom'>('top')
+  const [hookFontScale, setHookFontScale] = useState<number>(1.0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
@@ -164,9 +244,13 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
         {
           aspect_ratio: aspectRatio,
           caption_style: captionStyle,
+          caption_position: captionPosition,
           include_captions: includeCaptions,
           focus_mode: effectiveFocusMode,
           output_format: 'mp4',
+          hook_text: hookText.trim() || null,
+          hook_position: hookPosition,
+          hook_font_scale: hookFontScale,
         },
       )
       if (targetId !== clipId) return
@@ -266,7 +350,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
       aria-labelledby="export-modal-title"
       className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto py-6 sm:py-8"
     >
-      <div className="bg-forge-card border border-forge-border rounded-2xl p-6 w-full max-w-md mx-4 my-auto shadow-2xl">
+      <div className="bg-forge-card border border-forge-border rounded-2xl p-6 w-full max-w-4xl mx-4 my-auto shadow-2xl">
         <div className="flex items-center justify-between mb-5 gap-2">
           <div className="flex items-center gap-2">
             {total > 1 && (
@@ -305,7 +389,19 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           </button>
         </div>
 
-        <div className="space-y-5">
+        <div className="flex flex-col md:flex-row gap-6 max-h-[75vh]">
+          {/* Live preview */}
+          <PreviewPanel
+            aspectRatio={aspectRatio}
+            captionStyle={captionStyle}
+            captionPosition={captionPosition}
+            includeCaptions={includeCaptions}
+            hookText={hookText}
+            hookPosition={hookPosition}
+            hookFontScale={hookFontScale}
+          />
+
+          <div className="flex-1 space-y-5 overflow-y-auto pr-1 md:max-h-[75vh]">
           {/* Aspect ratio */}
           <div>
             <label className="block text-sm text-gray-400 mb-2">Aspect ratio</label>
@@ -433,6 +529,82 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             </div>
           )}
 
+          {/* Caption position */}
+          {includeCaptions && (
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Caption position</label>
+              <div className="flex gap-2" role="radiogroup" aria-label="Caption position">
+                {(['top', 'middle', 'bottom'] as const).map((pos) => (
+                  <button
+                    key={pos}
+                    role="radio"
+                    aria-checked={captionPosition === pos}
+                    onClick={() => setCaptionPosition(pos)}
+                    className={`flex-1 py-2 rounded-lg text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 capitalize ${
+                      captionPosition === pos
+                        ? 'bg-violet-600 border-violet-500 text-white'
+                        : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
+                    }`}
+                  >
+                    {pos}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Viral hook */}
+          <div>
+            <label htmlFor="hook-text" className="block text-sm text-gray-400 mb-2">
+              Viral hook <span className="text-gray-600">(optional)</span>
+            </label>
+            <input
+              id="hook-text"
+              type="text"
+              value={hookText}
+              onChange={(e) => setHookText(e.target.value)}
+              placeholder="e.g. POV: you fix prod at 3am"
+              maxLength={140}
+              className="w-full px-3 py-2 rounded-lg bg-forge-bg border border-forge-border text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500"
+            />
+            {hookText.trim() && (
+              <div className="mt-2 space-y-2">
+                <div className="flex gap-2" role="radiogroup" aria-label="Hook position">
+                  {(['top', 'center', 'bottom'] as const).map((pos) => (
+                    <button
+                      key={pos}
+                      role="radio"
+                      aria-checked={hookPosition === pos}
+                      onClick={() => setHookPosition(pos)}
+                      className={`flex-1 py-2 rounded-lg text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 capitalize ${
+                        hookPosition === pos
+                          ? 'bg-violet-600 border-violet-500 text-white'
+                          : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
+                      }`}
+                    >
+                      {pos}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-3">
+                  <label htmlFor="hook-scale" className="text-xs text-gray-400 shrink-0">
+                    Size {hookFontScale.toFixed(1)}x
+                  </label>
+                  <input
+                    id="hook-scale"
+                    type="range"
+                    min="0.8"
+                    max="1.5"
+                    step="0.1"
+                    value={hookFontScale}
+                    onChange={(e) => setHookFontScale(parseFloat(e.target.value))}
+                    className="flex-1 accent-violet-500"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           {focusMode === 'speaker' && (
             <div className="flex items-start gap-2 p-2.5 bg-amber-950/40 border border-amber-800/50 rounded-lg text-xs text-amber-200">
               <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
@@ -478,6 +650,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               {loading ? <><Loader size={16} className="animate-spin" aria-hidden="true" /> Exporting...</> : <><Download size={16} aria-hidden="true" /> Export</>}
             </button>
           )}
+          </div>
         </div>
       </div>
     </div>
