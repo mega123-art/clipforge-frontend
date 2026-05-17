@@ -139,11 +139,12 @@ interface FocusModeOption {
   id: 'none' | 'speaker' | 'center' | 'face'
   label: string
   desc: string
+  comingSoon?: boolean
 }
 
 const FOCUS_MODES: FocusModeOption[] = [
-  { id: 'face', label: 'Face Focus (Pro)', desc: 'TikTok-style: locks on face, ultra-smooth, no shake, max quality' },
-  { id: 'speaker', label: 'Speaker focus', desc: 'Auto-track active speaker (multi-speaker podcasts)' },
+  { id: 'face', label: 'Face Focus (Pro)', desc: 'TikTok-style: locks on face, ultra-smooth, no shake, max quality', comingSoon: true },
+  { id: 'speaker', label: 'Speaker focus', desc: 'Auto-track active speaker (multi-speaker podcasts)', comingSoon: true },
   { id: 'center', label: 'Center crop', desc: 'Crop to center' },
   { id: 'none', label: 'Blurred BG', desc: 'Fit + blur background' },
 ]
@@ -243,7 +244,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [captionStyle, setCaptionStyle] = useState<string>('word_highlight')
   const [captionPosition, setCaptionPosition] = useState<'top' | 'middle' | 'bottom'>('bottom')
   const [includeCaptions, setIncludeCaptions] = useState(true)
-  const [focusMode, setFocusMode] = useState<'none' | 'speaker' | 'center' | 'face'>('face')
+  const [focusMode, setFocusMode] = useState<'none' | 'speaker' | 'center' | 'face'>('center')
   const [hookText, setHookText] = useState<string>('')
   const [hookPosition, setHookPosition] = useState<'top' | 'center' | 'bottom'>('top')
   const [hookFontScale, setHookFontScale] = useState<number>(1.0)
@@ -499,16 +500,28 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     key={fm.id}
                     role="radio"
                     aria-checked={focusMode === fm.id}
-                    onClick={() => setFocusMode(fm.id)}
-                    className={`w-full flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-sm border cursor-pointer transition-colors duration-200 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 ${
-                      focusMode === fm.id
-                        ? 'bg-violet-950 border-violet-600 text-violet-200'
-                        : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
+                    onClick={() => { if (!fm.comingSoon) setFocusMode(fm.id) }}
+                    disabled={fm.comingSoon}
+                    aria-disabled={fm.comingSoon}
+                    title={fm.comingSoon ? 'Coming soon' : undefined}
+                    className={`w-full flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-sm border text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 transition-colors duration-200 ${
+                      fm.comingSoon
+                        ? 'border-forge-border text-gray-500 opacity-60 cursor-not-allowed'
+                        : focusMode === fm.id
+                          ? 'bg-violet-950 border-violet-600 text-violet-200 cursor-pointer'
+                          : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white cursor-pointer'
                     }`}
                   >
-                    <span className={`mt-1 w-3 h-3 rounded-full border-2 shrink-0 transition-colors duration-200 ${focusMode === fm.id ? 'bg-violet-500 border-violet-500' : 'border-gray-600'}`} />
+                    <span className={`mt-1 w-3 h-3 rounded-full border-2 shrink-0 transition-colors duration-200 ${focusMode === fm.id && !fm.comingSoon ? 'bg-violet-500 border-violet-500' : 'border-gray-600'}`} />
                     <span className="flex-1">
-                      <span className="block font-medium">{fm.label}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="font-medium">{fm.label}</span>
+                        {fm.comingSoon && (
+                          <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300">
+                            Coming soon
+                          </span>
+                        )}
+                      </span>
                       <span className="block text-xs text-gray-500 mt-0.5">{fm.desc}</span>
                     </span>
                   </button>

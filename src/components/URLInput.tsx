@@ -105,7 +105,8 @@ export default function URLInput({ value, onChange, onFileSelect, uploadedFile }
                 <>Drop file or <span className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">browse</span></>
               )}
             </p>
-            <p className="text-xs text-forge-dim mt-0.5">MP4, MOV, MP3, M4A · up to 2GB</p>
+            <p className="text-xs text-forge-dim mt-0.5">MP4, MOV, MP3, M4A · up to 500 MB</p>
+            <p className="text-[10px] text-amber-400/80 mt-1">Long videos (&gt;30 min) — coming soon</p>
           </div>
           <input
             ref={inputRef}
