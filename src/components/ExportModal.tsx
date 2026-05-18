@@ -665,8 +665,9 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
         return
       }
 
-      // Poll clip status every 3s, max 10 min.
-      const deadline = Date.now() + 10 * 60 * 1000
+      // Poll clip status every 3s, max 20 min (hook overlay + Railway shared
+      // vCPU = ~2x render time on long clips).
+      const deadline = Date.now() + 20 * 60 * 1000
       while (Date.now() < deadline) {
         await new Promise((r) => setTimeout(r, 3000))
         if (targetId !== clipId) return
@@ -688,7 +689,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           return
         }
       }
-      setError('Export timed out after 10 minutes. Try a shorter clip.')
+      setError('Export timed out after 20 minutes. Try a shorter clip or simpler options.')
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>
       setError(ax.response?.data?.detail || 'Export failed.')
