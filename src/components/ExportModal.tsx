@@ -366,6 +366,75 @@ const HOOK_STYLES: HookStyleOption[] = [
       textShadow: '0 0 6px #00ff5a, 0 0 12px #00ff5a',
     },
   },
+  {
+    id: 'claymorphism',
+    label: 'Clay',
+    boxCss: {
+      background: '#a7c6ff',
+      borderRadius: 22,
+      padding: '8px 14px',
+      boxShadow: '6px 8px 0 rgba(50,60,120,0.45)',
+    },
+    textCss: {
+      color: '#1c1e3c',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 800,
+    },
+  },
+  {
+    id: 'brutalism_red',
+    label: 'Brutalist',
+    boxCss: {
+      background: '#ff0000',
+      borderRadius: 0,
+      padding: '6px 14px',
+      border: '4px solid #000',
+      boxShadow: '10px 10px 0 #000',
+    },
+    textCss: {
+      color: '#fff',
+      fontFamily: '"Oswald", "Bebas Neue", Impact, system-ui, sans-serif',
+      fontWeight: 900,
+      textTransform: 'uppercase',
+      letterSpacing: '2px',
+    },
+  },
+  {
+    id: 'glitch_rgb',
+    label: 'Glitch',
+    boxCss: {
+      background: '#000',
+      borderRadius: 4,
+      padding: '6px 12px',
+    },
+    textCss: {
+      color: '#fff',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 900,
+      textTransform: 'uppercase',
+      letterSpacing: '1.5px',
+      textShadow: '-2px 0 #ff003c, 2px 0 #00dcff',
+    },
+  },
+  {
+    id: 'memphis_pop',
+    label: 'Memphis',
+    boxCss: {
+      background: '#ff71ce',
+      borderRadius: 14,
+      padding: '6px 12px',
+      border: '3px solid #86ccca',
+      boxShadow: '6px 8px 0 rgba(0,0,0,0.55)',
+      transform: 'rotate(-3deg)',
+    },
+    textCss: {
+      color: '#1c1e3c',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 900,
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+    },
+  },
 ]
 
 interface FocusModeOption {
@@ -674,7 +743,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                 onClick={goPrev}
                 disabled={safeIndex === 0}
                 aria-label="Previous clip"
-                className="cursor-pointer p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 transition-colors duration-200"
+                className="cursor-pointer p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 transition-colors duration-200"
               >
                 <ChevronLeft size={18} />
               </button>
@@ -690,7 +759,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                 onClick={goNext}
                 disabled={safeIndex >= total - 1}
                 aria-label="Next clip"
-                className="cursor-pointer p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 transition-colors duration-200"
+                className="cursor-pointer p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 transition-colors duration-200"
               >
                 <ChevronRight size={18} />
               </button>
@@ -699,7 +768,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           <button
             onClick={onClose}
             aria-label="Close export dialog"
-            className="cursor-pointer p-2 -m-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 transition-colors duration-200"
+            className="cursor-pointer p-2 -m-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 transition-colors duration-200"
           >
             <X size={20} />
           </button>
@@ -729,9 +798,9 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                   role="radio"
                   aria-checked={aspectRatio === ar.id}
                   onClick={() => setAspectRatio(ar.id)}
-                  className={`flex-1 py-2 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 ${
+                  className={`flex-1 py-2 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                     aspectRatio === ar.id
-                      ? 'bg-violet-600 border-violet-500 text-white'
+                      ? 'bg-pink-500 border-pink-400 text-white'
                       : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
                   }`}
                 >
@@ -755,11 +824,11 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     disabled={fm.comingSoon}
                     aria-disabled={fm.comingSoon}
                     title={fm.comingSoon ? 'Coming soon' : undefined}
-                    className={`w-full flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-sm border text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 transition-colors duration-200 ${
+                    className={`w-full flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-sm border text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 transition-colors duration-200 ${
                       fm.comingSoon
                         ? 'border-forge-border text-gray-500 opacity-60 cursor-not-allowed'
                         : focusMode === fm.id
-                          ? 'bg-violet-950 border-violet-600 text-violet-200 cursor-pointer'
+                          ? 'bg-pink-950 border-violet-600 text-pink-200 cursor-pointer'
                           : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white cursor-pointer'
                     }`}
                   >
@@ -835,9 +904,9 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     aria-checked={captionStyle === cs.id}
                     aria-label={cs.label}
                     onClick={() => setCaptionStyle(cs.id)}
-                    className={`relative rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 ${
+                    className={`relative rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                       captionStyle === cs.id
-                        ? 'border-violet-500 ring-2 ring-violet-500/40'
+                        ? 'border-violet-500 ring-2 ring-pink-400/40'
                         : 'border-forge-border hover:border-gray-500'
                     }`}
                   >
@@ -869,9 +938,9 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     role="radio"
                     aria-checked={captionPosition === pos}
                     onClick={() => setCaptionPosition(pos)}
-                    className={`flex-1 py-2 rounded-lg text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 capitalize ${
+                    className={`flex-1 py-2 rounded-lg text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
                       captionPosition === pos
-                        ? 'bg-violet-600 border-violet-500 text-white'
+                        ? 'bg-pink-500 border-pink-400 text-white'
                         : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
                     }`}
                   >
@@ -892,7 +961,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                 type="button"
                 onClick={handleGenerateHook}
                 disabled={hookGenLoading}
-                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-violet-600/20 border border-violet-600/40 text-violet-300 hover:bg-violet-600/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-pink-500/20 border border-pink-500/40 text-pink-300 hover:bg-pink-500/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
               >
                 {hookGenLoading ? (
                   <><Loader size={12} className="animate-spin" /> Generating</>
@@ -908,7 +977,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               onChange={(e) => setHookText(e.target.value)}
               placeholder="e.g. POV: you fix prod at 3am"
               maxLength={140}
-              className="w-full px-3 py-2 rounded-lg bg-forge-bg border border-forge-border text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500"
+              className="w-full px-3 py-2 rounded-lg bg-forge-bg border border-forge-border text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-400"
             />
             {hookGenError && (
               <p role="alert" className="text-xs text-red-400 mt-1">{hookGenError}</p>
@@ -925,7 +994,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                         setHookText(s)
                         setHookSuggestions([])
                       }}
-                      className="text-left text-xs px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-forge-border text-gray-200 cursor-pointer transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                      className="text-left text-xs px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 border border-forge-border text-gray-200 cursor-pointer transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
                     >
                       {s}
                     </button>
@@ -945,9 +1014,9 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                         aria-checked={hookStyle === hs.id}
                         aria-label={hs.label}
                         onClick={() => setHookStyle(hs.id)}
-                        className={`relative rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 ${
+                        className={`relative rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                           hookStyle === hs.id
-                            ? 'border-violet-500 ring-2 ring-violet-500/40'
+                            ? 'border-violet-500 ring-2 ring-pink-400/40'
                             : 'border-forge-border hover:border-gray-500'
                         }`}
                       >
@@ -970,9 +1039,9 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                       role="radio"
                       aria-checked={hookPosition === pos}
                       onClick={() => setHookPosition(pos)}
-                      className={`flex-1 py-2 rounded-lg text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 capitalize ${
+                      className={`flex-1 py-2 rounded-lg text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
                         hookPosition === pos
-                          ? 'bg-violet-600 border-violet-500 text-white'
+                          ? 'bg-pink-500 border-pink-400 text-white'
                           : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
                       }`}
                     >
@@ -1006,7 +1075,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             </div>
           )}
           {focusMode === 'face' && (
-            <div className="flex items-start gap-2 p-2.5 bg-violet-950/40 border border-violet-800/50 rounded-lg text-xs text-violet-200">
+            <div className="flex items-start gap-2 p-2.5 bg-pink-950/40 border border-pink-800/50 rounded-lg text-xs text-pink-200">
               <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
               <span>Face Focus uses MediaPipe + One-Euro smoothing + scene-cut locking + max-quality encode. First export adds ~30–60s.</span>
             </div>
@@ -1029,7 +1098,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               {total > 1 && safeIndex < total - 1 && (
                 <button
                   onClick={goNext}
-                  className="w-full py-2 text-sm text-gray-300 hover:text-white border border-forge-border hover:border-gray-500 rounded-xl cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+                  className="w-full py-2 text-sm text-gray-300 hover:text-white border border-forge-border hover:border-gray-500 rounded-xl cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
                 >
                   Next clip ({safeIndex + 2} of {total}) →
                 </button>
@@ -1039,7 +1108,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             <button
               onClick={handleExport}
               disabled={loading}
-              className="flex items-center justify-center gap-2 w-full py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-medium cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
+              className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-semibold cursor-pointer transition-all duration-200 shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
             >
               {loading ? <><Loader size={16} className="animate-spin" aria-hidden="true" /> Exporting...</> : <><Download size={16} aria-hidden="true" /> Export</>}
             </button>

@@ -4,9 +4,18 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
+        creator: {
+          // Soft-UI evolution palette (UI/UX Pro Max recommendation)
+          DEFAULT: '#EC4899',  // primary creator pink
+          light:   '#F472B6',  // secondary
+          cta:     '#F97316',  // CTA orange
+          bg:      '#FDF2F8',  // light bg
+          ink:     '#831843',  // dark text
+        },
         forge: {
           bg:             'rgb(var(--c-bg) / <alpha-value>)',
           surface:        'rgb(var(--c-surface) / <alpha-value>)',
