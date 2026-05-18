@@ -104,34 +104,130 @@ interface HookStyleOption {
 
 const HOOK_STYLES: HookStyleOption[] = [
   {
-    id: 'serif_white',
+    id: 'serif_card',
     label: 'Serif card',
-    boxCss: { background: 'rgba(255,255,255,0.95)', borderRadius: 14, padding: '8px 14px', boxShadow: '0 4px 12px rgba(0,0,0,0.35)' },
-    textCss: { color: '#000', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 700 },
+    boxCss: {
+      background: 'rgba(255,255,255,0.96)',
+      borderRadius: 14,
+      padding: '8px 14px',
+      boxShadow: '0 10px 24px rgba(0,0,0,0.45)',
+      transform: 'rotate(-1.5deg)',
+    },
+    textCss: { color: '#0f0f0f', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 700 },
   },
   {
-    id: 'black_box',
-    label: 'Black box',
-    boxCss: { background: 'rgba(0,0,0,0.92)', borderRadius: 6, padding: '8px 14px', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' },
-    textCss: { color: '#fff', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 700 },
+    id: 'mrbeast_yellow',
+    label: 'MrBeast',
+    boxCss: { padding: '4px 8px' },
+    textCss: {
+      color: '#ffdc00',
+      fontFamily: 'Inter, "Helvetica Neue", system-ui, sans-serif',
+      fontWeight: 900,
+      WebkitTextStroke: '2px #000',
+      textShadow: '3px 3px 0 rgba(0,0,0,0.95)',
+      textTransform: 'uppercase',
+    },
   },
   {
-    id: 'sticker_yellow',
-    label: 'Yellow sticker',
-    boxCss: { background: '#ffde00', borderRadius: 10, padding: '8px 14px', border: '3px solid #000', boxShadow: '0 4px 10px rgba(0,0,0,0.35)' },
-    textCss: { color: '#000', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 800 },
+    id: 'sticker_pop',
+    label: 'Sticker pop',
+    boxCss: {
+      background: '#ffde00',
+      borderRadius: 10,
+      padding: '6px 12px',
+      border: '3px solid #000',
+      boxShadow: '6px 8px 0 rgba(0,0,0,0.85)',
+      transform: 'rotate(-4deg)',
+    },
+    textCss: {
+      color: '#000',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 900,
+      textTransform: 'uppercase',
+    },
+  },
+  {
+    id: 'neon_glow',
+    label: 'Neon glow',
+    boxCss: {
+      background: 'rgba(10,10,20,0.92)',
+      borderRadius: 10,
+      padding: '6px 12px',
+    },
+    textCss: {
+      color: '#fff',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 900,
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+      textShadow: '0 0 6px #ff00c8, 0 0 12px #ff00c8, 0 0 18px #00dcff',
+    },
+  },
+  {
+    id: 'hot_pink',
+    label: 'Hot pink',
+    boxCss: {
+      background: '#ff1e82',
+      borderRadius: 14,
+      padding: '6px 12px',
+      boxShadow: '6px 8px 0 rgba(0,0,0,0.55)',
+    },
+    textCss: {
+      color: '#fff',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 900,
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+    },
   },
   {
     id: 'breaking_news',
     label: 'Breaking news',
-    boxCss: { background: '#d21e1e', borderRadius: 0, padding: '8px 16px', boxShadow: '0 4px 10px rgba(0,0,0,0.35)' },
-    textCss: { color: '#fff', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase' },
+    boxCss: {
+      background: '#d21919',
+      borderRadius: 4,
+      padding: '6px 14px',
+      border: '2px solid #fff',
+      boxShadow: '4px 6px 0 rgba(0,0,0,0.6)',
+    },
+    textCss: {
+      color: '#fff',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 900,
+      textTransform: 'uppercase',
+      letterSpacing: '1px',
+    },
   },
   {
-    id: 'outline_only',
-    label: 'No box',
-    boxCss: { background: 'transparent', padding: '4px 8px' },
-    textCss: { color: '#fff', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 800, WebkitTextStroke: '1.5px #000', textShadow: '0 0 2px #000' },
+    id: 'headline_anton',
+    label: 'Headline',
+    boxCss: { padding: '4px 8px' },
+    textCss: {
+      color: '#fff',
+      fontFamily: '"Oswald", "Bebas Neue", Impact, system-ui, sans-serif',
+      fontWeight: 900,
+      WebkitTextStroke: '2px #000',
+      textShadow: '3px 3px 0 rgba(0,0,0,0.95)',
+      textTransform: 'uppercase',
+      letterSpacing: '1.5px',
+    },
+  },
+  {
+    id: 'glass_dark',
+    label: 'Glass',
+    boxCss: {
+      background: 'rgba(30,30,35,0.65)',
+      borderRadius: 18,
+      padding: '6px 12px',
+      border: '1px solid rgba(255,255,255,0.25)',
+      boxShadow: '0 8px 22px rgba(0,0,0,0.5)',
+      backdropFilter: 'blur(8px)',
+    },
+    textCss: {
+      color: '#fff',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 800,
+    },
   },
 ]
 
@@ -248,7 +344,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [hookText, setHookText] = useState<string>('')
   const [hookPosition, setHookPosition] = useState<'top' | 'center' | 'bottom'>('top')
   const [hookFontScale, setHookFontScale] = useState<number>(1.0)
-  const [hookStyle, setHookStyle] = useState<string>('serif_white')
+  const [hookStyle, setHookStyle] = useState<string>('serif_card')
   const [hookSuggestions, setHookSuggestions] = useState<string[]>([])
   const [hookGenLoading, setHookGenLoading] = useState(false)
   const [hookGenError, setHookGenError] = useState<string | null>(null)
