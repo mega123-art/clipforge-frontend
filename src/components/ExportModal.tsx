@@ -93,6 +93,53 @@ const CAPTION_STYLES: CaptionStyleOption[] = [
     css: { color: '#fff', fontWeight: 700, background: 'rgba(0,0,0,0.4)', padding: '2px 6px' },
     bg: '#000',
   },
+  {
+    id: 'tiktok_native',
+    label: 'TikTok',
+    sample: 'native',
+    css: { color: '#fff', fontWeight: 800, textShadow: '0 0 4px #000, 2px 2px 0 #000' },
+    bg: '#111',
+  },
+  {
+    id: 'magenta_pop',
+    label: 'Magenta pop',
+    sample: 'POP',
+    css: { color: '#fff', fontWeight: 900, background: 'rgba(200,0,140,0.8)', padding: '2px 6px', borderRadius: 4 },
+    bg: '#000',
+  },
+  {
+    id: 'cyan_neon',
+    label: 'Cyan neon',
+    sample: 'NEON',
+    css: { color: '#fff', fontWeight: 900, textShadow: '0 0 6px #00ffff, 0 0 12px #00ffff' },
+    bg: '#0a0a18',
+  },
+  {
+    id: 'fire_gradient',
+    label: 'Fire gradient',
+    sample: 'FIRE',
+    css: {
+      background: 'linear-gradient(90deg, #ff2200, #ff8c00, #ffd400)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      fontWeight: 900,
+    },
+    bg: '#000',
+  },
+  {
+    id: 'spotify_green',
+    label: 'Spotify',
+    sample: 'spotify',
+    css: { color: '#1ed760', fontWeight: 800, background: 'rgba(0,0,0,0.7)', padding: '2px 6px', borderRadius: 4 },
+    bg: '#000',
+  },
+  {
+    id: 'shadow_3d',
+    label: '3D shadow',
+    sample: 'BOLD',
+    css: { color: '#ffff00', fontWeight: 900, textShadow: '4px 4px 0 #d65500, 8px 8px 0 rgba(0,0,0,0.6)' },
+    bg: '#111',
+  },
 ]
 
 interface HookStyleOption {
@@ -227,6 +274,90 @@ const HOOK_STYLES: HookStyleOption[] = [
       color: '#fff',
       fontFamily: 'Inter, system-ui, sans-serif',
       fontWeight: 800,
+    },
+  },
+  {
+    id: 'sunset_gradient',
+    label: 'Sunset',
+    boxCss: {
+      background: 'linear-gradient(90deg, #ff6e3c, #ff3c96)',
+      borderRadius: 16,
+      padding: '6px 12px',
+      boxShadow: '6px 8px 0 rgba(0,0,0,0.5)',
+    },
+    textCss: {
+      color: '#fff',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 900,
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+    },
+  },
+  {
+    id: 'ocean_gradient',
+    label: 'Ocean',
+    boxCss: {
+      background: 'linear-gradient(90deg, #00c8ff, #7850ff)',
+      borderRadius: 16,
+      padding: '6px 12px',
+      boxShadow: '6px 8px 0 rgba(0,0,0,0.5)',
+    },
+    textCss: {
+      color: '#fff',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 900,
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+    },
+  },
+  {
+    id: 'gold_luxe',
+    label: 'Gold luxe',
+    boxCss: {
+      background: '#0f0f0f',
+      border: '2px solid #d4af37',
+      padding: '6px 14px',
+      boxShadow: '4px 6px 0 rgba(0,0,0,0.6)',
+    },
+    textCss: {
+      color: '#d4af37',
+      fontFamily: 'Georgia, serif',
+      fontWeight: 700,
+      textTransform: 'uppercase',
+      letterSpacing: '2px',
+    },
+  },
+  {
+    id: 'pastel_card',
+    label: 'Pastel',
+    boxCss: {
+      background: '#ffdcec',
+      borderRadius: 18,
+      padding: '6px 14px',
+      boxShadow: '4px 6px 10px rgba(0,0,0,0.3)',
+      transform: 'rotate(1.5deg)',
+    },
+    textCss: {
+      color: '#6e1e50',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 800,
+    },
+  },
+  {
+    id: 'matrix_green',
+    label: 'Matrix',
+    boxCss: {
+      background: '#000',
+      borderRadius: 4,
+      padding: '6px 12px',
+    },
+    textCss: {
+      color: '#00ff5a',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      fontWeight: 900,
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px',
+      textShadow: '0 0 6px #00ff5a, 0 0 12px #00ff5a',
     },
   },
 ]
@@ -375,6 +506,14 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     setError(null)
     setDownloadUrl(null)
   }, [clipId])
+
+  // Invalidate download when any export option changes — stale file would
+  // download with old options. User must re-run Export.
+  useEffect(() => {
+    setDownloadUrl(null)
+    setError(null)
+  }, [aspectRatio, captionStyle, captionPosition, includeCaptions, focusMode,
+      hookText, hookPosition, hookFontScale, hookStyle])
 
   const goPrev = () => {
     if (safeIndex > 0 && onIndexChange) onIndexChange(safeIndex - 1)
