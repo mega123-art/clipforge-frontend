@@ -460,6 +460,7 @@ interface PreviewPanelProps {
   hookPosition: 'top' | 'center' | 'bottom'
   hookFontScale: number
   hookStyle: string
+  hookYPct: number | null
 }
 
 function PreviewPanel({
@@ -471,6 +472,7 @@ function PreviewPanel({
   hookPosition,
   hookFontScale,
   hookStyle,
+  hookYPct,
 }: PreviewPanelProps) {
   const cs = CAPTION_STYLES.find((s) => s.id === captionStyle) ?? CAPTION_STYLES[0]
   const hs = HOOK_STYLES.find((s) => s.id === hookStyle) ?? HOOK_STYLES[0]
@@ -485,14 +487,21 @@ function PreviewPanel({
     captionPosition === 'middle' ? 'top-0 bottom-0 justify-center' :
     'bottom-10 justify-end'
 
-  // For square-in-vertical aspect, place hook inside the 1:1 content area
-  // (between the black bars), not over the bars.
-  const hookPosClass =
-    hookPosition === 'top'
-      ? (showSquareInVertical ? 'top-[25%]' : 'top-6')
-      : hookPosition === 'center'
-      ? 'top-1/2 -translate-y-1/2'
-      : (showSquareInVertical ? 'bottom-[25%]' : 'bottom-24')
+  // Hook position: slider wins when set, else preset.
+  let hookTopStyle: CSSProperties | undefined
+  let hookPosClass: string
+  if (hookYPct !== null) {
+    hookTopStyle = { top: `${hookYPct}%` }
+    hookPosClass = ''
+  } else {
+    hookTopStyle = undefined
+    hookPosClass =
+      hookPosition === 'top'
+        ? (showSquareInVertical ? 'top-[25%]' : 'top-6')
+        : hookPosition === 'center'
+        ? 'top-1/2 -translate-y-1/2'
+        : (showSquareInVertical ? 'bottom-[25%]' : 'bottom-24')
+  }
 
   return (
     <div className="shrink-0 w-full md:w-[280px] flex flex-col items-center">
@@ -513,7 +522,10 @@ function PreviewPanel({
 
         {/* Hook overlay */}
         {hookText.trim() && (
-          <div className={`absolute left-0 right-0 px-4 flex justify-center pointer-events-none ${hookPosClass}`}>
+          <div
+            className={`absolute left-0 right-0 px-4 flex justify-center pointer-events-none ${hookPosClass}`}
+            style={hookTopStyle}
+          >
             <div
               className="text-center"
               style={{
@@ -565,6 +577,8 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [hookPosition, setHookPosition] = useState<'top' | 'center' | 'bottom'>('top')
   const [hookFontScale, setHookFontScale] = useState<number>(1.0)
   const [hookStyle, setHookStyle] = useState<string>('serif_card')
+  // Vertical position of hook as % from top of frame. null = use named preset.
+  const [hookYPct, setHookYPct] = useState<number | null>(null)
   const [hookSuggestions, setHookSuggestions] = useState<string[]>([])
   const [hookGenLoading, setHookGenLoading] = useState(false)
   const [hookGenError, setHookGenError] = useState<string | null>(null)
@@ -602,7 +616,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     setDownloadUrl(null)
     setError(null)
   }, [aspectRatio, captionStyle, captionPosition, includeCaptions, focusMode,
-      hookText, hookPosition, hookFontScale, hookStyle])
+      hookText, hookPosition, hookFontScale, hookStyle, hookYPct])
 
   const goPrev = () => {
     if (safeIndex > 0 && onIndexChange) onIndexChange(safeIndex - 1)
@@ -640,6 +654,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           hook_position: hookPosition,
           hook_font_scale: hookFontScale,
           hook_style: hookStyle,
+          hook_y_pct: hookYPct,
         },
       )
       if (targetId !== clipId) return
@@ -789,6 +804,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             hookPosition={hookPosition}
             hookFontScale={hookFontScale}
             hookStyle={hookStyle}
+            hookYPct={hookYPct}
           />
 
           <div className="flex-1 space-y-5 overflow-y-auto pr-1 md:max-h-[75vh]">
@@ -1041,10 +1057,10 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     <button
                       key={pos}
                       role="radio"
-                      aria-checked={hookPosition === pos}
-                      onClick={() => setHookPosition(pos)}
+                      aria-checked={hookPosition === pos && hookYPct === null}
+                      onClick={() => { setHookPosition(pos); setHookYPct(null) }}
                       className={`flex-1 py-2 rounded-lg text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
-                        hookPosition === pos
+                        hookPosition === pos && hookYPct === null
                           ? 'bg-pink-500 border-pink-400 text-white'
                           : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
                       }`}
@@ -1052,6 +1068,31 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                       {pos}
                     </button>
                   ))}
+                </div>
+                {/* Vertical fine-tune slider — overrides preset when set */}
+                <div className="flex items-center gap-3">
+                  <label htmlFor="hook-y" className="text-xs text-gray-400 shrink-0">
+                    Y {hookYPct === null ? 'preset' : `${hookYPct.toFixed(0)}%`}
+                  </label>
+                  <input
+                    id="hook-y"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={hookYPct ?? (hookPosition === 'top' ? 10 : hookPosition === 'center' ? 50 : 70)}
+                    onChange={(e) => setHookYPct(parseFloat(e.target.value))}
+                    className="flex-1 accent-pink-500"
+                  />
+                  {hookYPct !== null && (
+                    <button
+                      type="button"
+                      onClick={() => setHookYPct(null)}
+                      className="text-[10px] text-gray-500 hover:text-gray-300 underline cursor-pointer"
+                    >
+                      reset
+                    </button>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <label htmlFor="hook-scale" className="text-xs text-gray-400 shrink-0">
