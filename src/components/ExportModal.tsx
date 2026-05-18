@@ -485,10 +485,14 @@ function PreviewPanel({
     captionPosition === 'middle' ? 'top-0 bottom-0 justify-center' :
     'bottom-10 justify-end'
 
+  // For square-in-vertical aspect, place hook inside the 1:1 content area
+  // (between the black bars), not over the bars.
   const hookPosClass =
-    hookPosition === 'top' ? 'top-6' :
-    hookPosition === 'center' ? 'top-1/2 -translate-y-1/2' :
-    'bottom-24'
+    hookPosition === 'top'
+      ? (showSquareInVertical ? 'top-[25%]' : 'top-6')
+      : hookPosition === 'center'
+      ? 'top-1/2 -translate-y-1/2'
+      : (showSquareInVertical ? 'bottom-[25%]' : 'bottom-24')
 
   return (
     <div className="shrink-0 w-full md:w-[280px] flex flex-col items-center">
