@@ -4,7 +4,13 @@ import { X, Download, Loader, Info, ChevronLeft, ChevronRight, Sparkles } from '
 import type { AxiosError } from 'axios'
 import type { ExportResponse } from '../types/api'
 
-const ASPECT_RATIOS: string[] = ['9:16', '1:1', '16:9']
+interface AspectOption { id: string; label: string }
+const ASPECT_RATIOS: AspectOption[] = [
+  { id: '9:16', label: '9:16' },
+  { id: 'square_in_vertical', label: '1:1 in 9:16' },
+  { id: '1:1', label: '1:1' },
+  { id: '16:9', label: '16:9' },
+]
 
 interface CaptionStyleOption {
   id: string
@@ -403,6 +409,7 @@ function PreviewPanel({
     aspectRatio === '1:1' ? 'aspect-square' :
     aspectRatio === '16:9' ? 'aspect-video' :
     'aspect-[9/16]'
+  const showSquareInVertical = aspectRatio === 'square_in_vertical'
 
   const captionPosClass =
     captionPosition === 'top' ? 'top-6 justify-start' :
@@ -421,6 +428,15 @@ function PreviewPanel({
         <div className="absolute inset-0 flex items-end justify-center pb-12 opacity-30 pointer-events-none">
           <div className="w-32 h-32 rounded-full bg-zinc-600" />
         </div>
+
+        {/* square-in-vertical layout hint: solid black bars top/bottom,
+            1:1 square content centered (matches backend pad=black layout) */}
+        {showSquareInVertical && (
+          <>
+            <div className="absolute inset-x-0 top-0 h-[23.4%] bg-black pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-[23.4%] bg-black pointer-events-none" />
+          </>
+        )}
 
         {/* Hook overlay */}
         {hookText.trim() && (
@@ -709,17 +725,17 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             <div className="flex gap-2" role="radiogroup" aria-label="Aspect ratio">
               {ASPECT_RATIOS.map((ar) => (
                 <button
-                  key={ar}
+                  key={ar.id}
                   role="radio"
-                  aria-checked={aspectRatio === ar}
-                  onClick={() => setAspectRatio(ar)}
-                  className={`flex-1 py-2 rounded-lg text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 ${
-                    aspectRatio === ar
+                  aria-checked={aspectRatio === ar.id}
+                  onClick={() => setAspectRatio(ar.id)}
+                  className={`flex-1 py-2 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 ${
+                    aspectRatio === ar.id
                       ? 'bg-violet-600 border-violet-500 text-white'
                       : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
                   }`}
                 >
-                  {ar}
+                  {ar.label}
                 </button>
               ))}
             </div>
