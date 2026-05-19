@@ -7,6 +7,7 @@ import Review from './pages/Review'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
 import Admin from './pages/Admin'
+import MyClips from './pages/MyClips'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import useStore from './store'
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/processing/:jobId" element={<ProtectedRoute><Processing /></ProtectedRoute>} />
             <Route path="/review/:jobId" element={<ProtectedRoute><Review /></ProtectedRoute>} />
+            <Route path="/clips" element={<ProtectedRoute><MyClips /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

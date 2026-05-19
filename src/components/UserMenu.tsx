@@ -52,7 +52,7 @@ export default function UserMenu() {
             </div>
           </div>
           <button
-            onClick={() => { setOpen(false); navigate('/') }}
+            onClick={() => { setOpen(false); navigate('/clips') }}
             className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-forge-subtext hover:bg-forge-card-hover hover:text-forge-text transition-colors cursor-pointer"
           >
             <UserIcon size={14} />
