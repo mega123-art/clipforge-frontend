@@ -703,15 +703,11 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     if (!downloadUrl) return
     setDownloading(true)
     setError(null)
+    // Open blank window synchronously while user gesture is active.
+    // After the await the gesture context is gone — popup blockers would
+    // kill a.click()/_blank. We redirect this pre-approved window instead.
+    const win = window.open('', '_blank')
     try {
-      // Ask backend where the file is. Backend returns either:
-      //   - JSON {url: <R2 presigned URL>}  (R2 path, preferred)
-      //   - binary stream                    (local fallback)
-      // For R2 path, navigate the browser directly to the URL — no fetch,
-      // no CORS preflight, no JS heap allocation. R2 bucket should set
-      // Content-Disposition on the presigned URL so the browser saves
-      // instead of opening in-tab.
-      // For local stream path, fall back to arraybuffer + blob.
       const resp = await api.get(downloadUrl, { responseType: 'arraybuffer' })
       const contentType = (resp.headers['content-type'] || '').toLowerCase()
 
@@ -719,17 +715,16 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
         const text = new TextDecoder().decode(resp.data as ArrayBuffer)
         const parsed = JSON.parse(text) as { url?: string }
         if (!parsed.url) throw new Error('No download URL returned')
-        const a = document.createElement('a')
-        a.href = parsed.url
-        a.download = `clip_${clipId}.mp4`
-        a.target = '_blank'
-        a.rel = 'noopener'
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
+        if (win) {
+          win.location.href = parsed.url
+        } else {
+          window.location.href = parsed.url
+        }
         return
       }
 
+      // Local streaming fallback — blob download in same tab
+      if (win) win.close()
       const blob = new Blob([resp.data as ArrayBuffer], { type: 'video/mp4' })
       const blobUrl = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -740,6 +735,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
       a.remove()
       setTimeout(() => URL.revokeObjectURL(blobUrl), 30000)
     } catch (err) {
+      if (win) win.close()
       const ax = err as AxiosError<{ detail?: string }>
       setError(ax.response?.data?.detail || ax.message || 'Download failed.')
     } finally {
