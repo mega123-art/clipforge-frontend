@@ -1,7 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google'
-import { Scissors, Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react'
+import { Scissors, Mail, Lock, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import type { AxiosError } from 'axios'
 import api from '../api'
 import useStore from '../store'
@@ -20,6 +20,7 @@ export default function SignIn() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   const state = location.state as LocationState | null
   // Prefer the saved redirect from a 401 interceptor bounce, then the route
@@ -139,7 +140,7 @@ export default function SignIn() {
             <div className="flex items-center gap-3 bg-forge-surface rounded-xl px-4 py-3 border border-forge-border focus-within:border-violet-500/50 transition-colors">
               <Lock size={15} className="text-forge-dim shrink-0" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -147,6 +148,13 @@ export default function SignIn() {
                 minLength={8}
                 className="flex-1 bg-transparent outline-none text-forge-text placeholder-forge-dim text-sm"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(s => !s)}
+                className="text-forge-dim hover:text-forge-text transition-colors cursor-pointer"
+              >
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
             </div>
 
             {error && (
