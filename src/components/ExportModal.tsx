@@ -224,6 +224,7 @@ const HOOK_STYLES: HookStyleOption[] = [
       borderRadius: 14,
       padding: '6px 12px',
       boxShadow: '6px 8px 0 rgba(0,0,0,0.55)',
+      border: '3px solid #c2006e',
     },
     textCss: {
       color: '#fff',
