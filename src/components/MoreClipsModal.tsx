@@ -47,19 +47,19 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
       <div className="bg-forge-card border border-forge-border rounded-2xl w-full max-w-lg p-6 space-y-5">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Find more clips</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-forge-muted hover:text-forge-text transition-colors">
             <X size={20} />
           </button>
         </div>
 
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-forge-muted">
           Already-generated clips will be excluded — only new non-overlapping moments will be found.
         </p>
 
         {/* Max clips */}
         <div>
-          <label className="block text-sm text-gray-400 mb-2">
-            Max new clips: <span className="text-white font-medium">{options.max_clips}</span>
+          <label className="block text-sm text-forge-muted mb-2">
+            Max new clips: <span className="text-forge-text font-medium">{options.max_clips}</span>
           </label>
           <input
             type="range" min={1} max={10} value={options.max_clips}
@@ -71,8 +71,8 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
         {/* Duration */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Min duration: <span className="text-white">{options.min_clip_duration}s</span>
+            <label className="block text-sm text-forge-muted mb-2">
+              Min duration: <span className="text-forge-text">{options.min_clip_duration}s</span>
             </label>
             <input
               type="range" min={10} max={60} value={options.min_clip_duration}
@@ -81,8 +81,8 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-2">
-              Max duration: <span className="text-white">{options.max_clip_duration}s</span>
+            <label className="block text-sm text-forge-muted mb-2">
+              Max duration: <span className="text-forge-text">{options.max_clip_duration}s</span>
             </label>
             <input
               type="range" min={30} max={180} value={options.max_clip_duration}
@@ -94,7 +94,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
 
         {/* Clip types */}
         <div>
-          <label className="block text-sm text-gray-400 mb-2">Clip types to find</label>
+          <label className="block text-sm text-forge-muted mb-2">Clip types to find</label>
           <div className="flex flex-wrap gap-2">
             {CLIP_TYPES.map((ct) => (
               <button
@@ -104,7 +104,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
                 className={`px-3 py-1 rounded-full text-sm border transition-all ${
                   options.clip_types.includes(ct.id)
                     ? 'bg-violet-600 border-violet-500 text-white'
-                    : 'border-forge-border text-gray-400 hover:border-gray-500'
+                    : 'border-forge-border text-forge-muted hover:border-forge-border-bright'
                 }`}
               >
                 {ct.label}
@@ -115,7 +115,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
 
         {/* Aspect ratio */}
         <div>
-          <label className="block text-sm text-gray-400 mb-2">Aspect ratio</label>
+          <label className="block text-sm text-forge-muted mb-2">Aspect ratio</label>
           <div className="flex gap-2">
             {['9:16', '1:1', '16:9'].map((ar) => (
               <button
@@ -125,7 +125,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
                 className={`px-4 py-2 rounded-lg text-sm border transition-all ${
                   options.target_aspect_ratio === ar
                     ? 'bg-violet-600 border-violet-500 text-white'
-                    : 'border-forge-border text-gray-400 hover:border-gray-500'
+                    : 'border-forge-border text-forge-muted hover:border-forge-border-bright'
                 }`}
               >
                 {ar}
@@ -137,7 +137,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
         <div className="flex gap-3 pt-2">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 border border-forge-border rounded-xl text-sm text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
+            className="flex-1 py-2.5 border border-forge-border rounded-xl text-sm text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-colors"
           >
             Cancel
           </button>
