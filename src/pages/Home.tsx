@@ -6,14 +6,13 @@ import {
   LucideIcon, SlidersHorizontal, Wand2,
 } from 'lucide-react'
 import type { AxiosError } from 'axios'
-import api from '../api'
 import { uploadAndCreateJob } from '../lib/r2Upload'
 import useStore from '../store'
 import URLInput from '../components/URLInput'
 import ThemeToggle from '../components/ThemeToggle'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
-import type { AspectRatio, JobCreateResponse } from '../types/api'
+import type { AspectRatio } from '../types/api'
 
 interface ClipTypeDef {
   id: string
@@ -46,7 +45,6 @@ const STATS: StatDef[] = [
 type ClipMode = 'quick' | 'custom'
 
 interface HomeOptions {
-  source_url: string
   max_clips: number
   clip_types: string[]
   min_clip_duration: number
@@ -78,7 +76,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [options, setOptions] = useState<HomeOptions>({
-    source_url: '',
     max_clips: 5,
     clip_types: ['controversy', 'hook_intro', 'quotable', 'shocking_stat', 'myth_bust'],
     min_clip_duration: 20,
@@ -99,8 +96,8 @@ export default function Home() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!options.source_url && !uploadedFile) {
-      setError('Paste a URL or upload a file.')
+    if (!uploadedFile) {
+      setError('Upload a video or audio file to continue.')
       return
     }
     setError(null)
@@ -111,35 +108,20 @@ export default function Home() {
 
       const prompt = clipMode === 'custom' ? customPrompt.trim() : ''
 
-      if (uploadedFile) {
-        // Direct browser→R2 multipart upload (no Railway proxy bottleneck).
-        const res = await uploadAndCreateJob(
-          { file: uploadedFile, onProgress: setUploadPct },
-          {
-            max_clips: options.max_clips,
-            clip_types: prompt ? [] : options.clip_types,
-            min_clip_duration: options.min_clip_duration,
-            max_clip_duration: options.max_clip_duration,
-            target_aspect_ratio: options.target_aspect_ratio,
-            ...(prompt ? { custom_prompt: prompt } : {}),
-          },
-        )
-        jobId = res.job_id
-      } else {
-        // URL flow unchanged — backend yt-dlp / cobalt / rapidapi handles it.
-        const form = new FormData()
-        if (options.source_url) form.append('source_url', options.source_url)
-        form.append('max_clips', String(options.max_clips))
-        form.append('clip_types', prompt ? '' : options.clip_types.join(','))
-        form.append('min_clip_duration', String(options.min_clip_duration))
-        form.append('max_clip_duration', String(options.max_clip_duration))
-        form.append('target_aspect_ratio', options.target_aspect_ratio)
-        if (prompt) form.append('custom_prompt', prompt)
-        const { data } = await api.post<JobCreateResponse>('/api/jobs', form)
-        jobId = data.job_id
-      }
+      const res = await uploadAndCreateJob(
+        { file: uploadedFile, onProgress: setUploadPct },
+        {
+          max_clips: options.max_clips,
+          clip_types: prompt ? [] : options.clip_types,
+          min_clip_duration: options.min_clip_duration,
+          max_clip_duration: options.max_clip_duration,
+          target_aspect_ratio: options.target_aspect_ratio,
+          ...(prompt ? { custom_prompt: prompt } : {}),
+        },
+      )
+      jobId = res.job_id
 
-      addRecentJob({ job_id: jobId, video_title: options.source_url || uploadedFile?.name })
+      addRecentJob({ job_id: jobId, video_title: uploadedFile.name })
       refreshUser()
       navigate(`/processing/${jobId}`)
     } catch (err) {
@@ -214,8 +196,6 @@ export default function Home() {
           <div className="gradient-ring rounded-2xl">
             <div className="glass-card rounded-2xl p-1 input-glow border border-forge-border transition-all duration-300">
               <URLInput
-                value={options.source_url}
-                onChange={(v) => setOptions((o) => ({ ...o, source_url: v }))}
                 onFileSelect={setUploadedFile}
                 uploadedFile={uploadedFile}
               />

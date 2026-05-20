@@ -1,16 +1,14 @@
 import { useRef, useState, ChangeEvent, DragEvent } from 'react'
-import { Link2, Upload, X, FileVideo, CloudUpload } from 'lucide-react'
+import { Upload, X, FileVideo, CloudUpload } from 'lucide-react'
 
 interface URLInputProps {
-  value: string
-  onChange: (value: string) => void
   onFileSelect: (file: File | null) => void
   uploadedFile: File | null
 }
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024 // 2 GB — must match backend MAX_FILE_SIZE_MB
 
-export default function URLInput({ value, onChange, onFileSelect, uploadedFile }: URLInputProps) {
+export default function URLInput({ onFileSelect, uploadedFile }: URLInputProps) {
   const [dragOver, setDragOver] = useState(false)
   const [sizeError, setSizeError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
@@ -43,32 +41,7 @@ export default function URLInput({ value, onChange, onFileSelect, uploadedFile }
   }
 
   return (
-    <div className="space-y-3 p-4">
-      {/* URL input */}
-      <div className="flex items-center gap-3 bg-forge-surface/70 rounded-xl px-4 py-3.5 transition-all border border-forge-border focus-within:border-violet-500/50 focus-within:bg-forge-surface">
-        <Link2 size={15} className="text-forge-dim shrink-0" />
-        <input
-          type="url"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Paste YouTube, Spotify, or any video URL..."
-          className="flex-1 bg-transparent outline-none text-forge-text placeholder-forge-dim text-sm"
-        />
-        {value && (
-          <button type="button" onClick={() => onChange('')} className="cursor-pointer">
-            <X size={14} className="text-forge-muted hover:text-forge-text transition-colors" />
-          </button>
-        )}
-      </div>
-
-      {/* Or separator */}
-      <div className="flex items-center gap-3 text-forge-dim text-xs">
-        <div className="flex-1 h-px bg-forge-border" />
-        <span className="font-medium">or upload</span>
-        <div className="flex-1 h-px bg-forge-border" />
-      </div>
-
-      {/* Drop zone */}
+    <div className="p-4">
       {uploadedFile ? (
         <div className="flex items-center gap-3 px-4 py-3.5 bg-violet-500/10 border border-violet-500/40 rounded-xl">
           <FileVideo size={16} className="text-violet-400 shrink-0" />
@@ -118,7 +91,7 @@ export default function URLInput({ value, onChange, onFileSelect, uploadedFile }
         </div>
       )}
       {sizeError && (
-        <p className="text-xs text-red-400 px-1">{sizeError}</p>
+        <p className="text-xs text-red-400 px-1 mt-2">{sizeError}</p>
       )}
     </div>
   )
