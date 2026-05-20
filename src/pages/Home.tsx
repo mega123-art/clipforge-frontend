@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Scissors, ChevronDown, ChevronUp, Clock, ArrowRight, Zap,
   Flame, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
-  LucideIcon,
+  LucideIcon, SlidersHorizontal, Wand2,
 } from 'lucide-react'
 import type { AxiosError } from 'axios'
 import api from '../api'
@@ -43,6 +43,8 @@ const STATS: StatDef[] = [
   { value: '40x',  label: 'Faster Than Manual' },
 ]
 
+type ClipMode = 'quick' | 'custom'
+
 interface HomeOptions {
   source_url: string
   max_clips: number
@@ -71,6 +73,8 @@ export default function Home() {
   const navigate = useNavigate()
   const { getRecentJobs, addRecentJob, refreshUser } = useStore()
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [clipMode, setClipMode] = useState<ClipMode>('quick')
+  const [customPrompt, setCustomPrompt] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [options, setOptions] = useState<HomeOptions>({
@@ -105,16 +109,19 @@ export default function Home() {
     try {
       let jobId: string
 
+      const prompt = clipMode === 'custom' ? customPrompt.trim() : ''
+
       if (uploadedFile) {
         // Direct browser→R2 multipart upload (no Railway proxy bottleneck).
         const res = await uploadAndCreateJob(
           { file: uploadedFile, onProgress: setUploadPct },
           {
             max_clips: options.max_clips,
-            clip_types: options.clip_types,
+            clip_types: prompt ? [] : options.clip_types,
             min_clip_duration: options.min_clip_duration,
             max_clip_duration: options.max_clip_duration,
             target_aspect_ratio: options.target_aspect_ratio,
+            ...(prompt ? { custom_prompt: prompt } : {}),
           },
         )
         jobId = res.job_id
@@ -123,10 +130,11 @@ export default function Home() {
         const form = new FormData()
         if (options.source_url) form.append('source_url', options.source_url)
         form.append('max_clips', String(options.max_clips))
-        form.append('clip_types', options.clip_types.join(','))
+        form.append('clip_types', prompt ? '' : options.clip_types.join(','))
         form.append('min_clip_duration', String(options.min_clip_duration))
         form.append('max_clip_duration', String(options.max_clip_duration))
         form.append('target_aspect_ratio', options.target_aspect_ratio)
+        if (prompt) form.append('custom_prompt', prompt)
         const { data } = await api.post<JobCreateResponse>('/api/jobs', form)
         jobId = data.job_id
       }
@@ -261,29 +269,70 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Clip types */}
-              <div>
-                <label className="block text-sm font-semibold text-forge-text mb-3">Clip types</label>
-                <div className="flex flex-wrap gap-2">
-                  {CLIP_TYPES.map(({ id, label, Icon }) => {
-                    const active = options.clip_types.includes(id)
-                    return (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => toggleClipType(id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 cursor-pointer ${
-                          active
-                            ? 'bg-violet-600/22 border-violet-500/55 text-violet-300 shadow-glow-violet-sm'
-                            : 'border-forge-border text-forge-muted hover:border-forge-border-bright hover:text-forge-text'
-                        }`}
-                      >
-                        <Icon size={10} />
-                        {label}
-                      </button>
-                    )
-                  })}
+              {/* Clip mode toggle + content */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold text-forge-text">Clip selection</label>
+                  <div className="flex gap-1 p-0.5 bg-forge-surface rounded-lg border border-forge-border">
+                    <button
+                      type="button"
+                      onClick={() => setClipMode('quick')}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                        clipMode === 'quick'
+                          ? 'bg-forge-card border border-forge-border-bright text-forge-text shadow-sm'
+                          : 'text-forge-muted hover:text-forge-text'
+                      }`}
+                    >
+                      <SlidersHorizontal size={11} />
+                      Quick
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setClipMode('custom')}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                        clipMode === 'custom'
+                          ? 'bg-forge-card border border-forge-border-bright text-forge-text shadow-sm'
+                          : 'text-forge-muted hover:text-forge-text'
+                      }`}
+                    >
+                      <Wand2 size={11} />
+                      Custom
+                    </button>
+                  </div>
                 </div>
+
+                {clipMode === 'quick' && (
+                  <div className="flex flex-wrap gap-2">
+                    {CLIP_TYPES.map(({ id, label, Icon }) => {
+                      const active = options.clip_types.includes(id)
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => toggleClipType(id)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 cursor-pointer ${
+                            active
+                              ? 'bg-violet-600/22 border-violet-500/55 text-violet-300 shadow-glow-violet-sm'
+                              : 'border-forge-border text-forge-muted hover:border-forge-border-bright hover:text-forge-text'
+                          }`}
+                        >
+                          <Icon size={10} />
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {clipMode === 'custom' && (
+                  <textarea
+                    value={customPrompt}
+                    onChange={(e) => setCustomPrompt(e.target.value)}
+                    placeholder={`Describe what you're looking for, e.g.:\n• Clips that make John look credible and likeable — positive PR\n• Most engaging scroll-stopping moments for a challenge video\n• Heated debate moments and strong pushbacks`}
+                    rows={4}
+                    className="w-full bg-forge-surface border border-forge-border rounded-xl px-3.5 py-3 text-sm text-forge-text placeholder:text-forge-dim resize-none focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/20 transition-colors"
+                  />
+                )}
               </div>
 
               {/* Aspect ratio */}

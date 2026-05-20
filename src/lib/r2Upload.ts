@@ -41,6 +41,7 @@ export interface CreateJobOptions {
   min_clip_duration: number
   max_clip_duration: number
   target_aspect_ratio: string
+  custom_prompt?: string
 }
 
 interface PartResult {

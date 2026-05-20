@@ -162,6 +162,7 @@ export interface MoreClipsOptions {
   min_clip_duration: number
   max_clip_duration: number
   target_aspect_ratio: AspectRatio | string
+  custom_prompt?: string
 }
 
 export interface DebugHealth {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Plus } from 'lucide-react'
+import { X, Plus, Wand2, SlidersHorizontal } from 'lucide-react'
 import type { MoreClipsOptions } from '../types/api'
 
 interface ClipTypeOption {
@@ -18,6 +18,8 @@ const CLIP_TYPES: ClipTypeOption[] = [
   { id: 'story_arc', label: 'Story Arc' },
 ]
 
+type Mode = 'quick' | 'custom'
+
 interface MoreClipsModalProps {
   onConfirm: (options: MoreClipsOptions) => void
   onClose: () => void
@@ -25,6 +27,8 @@ interface MoreClipsModalProps {
 }
 
 export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClipsModalProps) {
+  const [mode, setMode] = useState<Mode>('quick')
+  const [customPrompt, setCustomPrompt] = useState('')
   const [options, setOptions] = useState<MoreClipsOptions>({
     max_clips: 5,
     clip_types: ['controversy', 'hook_intro', 'quotable', 'shocking_stat', 'myth_bust'],
@@ -42,19 +46,102 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
     }))
   }
 
+  const handleConfirm = () => {
+    if (mode === 'custom') {
+      onConfirm({ ...options, clip_types: [], custom_prompt: customPrompt.trim() })
+    } else {
+      onConfirm({ ...options, custom_prompt: undefined })
+    }
+  }
+
+  const canSubmit = !loading && (
+    mode === 'custom'
+      ? customPrompt.trim().length > 0
+      : options.clip_types.length > 0
+  )
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
       <div className="bg-forge-card border border-forge-border rounded-2xl w-full max-w-lg p-6 space-y-5">
+
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Find more clips</h2>
+          <h2 className="text-lg font-semibold text-forge-text">Find more clips</h2>
           <button onClick={onClose} className="text-forge-muted hover:text-forge-text transition-colors">
             <X size={20} />
           </button>
         </div>
 
         <p className="text-sm text-forge-muted">
-          Already-generated clips will be excluded — only new non-overlapping moments will be found.
+          Already-generated clips are excluded — only new non-overlapping moments will be found.
         </p>
+
+        {/* Mode toggle */}
+        <div className="flex gap-1 p-1 bg-forge-surface rounded-xl border border-forge-border">
+          <button
+            type="button"
+            onClick={() => setMode('quick')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all ${
+              mode === 'quick'
+                ? 'bg-forge-card border border-forge-border-bright text-forge-text shadow-sm'
+                : 'text-forge-muted hover:text-forge-text'
+            }`}
+          >
+            <SlidersHorizontal size={13} />
+            Quick
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('custom')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all ${
+              mode === 'custom'
+                ? 'bg-forge-card border border-forge-border-bright text-forge-text shadow-sm'
+                : 'text-forge-muted hover:text-forge-text'
+            }`}
+          >
+            <Wand2 size={13} />
+            Custom prompt
+          </button>
+        </div>
+
+        {/* Quick mode: clip type chips */}
+        {mode === 'quick' && (
+          <div>
+            <label className="block text-sm text-forge-muted mb-2">Clip types to find</label>
+            <div className="flex flex-wrap gap-2">
+              {CLIP_TYPES.map((ct) => (
+                <button
+                  key={ct.id}
+                  type="button"
+                  onClick={() => toggleClipType(ct.id)}
+                  className={`px-3 py-1 rounded-full text-sm border transition-all ${
+                    options.clip_types.includes(ct.id)
+                      ? 'bg-violet-600 border-violet-500 text-white'
+                      : 'border-forge-border text-forge-muted hover:border-forge-border-bright'
+                  }`}
+                >
+                  {ct.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Custom mode: prompt textarea */}
+        {mode === 'custom' && (
+          <div>
+            <label className="block text-sm text-forge-muted mb-2">
+              Describe what you're looking for
+            </label>
+            <textarea
+              value={customPrompt}
+              onChange={(e) => setCustomPrompt(e.target.value)}
+              placeholder={`Examples:\n• Clips that make John Doe look credible and likeable — positive PR\n• Most engaging, scroll-stopping moments for max virality\n• Heated debate moments and strong pushbacks\n• Quotable insights worth sharing`}
+              rows={5}
+              className="w-full bg-forge-surface border border-forge-border rounded-xl px-3.5 py-3 text-sm text-forge-text placeholder:text-forge-dim resize-none focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/20 transition-colors"
+            />
+          </div>
+        )}
 
         {/* Max clips */}
         <div>
@@ -92,27 +179,6 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
           </div>
         </div>
 
-        {/* Clip types */}
-        <div>
-          <label className="block text-sm text-forge-muted mb-2">Clip types to find</label>
-          <div className="flex flex-wrap gap-2">
-            {CLIP_TYPES.map((ct) => (
-              <button
-                key={ct.id}
-                type="button"
-                onClick={() => toggleClipType(ct.id)}
-                className={`px-3 py-1 rounded-full text-sm border transition-all ${
-                  options.clip_types.includes(ct.id)
-                    ? 'bg-violet-600 border-violet-500 text-white'
-                    : 'border-forge-border text-forge-muted hover:border-forge-border-bright'
-                }`}
-              >
-                {ct.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Aspect ratio */}
         <div>
           <label className="block text-sm text-forge-muted mb-2">Aspect ratio</label>
@@ -142,11 +208,11 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
             Cancel
           </button>
           <button
-            onClick={() => onConfirm(options)}
-            disabled={loading || options.clip_types.length === 0}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-sm font-semibold transition-colors"
+            onClick={handleConfirm}
+            disabled={!canSubmit}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-sm font-semibold text-white transition-colors"
           >
-            <Plus size={16} />
+            {mode === 'custom' ? <Wand2 size={16} /> : <Plus size={16} />}
             {loading ? 'Finding...' : 'Find clips'}
           </button>
         </div>
