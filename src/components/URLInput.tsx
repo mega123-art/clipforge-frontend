@@ -79,7 +79,6 @@ export default function URLInput({ onFileSelect, uploadedFile }: URLInputProps) 
               )}
             </p>
             <p className="text-xs text-forge-dim mt-0.5">MP4, MOV, MP3, M4A · up to 500 MB</p>
-            <p className="text-[10px] text-amber-400/80 mt-1">Long videos (&gt;30 min) — coming soon</p>
           </div>
           <input
             ref={inputRef}
