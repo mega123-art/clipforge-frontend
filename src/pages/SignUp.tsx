@@ -62,6 +62,10 @@ export default function SignUp() {
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
+      if (!tokenResponse.access_token) {
+        setError('Google sign up failed — no token received. Please try again.')
+        return
+      }
       setLoading(true)
       setError(null)
       try {
@@ -75,7 +79,14 @@ export default function SignUp() {
         setLoading(false)
       }
     },
-    onError: () => setError('Google sign up failed'),
+    onError: (err) => {
+      if (err.error === 'popup_closed_by_user') return
+      if (err.error === 'popup_blocked_by_browser') {
+        setError('Google sign-in popup was blocked. Please allow popups for this site and try again.')
+      } else {
+        setError(err.error_description || err.error || 'Google sign up failed')
+      }
+    },
   })
 
   return (
