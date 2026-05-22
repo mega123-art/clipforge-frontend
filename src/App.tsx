@@ -8,6 +8,7 @@ import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
 import Admin from './pages/Admin'
 import MyClips from './pages/MyClips'
+import VerifyEmail from './pages/VerifyEmail'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
 import useStore from './store'
@@ -46,6 +47,7 @@ export default function App() {
           <Routes>
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/processing/:jobId" element={<ProtectedRoute><Processing /></ProtectedRoute>} />
             <Route path="/review/:jobId" element={<ProtectedRoute><Review /></ProtectedRoute>} />

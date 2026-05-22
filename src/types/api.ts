@@ -107,6 +107,7 @@ export interface User {
   credits?: number
   is_admin?: boolean
   auth_provider?: string
+  is_email_verified?: boolean
   created_at?: string
   last_login_at?: string | null
   job_count?: number

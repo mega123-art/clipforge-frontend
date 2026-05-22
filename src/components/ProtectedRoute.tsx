@@ -8,9 +8,16 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const token = useStore((s) => s.token)
+  const user = useStore((s) => s.user)
   const location = useLocation()
+  
   if (!token) {
     return <Navigate to="/signin" replace state={{ from: location }} />
   }
+  
+  if (user && user.is_email_verified === false && user.auth_provider === 'local') {
+    return <Navigate to="/verify-email" replace state={{ from: location }} />
+  }
+  
   return <>{children}</>
 }
