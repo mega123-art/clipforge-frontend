@@ -15,9 +15,10 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/signin" replace state={{ from: location }} />
   }
   
-  if (user && user.is_email_verified === false && user.auth_provider === 'local') {
-    return <Navigate to="/verify-email" replace state={{ from: location }} />
-  }
+  // Email verification route guard temporarily bypassed
+  // if (user && user.is_email_verified === false && user.auth_provider === 'local') {
+  //   return <Navigate to="/verify-email" replace state={{ from: location }} />
+  // }
   
   return <>{children}</>
 }
