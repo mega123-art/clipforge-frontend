@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Scissors, ChevronDown, ChevronUp, Clock, ArrowRight, Zap,
   Flame, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
-  LucideIcon, SlidersHorizontal, Wand2, Play, Eye, ThumbsUp,
+  LucideIcon, SlidersHorizontal, Wand2, Play,
 } from 'lucide-react'
 import type { AxiosError } from 'axios'
 import { uploadAndCreateJob } from '../lib/r2Upload'
@@ -64,120 +64,190 @@ const DURATION_SLIDERS: DurationSliderDef[] = [
   { key: 'max_clip_duration', label: 'Max duration', min: 30, max: 180 },
 ]
 
-// ── Animated right-panel clip preview ─────────────────────────
+// ── Scrolling reel panel ───────────────────────────────────────
 
-interface MockClip {
+interface ReelClip {
   title: string
   views: string
-  likes: string
   dur: string
   platform: string
   gradient: string
-  tagColor: string
   tag: string
+  tagColor: string
 }
 
-const MOCK_CLIPS: MockClip[] = [
-  {
-    title: 'The moment they realized they were wrong',
-    views: '2.3M',
-    likes: '147K',
-    dur: '0:47',
-    platform: 'TikTok',
-    gradient: 'from-cyan-500/20 via-teal-500/10 to-transparent',
-    tag: 'Debate Moment',
-    tagColor: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20',
-  },
-  {
-    title: 'Nobody ever explains this part',
-    views: '847K',
-    likes: '63.2K',
-    dur: '1:12',
-    platform: 'Reels',
-    gradient: 'from-rose-500/20 via-pink-500/10 to-transparent',
-    tag: 'Hook Intro',
-    tagColor: 'bg-rose-500/15 text-rose-300 border-rose-500/20',
-  },
-  {
-    title: 'The stat that changes everything',
-    views: '1.1M',
-    likes: '91.8K',
-    dur: '0:33',
-    platform: 'Shorts',
-    gradient: 'from-amber-500/20 via-yellow-500/10 to-transparent',
-    tag: 'Shocking Stat',
-    tagColor: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
-  },
+const LEFT_REELS: ReelClip[] = [
+  { title: 'The moment they realized they were wrong', views: '2.3M', dur: '0:47', platform: 'TikTok', gradient: 'from-cyan-500/25 to-teal-600/15', tag: 'Debate', tagColor: 'text-cyan-300 border-cyan-500/25' },
+  { title: 'Nobody ever explains this part', views: '847K', dur: '1:12', platform: 'Reels', gradient: 'from-rose-500/25 to-pink-600/15', tag: 'Hook', tagColor: 'text-rose-300 border-rose-500/25' },
+  { title: 'The stat that ends the argument', views: '1.1M', dur: '0:33', platform: 'Shorts', gradient: 'from-amber-500/25 to-yellow-600/15', tag: 'Stat', tagColor: 'text-amber-300 border-amber-500/25' },
+  { title: 'Three seconds. That was all it took.', views: '4.7M', dur: '0:18', platform: 'TikTok', gradient: 'from-teal-500/25 to-emerald-600/15', tag: 'Peak', tagColor: 'text-emerald-300 border-emerald-500/25' },
+  { title: 'They cut this from the official edit', views: '612K', dur: '0:55', platform: 'Reels', gradient: 'from-sky-500/25 to-blue-600/15', tag: 'Story', tagColor: 'text-sky-300 border-sky-500/25' },
 ]
 
-const PLATFORM_COLORS: Record<string, string> = {
-  TikTok:  'bg-zinc-800 text-zinc-200',
-  Reels:   'bg-zinc-800 text-zinc-200',
-  Shorts:  'bg-zinc-800 text-zinc-200',
-}
+const RIGHT_REELS: ReelClip[] = [
+  { title: 'Here\'s what they don\'t teach you', views: '3.1M', dur: '1:04', platform: 'Shorts', gradient: 'from-orange-500/25 to-amber-600/15', tag: 'Quotable', tagColor: 'text-orange-300 border-orange-500/25' },
+  { title: 'The pushback nobody saw coming', views: '928K', dur: '0:41', platform: 'TikTok', gradient: 'from-rose-500/25 to-red-600/15', tag: 'Debate', tagColor: 'text-rose-300 border-rose-500/25' },
+  { title: 'You can\'t look away from this moment', views: '1.8M', dur: '0:29', platform: 'Reels', gradient: 'from-cyan-500/25 to-sky-600/15', tag: 'Hook', tagColor: 'text-cyan-300 border-cyan-500/25' },
+  { title: 'Wait — they actually said that on camera', views: '5.2M', dur: '0:22', platform: 'TikTok', gradient: 'from-fuchsia-500/20 to-pink-600/10', tag: 'Viral', tagColor: 'text-fuchsia-300 border-fuchsia-500/25' },
+  { title: 'The clip that started everything', views: '2.6M', dur: '0:38', platform: 'Shorts', gradient: 'from-green-500/25 to-teal-600/15', tag: 'Arc', tagColor: 'text-green-300 border-green-500/25' },
+]
 
-const ClipPreviewCard = memo(({ clip, index }: { clip: MockClip; index: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 40, scale: 0.94 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{ delay: 0.3 + index * 0.18, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-    className="w-[280px] glass-card rounded-2xl overflow-hidden border border-forge-border shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)]"
-    style={{
-      animation: `float ${4.5 + index * 1.2}s ease-in-out infinite`,
-      animationDelay: `${index * 1.4}s`,
-    }}
-  >
-    {/* Thumbnail */}
-    <div className={`relative h-36 bg-gradient-to-br ${clip.gradient} bg-forge-surface flex items-center justify-center`}>
-      <div className="absolute inset-0 bg-forge-bg/40" />
-      <div className="relative w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-sm">
-        <Play size={16} className="text-white ml-0.5" fill="white" />
+const ReelCard = memo(({ clip }: { clip: ReelClip }) => (
+  <div className="w-[158px] shrink-0 mb-3 glass-card rounded-xl overflow-hidden border border-forge-border/70 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)]">
+    {/* Portrait thumbnail */}
+    <div className={`relative h-[198px] bg-gradient-to-b ${clip.gradient} bg-forge-surface/60 flex items-center justify-center`}>
+      <div className="absolute inset-0 bg-forge-bg/30" />
+      <div className="relative w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+        <Play size={14} className="text-white ml-0.5" fill="white" />
       </div>
-      <span className="absolute bottom-2 right-2 text-[11px] font-semibold text-white/80 bg-black/50 px-1.5 py-0.5 rounded-md">
+      <span className="absolute bottom-2 right-2 text-[10px] font-bold text-white/80 bg-black/55 px-1.5 py-0.5 rounded-md font-mono">
         {clip.dur}
       </span>
-      <span className={`absolute top-2 left-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${PLATFORM_COLORS[clip.platform]}`}>
+      <span className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-black/55 text-white/90">
         {clip.platform}
       </span>
     </div>
-
-    {/* Body */}
-    <div className="px-4 py-3 space-y-2">
-      <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full border ${clip.tagColor}`}>
+    {/* Info */}
+    <div className="px-3 py-2.5">
+      <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded border mb-1.5 ${clip.tagColor}`}>
         {clip.tag}
       </span>
-      <p className="text-sm font-semibold text-forge-text leading-snug line-clamp-2">
-        {clip.title}
-      </p>
-      <div className="flex items-center gap-3 pt-0.5">
-        <span className="flex items-center gap-1 text-[11px] text-forge-muted">
-          <Eye size={11} />
-          {clip.views}
-        </span>
-        <span className="flex items-center gap-1 text-[11px] text-forge-muted">
-          <ThumbsUp size={11} />
-          {clip.likes}
-        </span>
-      </div>
+      <p className="text-[11px] font-semibold text-forge-text leading-snug line-clamp-2">{clip.title}</p>
+      <p className="text-[10px] text-forge-dim mt-1">{clip.views} views</p>
     </div>
-  </motion.div>
+  </div>
+))
+
+const ScrollingReelColumn = memo(({ clips, direction, rotateDeg, duration }: {
+  clips: ReelClip[]
+  direction: 'up' | 'down'
+  rotateDeg: number
+  duration: number
+}) => {
+  const doubled = [...clips, ...clips]
+  return (
+    <div style={{ transform: `rotate(${rotateDeg}deg)` }} className="flex flex-col">
+      <motion.div
+        className="flex flex-col"
+        animate={{ y: direction === 'up' ? ['0%', '-50%'] : ['-50%', '0%'] }}
+        transition={{ duration, repeat: Infinity, ease: 'linear' }}
+      >
+        {doubled.map((clip, i) => (
+          <ReelCard key={`${clip.title}-${i}`} clip={clip} />
+        ))}
+      </motion.div>
+    </div>
+  )
+})
+
+// ── Hero background ───────────────────────────────────────────
+
+const HeroBg = memo(() => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none select-none" aria-hidden="true">
+
+    {/* Slow-rotating conic aurora sweep */}
+    <motion.div
+      className="absolute inset-0 origin-center"
+      style={{
+        background: [
+          'conic-gradient(from 0deg at 25% 55%,',
+          '  transparent 0deg,',
+          '  rgba(6,182,212,0.09) 45deg,',
+          '  rgba(20,184,166,0.07) 90deg,',
+          '  transparent 140deg,',
+          '  rgba(34,211,238,0.06) 210deg,',
+          '  rgba(6,182,212,0.08) 255deg,',
+          '  transparent 310deg,',
+          '  rgba(16,185,129,0.05) 340deg,',
+          '  transparent 360deg',
+          ')',
+        ].join(''),
+      }}
+      animate={{ rotate: 360 }}
+      transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
+    />
+
+    {/* Second counter-rotating sweep — offset colors */}
+    <motion.div
+      className="absolute inset-0 origin-[70%_40%]"
+      style={{
+        background: [
+          'conic-gradient(from 180deg at 70% 40%,',
+          '  transparent 0deg,',
+          '  rgba(20,184,166,0.06) 50deg,',
+          '  transparent 110deg,',
+          '  rgba(6,182,212,0.07) 190deg,',
+          '  rgba(34,211,238,0.05) 230deg,',
+          '  transparent 290deg,',
+          '  rgba(16,185,129,0.04) 340deg,',
+          '  transparent 360deg',
+          ')',
+        ].join(''),
+      }}
+      animate={{ rotate: -360 }}
+      transition={{ duration: 38, repeat: Infinity, ease: 'linear' }}
+    />
+
+    {/* Blob 1 — top-left cyan */}
+    <motion.div
+      className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full"
+      style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.16) 0%, transparent 68%)', filter: 'blur(55px)' }}
+      animate={{ x: [0, 35, -15, 25, 0], y: [0, -25, 35, -15, 0] }}
+      transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+    />
+
+    {/* Blob 2 — bottom-right teal */}
+    <motion.div
+      className="absolute bottom-[-15%] right-[-5%] w-[50%] h-[55%] rounded-full"
+      style={{ background: 'radial-gradient(circle, rgba(20,184,166,0.13) 0%, transparent 65%)', filter: 'blur(50px)' }}
+      animate={{ x: [0, -30, 20, -10, 0], y: [0, 20, -30, 15, 0] }}
+      transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
+    />
+
+    {/* Blob 3 — mid emerald accent */}
+    <motion.div
+      className="absolute top-[35%] left-[45%] w-[35%] h-[35%] rounded-full"
+      style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 65%)', filter: 'blur(45px)' }}
+      animate={{ x: [0, -20, 30, -10, 20, 0], y: [0, 25, -15, 30, -10, 0], scale: [1, 1.15, 0.9, 1.08, 1] }}
+      transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 6 }}
+    />
+
+    {/* Blob 4 — small hot accent top-right */}
+    <motion.div
+      className="absolute top-[5%] right-[15%] w-[28%] h-[28%] rounded-full"
+      style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.11) 0%, transparent 65%)', filter: 'blur(35px)' }}
+      animate={{ x: [0, 20, -25, 10, 0], y: [0, 30, -10, 25, 0] }}
+      transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }}
+    />
+
+    {/* Dot grid */}
+    <div
+      className="absolute inset-0 opacity-[0.028]"
+      style={{
+        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.85) 1px, transparent 1px)',
+        backgroundSize: '30px 30px',
+      }}
+    />
+
+    {/* Diagonal line texture — ultra subtle */}
+    <div
+      className="absolute inset-0 opacity-[0.018]"
+      style={{
+        backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.6) 0px, rgba(255,255,255,0.6) 1px, transparent 1px, transparent 40px)',
+      }}
+    />
+  </div>
 ))
 
 const AnimatedClipPanel = memo(() => (
-  <div className="relative flex flex-col items-center gap-5 py-8 px-6">
-    <motion.p
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.2 }}
-      className="text-xs font-semibold text-forge-muted uppercase tracking-widest mb-2"
-    >
-      Generated clips
-    </motion.p>
-    {MOCK_CLIPS.map((clip, i) => (
-      <ClipPreviewCard key={clip.title} clip={clip} index={i} />
-    ))}
-    {/* Fade-out gradient at bottom */}
-    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-forge-surface/60 to-transparent pointer-events-none" />
+  <div className="absolute inset-0 overflow-hidden flex items-start justify-center gap-3 pt-4">
+    {/* Top fade */}
+    <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-forge-surface/90 to-transparent z-10 pointer-events-none" />
+    {/* Bottom fade */}
+    <div className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-forge-surface/90 to-transparent z-10 pointer-events-none" />
+
+    <ScrollingReelColumn clips={LEFT_REELS}  direction="up"   rotateDeg={-5}  duration={18} />
+    <ScrollingReelColumn clips={RIGHT_REELS} direction="down" rotateDeg={4}   duration={22} />
   </div>
 ))
 
@@ -267,8 +337,9 @@ export default function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px] min-h-[100dvh]">
 
         {/* Left — hero + form */}
-        <section className="flex flex-col justify-center pt-28 pb-16 px-6 sm:px-10 lg:px-14 xl:px-20 page-enter">
-          <div className="w-full max-w-xl">
+        <section className="relative flex flex-col justify-center pt-28 pb-16 px-6 sm:px-10 lg:px-14 xl:px-20 page-enter overflow-hidden">
+          <HeroBg />
+          <div className="relative z-10 w-full max-w-xl">
 
             {/* Badge */}
             <motion.div
@@ -531,13 +602,9 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Right — animated clip preview */}
-        <aside className="hidden lg:flex flex-col items-center justify-center relative bg-forge-surface/25 border-l border-forge-border/40 overflow-hidden">
-          <div className="fixed top-0 right-0 w-[380px] xl:w-[420px] h-full flex flex-col items-center justify-center overflow-hidden">
-            {/* Ambient glow */}
-            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full bg-forge-accent/5 blur-3xl pointer-events-none" />
-            <AnimatedClipPanel />
-          </div>
+        {/* Right — scrolling reel columns */}
+        <aside className="hidden lg:block relative bg-forge-surface/20 border-l border-forge-border/40 overflow-hidden">
+          <AnimatedClipPanel />
         </aside>
 
       </div>
