@@ -6,7 +6,7 @@ interface URLInputProps {
   uploadedFile: File | null
 }
 
-const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024 // 2 GB — must match backend MAX_FILE_SIZE_MB
+const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024
 
 export default function URLInput({ onFileSelect, uploadedFile }: URLInputProps) {
   const [dragOver, setDragOver] = useState(false)
@@ -43,8 +43,8 @@ export default function URLInput({ onFileSelect, uploadedFile }: URLInputProps) 
   return (
     <div className="p-4">
       {uploadedFile ? (
-        <div className="flex items-center gap-3 px-4 py-3.5 bg-violet-500/10 border border-violet-500/40 rounded-xl">
-          <FileVideo size={16} className="text-violet-400 shrink-0" />
+        <div className="flex items-center gap-3 px-4 py-3.5 bg-forge-accent/10 border border-forge-accent/40 rounded-xl">
+          <FileVideo size={16} className="text-forge-accent shrink-0" />
           <span className="text-sm text-forge-subtext flex-1 truncate">{uploadedFile.name}</span>
           <button type="button" onClick={clearFile} className="cursor-pointer">
             <X size={14} className="text-forge-muted hover:text-forge-text transition-colors" />
@@ -58,27 +58,27 @@ export default function URLInput({ onFileSelect, uploadedFile }: URLInputProps) 
           onClick={() => inputRef.current?.click()}
           className={`flex flex-col items-center justify-center gap-3 px-4 py-8 border border-dashed rounded-xl cursor-pointer transition-all duration-200 ${
             dragOver
-              ? 'border-violet-500/65 bg-violet-500/12 shadow-glow-violet-sm'
+              ? 'border-forge-accent/65 bg-forge-accent/8 shadow-glow-violet-sm'
               : 'border-forge-border hover:border-forge-border-bright hover:bg-forge-surface/40'
           }`}
         >
           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 ${
             dragOver
-              ? 'bg-violet-500/25 border border-violet-500/50 shadow-glow-violet-sm'
+              ? 'bg-forge-accent/20 border border-forge-accent/50 shadow-glow-violet-sm'
               : 'bg-forge-surface border border-forge-border'
           }`}>
             {dragOver
-              ? <CloudUpload size={22} className="text-violet-400 animate-bounce" />
+              ? <CloudUpload size={22} className="text-forge-accent animate-bounce" />
               : <Upload size={20} className="text-forge-muted" />
             }
           </div>
           <div className="text-center">
             <p className="text-sm text-forge-subtext">
               {dragOver ? 'Drop to upload' : (
-                <>Drop file or <span className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">browse</span></>
+                <>Drop file or <span className="text-forge-accent font-semibold">browse</span></>
               )}
             </p>
-            <p className="text-xs text-forge-dim mt-0.5">MP4, MOV, MP3, M4A · up to 500 MB</p>
+            <p className="text-xs text-forge-dim mt-0.5">MP4, MOV, MP3, M4A · up to 2 GB</p>
           </div>
           <input
             ref={inputRef}

@@ -2,7 +2,10 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, Query } from '@tanstack/react-query'
 import api from '../api'
-import { Scissors, Sparkles, CheckCircle2, Wand2, Zap } from 'lucide-react'
+import {
+  Scissors, Sparkles, CheckCircle2, Wand2, Zap,
+  Download, Mic, Users, Brain, AlertCircle, Clock, LucideIcon,
+} from 'lucide-react'
 import ProgressStepper from '../components/ProgressStepper'
 import MetaballLoader from '../components/MetaballLoader'
 import useStore from '../store'
@@ -21,9 +24,20 @@ const STAGE_LABELS: Record<string, string> = {
   failed:       'Failed',
 }
 
+const STAGE_ICONS: Record<string, LucideIcon> = {
+  pending:      Clock,
+  downloading:  Download,
+  transcribing: Mic,
+  diarizing:    Users,
+  analyzing:    Brain,
+  clipping:     Scissors,
+  ready:        CheckCircle2,
+  failed:       AlertCircle,
+}
+
 const STAGE_QUIPS: Record<string, string[]> = {
   pending: [
-    'Warming up the forge...',
+    'Warming up the pipeline...',
     'Getting in queue. Standby.',
     'Systems online. Waiting for the signal.',
   ],
@@ -31,29 +45,25 @@ const STAGE_QUIPS: Record<string, string[]> = {
     'Negotiating with the internet...',
     'Pulling your video at full bandwidth...',
     'Bytes incoming. Please stand by.',
-    'YouTube is cooperating (for now)...',
     'Fetching the footage from the source...',
   ],
   transcribing: [
     'Whisper large-v3 is listening intently...',
     'Every single word. Captured.',
     'Running at full GPU throttle...',
-    'Speech → text. The magic is real.',
+    'Speech to text. The magic is real.',
     'Transcription in progress. No skipping.',
-    'large-v3 going brrr...',
   ],
   diarizing: [
     'Who said what? On it.',
     'Untangling the voices in the room...',
     'Speaker A. Speaker B. Both labeled.',
-    'Diarization: fancier than it sounds.',
     'Voice fingerprints being matched...',
   ],
   analyzing: [
     'Claude just read your whole transcript.',
     'Hunting for moments that stop the scroll...',
     'Finding the hooks, the bangers, the peaks...',
-    'AI verdict: this clip is gonna go crazy.',
     'Scanning for maximum viral potential...',
     'Claude: "hold on, this part is fire"...',
     'Emotional peaks identified. Flagging.',
@@ -61,21 +71,10 @@ const STAGE_QUIPS: Record<string, string[]> = {
   clipping: [
     'Slicing with surgical precision...',
     'Captions locked and loading...',
-    'Each clip handcrafted by algorithms.',
     'Almost done. Burning captions in...',
-    'One final pass. This is gonna hit.',
+    'One final pass. This is going to hit.',
     'Adding the finishing touches...',
   ],
-}
-
-const STAGE_EMOJI: Record<string, string> = {
-  downloading:  '📥',
-  transcribing: '🎙️',
-  diarizing:    '👥',
-  analyzing:    '🧠',
-  clipping:     '✂️',
-  ready:        '✅',
-  pending:      '⏳',
 }
 
 const MORE_CLIPS_MESSAGES: string[] = [
@@ -83,7 +82,6 @@ const MORE_CLIPS_MESSAGES: string[] = [
   'Scanning transcript for non-overlapping viral clips...',
   'Finding the hidden gems in the footage...',
   'Digging deeper into the transcript...',
-  'Looking for new hooks, stats, and emotional peaks...',
   'Almost there — burning captions into new clips...',
 ]
 
@@ -109,12 +107,9 @@ export default function Processing() {
     queryFn: () => api.get<JobOut>(`/api/jobs/${jobId}`).then((r) => r.data),
     refetchInterval: (query: Query<JobOut>) => {
       const data = query.state.data
-      const failureCount = query.state.failureCount || 0
+      const failureCount = (query.state as { failureCount?: number }).failureCount || 0
       if (data?.status === 'ready' || data?.status === 'failed') return false
-      // Exponential backoff on consecutive failures: 3s → 6s → 12s → 30s cap.
-      if (failureCount > 0) {
-        return Math.min(3000 * 2 ** failureCount, 30000)
-      }
+      if (failureCount > 0) return Math.min(3000 * 2 ** failureCount, 30000)
       return 3000
     },
   })
@@ -131,17 +126,13 @@ export default function Processing() {
     refetchInterval: showDebug ? 10000 : false,
   })
 
-  const rerunJob = async () => {
-    await api.post(`/api/debug/jobs/${jobId}/rerun`)
-  }
+  const rerunJob = async () => { await api.post(`/api/debug/jobs/${jobId}/rerun`) }
 
   useEffect(() => {
     if (job) {
       setCurrentJob(job)
       if (job.status === 'ready') {
         addRecentJob(job)
-        // Refresh credit balance — deducted at job start, possibly refunded
-        // on partial failures. UI badge was stale until next tab focus.
         refreshUser().catch(() => {})
         navigate(`/review/${jobId}`)
       } else if (job.status === 'failed') {
@@ -150,7 +141,6 @@ export default function Processing() {
     }
   }, [job, jobId, navigate, setCurrentJob, addRecentJob, refreshUser])
 
-  // Reset quip index when stage changes
   useEffect(() => {
     const status = job?.status || 'pending'
     if (status !== prevStatus.current) {
@@ -159,7 +149,6 @@ export default function Processing() {
     }
   }, [job?.status])
 
-  // Rotate quips with fade
   useEffect(() => {
     const status: JobStatus = job?.status || (isMoreClips ? 'analyzing' : 'pending')
     const quips = isMoreClips ? MORE_CLIPS_MESSAGES : (STAGE_QUIPS[status] || [])
@@ -174,7 +163,6 @@ export default function Processing() {
     return () => clearInterval(iv)
   }, [job?.status, isMoreClips])
 
-  // Elapsed timer
   useEffect(() => {
     const iv = setInterval(() => {
       setElapsedSeconds(Math.floor((Date.now() - startRef.current) / 1000))
@@ -195,21 +183,21 @@ export default function Processing() {
 
   if (error) {
     const ax = error as { response?: { status?: number; data?: { detail?: string } }; message?: string }
-    const status = ax.response?.status
+    const httpStatus = ax.response?.status
     const detail = ax.response?.data?.detail
     let msg = 'Failed to load job status.'
-    if (status === 401) msg = 'Session expired. Please sign in again.'
-    else if (status === 403) msg = "You don't have access to this job."
-    else if (status === 404) msg = 'Job not found. It may have been deleted.'
-    else if (status && status >= 500) msg = `Server error (${status}). Try again in a moment.`
+    if (httpStatus === 401) msg = 'Session expired. Please sign in again.'
+    else if (httpStatus === 403) msg = "You don't have access to this job."
+    else if (httpStatus === 404) msg = 'Job not found. It may have been deleted.'
+    else if (httpStatus && httpStatus >= 500) msg = `Server error (${httpStatus}). Try again in a moment.`
     else if (detail) msg = detail
     else if (ax.message) msg = ax.message
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-[100dvh] flex items-center justify-center">
         <div className="text-center max-w-md px-4">
           <p className="text-red-400 text-lg">{msg}</p>
-          {status ? <p className="text-zinc-500 text-xs mt-1">HTTP {status}</p> : null}
-          <button onClick={() => navigate('/')} className="mt-4 text-violet-400 hover:underline cursor-pointer">
+          {httpStatus ? <p className="text-forge-dim text-xs mt-1">HTTP {httpStatus}</p> : null}
+          <button onClick={() => navigate('/')} className="mt-4 text-forge-accent hover:underline cursor-pointer">
             Go back
           </button>
         </div>
@@ -222,220 +210,180 @@ export default function Processing() {
   const quips = isMoreClips ? MORE_CLIPS_MESSAGES : (STAGE_QUIPS[status] || [])
   const currentQuip = quips[quipIdx % Math.max(1, quips.length)] || ''
   const isRunning = status !== 'failed' && status !== 'ready'
+  const StageIcon = STAGE_ICONS[status] || Zap
 
-  if (isMoreClips) {
-    return (
-      <div className="processing-bg min-h-screen flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden page-enter">
-        <div className="bg-orb bg-orb-1" aria-hidden="true" />
-        <div className="bg-orb bg-orb-2" aria-hidden="true" />
-        <div className="bg-orb bg-orb-3" aria-hidden="true" />
-        <div className="scanlines-overlay" aria-hidden="true" />
+  // ── Shared inner content ─────────────────────────────────
+  const innerContent = (
+    <div className="relative z-10 w-full max-w-lg mx-auto">
 
-        <div className="relative z-10 w-full max-w-md text-center">
-          <div className="flex items-center justify-center gap-2.5 mb-10">
-            <div className="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center shadow-glow-violet-sm">
-              <Scissors className="text-violet-400" size={18} />
-            </div>
-            <span className="font-bold text-lg gradient-text">ClipForge</span>
+      {/* Video title + job id */}
+      {job?.video_title && (
+        <div className="text-center mb-8">
+          <h2 className="text-xl font-black text-forge-text truncate">{job.video_title}</h2>
+          <p className="text-[11px] font-mono text-forge-dim mt-1 opacity-50">{jobId}</p>
+        </div>
+      )}
+
+      {/* Animated loader */}
+      {isRunning && (
+        <div className="flex flex-col items-center mb-8">
+          <MetaballLoader icon={isMoreClips ? Wand2 : StageIcon} />
+
+          {/* Stage badge */}
+          <div className="mt-6 flex items-center gap-2 px-5 py-2 rounded-full bg-forge-accent/10 border border-forge-accent/25 backdrop-blur-sm">
+            <StageIcon size={13} className="text-forge-accent" />
+            <span className="text-sm font-black text-forge-accent tracking-widest uppercase">
+              {isMoreClips ? 'Finding clips' : STAGE_LABELS[status]}
+            </span>
           </div>
 
-          <div className="flex items-center justify-center mb-8">
-            <MetaballLoader icon={Wand2} />
-          </div>
-
-          <h2 className="text-2xl font-black mb-1 gradient-text">Finding new clips</h2>
-          {job?.video_title && (
-            <p className="text-sm text-forge-muted mb-6 truncate">{job.video_title}</p>
-          )}
-
+          {/* Rotating quip */}
           <p
-            className="text-sm font-mono text-violet-300/80 mb-8 min-h-5 transition-opacity duration-300"
+            className="mt-4 text-center text-sm font-mono text-forge-muted max-w-xs leading-relaxed transition-opacity duration-300"
             style={{ opacity: quipVisible ? 1 : 0 }}
           >
             {currentQuip}
           </p>
+        </div>
+      )}
 
-          {status !== 'failed' && (
-            <div className="glass-card rounded-2xl p-4 border border-forge-border mb-4">
-              <div className="flex justify-between text-xs text-forge-muted mb-2.5">
-                <span className="font-semibold">{STAGE_LABELS[status] || status}</span>
-                <span className="font-black text-violet-400 tabular-nums">{progress}%</span>
-              </div>
-              <div className="h-2.5 bg-forge-surface rounded-full overflow-hidden">
-                <div
-                  className="h-full rainbow-shimmer-bar rounded-full transition-all duration-700"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
+      {/* Stage stepper (main flow only) */}
+      {!isMoreClips && (
+        <ProgressStepper currentStage={status} stages={STAGES} stageLabels={STAGE_LABELS} />
+      )}
+
+      {/* Progress bar */}
+      {isRunning && (
+        <div className="mt-6 glass-card rounded-2xl p-5 border border-forge-border">
+          <div className="flex justify-between items-center text-xs mb-3">
+            <span className="font-semibold text-forge-subtext">
+              {isMoreClips ? 'Finding clips' : STAGE_LABELS[status]}
+            </span>
+            <div className="flex items-center gap-3">
+              <span className="font-black text-forge-accent tabular-nums">{progress}%</span>
+              <span className="text-forge-dim font-mono">{formatElapsed(elapsedSeconds)}</span>
+            </div>
+          </div>
+          <div className="h-2 bg-forge-surface rounded-full overflow-hidden">
+            <div
+              className="h-full cyan-shimmer-bar rounded-full transition-all duration-700"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Meta (language, duration) */}
+      {job?.detected_language && (
+        <div className="mt-4 flex gap-5 text-xs text-forge-muted font-mono">
+          <span>lang: <span className="text-forge-text uppercase font-bold">{job.detected_language}</span></span>
+          {job.video_duration_seconds && (
+            <span>
+              dur: <span className="text-forge-text font-bold">
+                {Math.floor(job.video_duration_seconds / 60)}m {Math.round(job.video_duration_seconds % 60)}s
+              </span>
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Failed state */}
+      {status === 'failed' && (
+        <div className="mt-6 p-5 bg-red-500/10 border border-red-500/30 rounded-2xl">
+          <p className="text-red-400 font-bold text-sm mb-1">Job failed</p>
+          <p className="text-xs text-red-300/70">{job?.error_message || 'Unknown error'}</p>
+          <button onClick={() => navigate('/')} className="mt-3 text-xs text-forge-accent hover:underline transition-colors cursor-pointer">
+            Try again
+          </button>
+        </div>
+      )}
+
+      {/* Ready state */}
+      {status === 'ready' && (
+        <div className="mt-6 p-5 bg-green-500/10 border border-green-500/30 rounded-2xl flex items-center gap-3">
+          <CheckCircle2 size={20} className="text-green-400 shrink-0" />
+          <p className="text-green-400 font-semibold text-sm">Done! Redirecting to clips...</p>
+        </div>
+      )}
+
+      {/* Debug panel */}
+      {showDebug && (
+        <div className="mt-6 p-5 bg-yellow-500/10 border border-yellow-500/25 rounded-2xl">
+          <p className="text-yellow-300 font-bold text-sm mb-1">Still queued</p>
+          <p className="text-xs text-yellow-100/70 mb-3">
+            Backend has not started this job. In development, the worker or broker may not be running.
+          </p>
+          {debugHealth && (
+            <div className="text-[11px] font-mono text-yellow-100/60 space-y-1 mb-3">
+              <p>inline: {String(debugHealth.run_jobs_inline)}</p>
+              <p>redis DNS: {String(debugHealth.redis_dns_ok)}</p>
+              <p>worker: {debugHealth.celery_worker_ping ? 'online' : 'not responding'}</p>
             </div>
           )}
+          <button
+            onClick={rerunJob}
+            className="px-3 py-2 text-xs font-semibold border border-yellow-500/35 rounded-xl text-yellow-200 hover:text-yellow-100 transition-colors cursor-pointer"
+          >
+            Rerun in backend
+          </button>
+        </div>
+      )}
 
-          {status === 'failed' && (
-            <div className="p-4 bg-red-500/10 border border-red-500/25 rounded-2xl text-left mb-4">
-              <p className="text-red-400 font-semibold mb-1">Failed</p>
-              <p className="text-sm text-red-300/70">{job?.error_message || 'Unknown error'}</p>
-              <button onClick={() => navigate(`/review/${jobId}`)} className="mt-3 text-sm text-violet-400 hover:text-violet-300 transition-colors cursor-pointer">
-                Back to clips
-              </button>
-            </div>
-          )}
-
+      {/* Actions */}
+      <div className="mt-8 flex gap-3 justify-center">
+        {isMoreClips ? (
           <button
             onClick={() => navigate(`/review/${jobId}`)}
-            className="mt-2 px-4 py-2 text-sm text-forge-dim hover:text-forge-muted transition-colors cursor-pointer"
+            className="px-4 py-2 text-sm text-forge-dim hover:text-forge-muted transition-colors cursor-pointer"
           >
             Back to review
           </button>
-        </div>
+        ) : (
+          <>
+            <button
+              onClick={requestNotification}
+              className="px-4 py-2 text-xs font-semibold border border-forge-border rounded-xl text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Zap size={11} />
+              Notify when done
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="px-4 py-2 text-xs text-forge-dim hover:text-forge-muted transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+          </>
+        )}
       </div>
-    )
-  }
+    </div>
+  )
 
   return (
-    <div className="processing-bg min-h-screen flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden page-enter">
-      {/* Animated background orbs */}
+    <div className="processing-bg min-h-[100dvh] flex flex-col relative overflow-hidden page-enter">
       <div className="bg-orb bg-orb-1" aria-hidden="true" />
       <div className="bg-orb bg-orb-2" aria-hidden="true" />
       <div className="bg-orb bg-orb-3" aria-hidden="true" />
-      <div className="scanlines-overlay" aria-hidden="true" />
 
-      <div className="relative z-10 w-full max-w-xl">
-        {/* Header: logo + live timer */}
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center shadow-glow-violet-sm">
-              <Scissors size={16} className="text-violet-400" />
-            </div>
-            <span className="font-bold text-lg gradient-text">ClipForge</span>
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-10 h-16 bg-forge-bg/80 backdrop-blur-xl border-b border-forge-border/50">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-forge-accent/15 border border-forge-accent/30 flex items-center justify-center">
+            <Scissors size={15} className="text-forge-accent" />
           </div>
-          {isRunning && (
-            <div className="flex items-center gap-1.5 text-xs font-mono text-forge-dim">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              LIVE · {formatElapsed(elapsedSeconds)}
-            </div>
-          )}
+          <span className="text-lg font-black tracking-tight text-forge-text">VibeClip</span>
         </div>
-
-        {/* Central animated section */}
         {isRunning && (
-          <div className="flex flex-col items-center mb-8">
-            <MetaballLoader icon={Sparkles} />
-
-            {/* Stage pill */}
-            <div className="mt-6 flex items-center gap-2 px-5 py-2 rounded-full bg-violet-500/10 border border-violet-500/25 backdrop-blur-sm">
-              <span className="text-base" role="img" aria-label={STAGE_LABELS[status]}>{STAGE_EMOJI[status] || '⚡'}</span>
-              <span className="text-sm font-black text-violet-300 tracking-widest uppercase">{STAGE_LABELS[status]}</span>
-            </div>
-
-            {/* Rotating quip */}
-            <p
-              className="mt-4 text-center text-sm font-mono text-forge-muted max-w-xs leading-relaxed transition-opacity duration-300"
-              style={{ opacity: quipVisible ? 1 : 0 }}
-            >
-              {currentQuip}
-            </p>
+          <div className="flex items-center gap-1.5 text-xs font-mono text-forge-dim">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            LIVE · {formatElapsed(elapsedSeconds)}
           </div>
         )}
+      </nav>
 
-        {/* Video title */}
-        {job?.video_title && (
-          <h2 className="text-xl font-black mb-1 truncate text-forge-text">{job.video_title}</h2>
-        )}
-        <p className="text-forge-dim mb-8 text-[11px] font-mono tracking-wider opacity-50">{jobId}</p>
-
-        {/* Progress stepper */}
-        <ProgressStepper currentStage={status} stages={STAGES} stageLabels={STAGE_LABELS} />
-
-        {/* Progress bar */}
-        {isRunning && (
-          <div className="mt-6 glass-card rounded-2xl p-5 border border-forge-border">
-            <div className="flex justify-between text-xs mb-3">
-              <span className="font-semibold text-forge-subtext">{STAGE_LABELS[status] || status}</span>
-              <span className="font-black text-violet-400 tabular-nums">{progress}%</span>
-            </div>
-            <div className="h-2.5 bg-forge-surface rounded-full overflow-hidden">
-              <div
-                className="h-full rainbow-shimmer-bar rounded-full transition-all duration-700"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <p className="mt-3 text-xs font-mono text-forge-dim opacity-70">
-              {isRunning ? `Processing · ${formatElapsed(elapsedSeconds)} elapsed` : ''}
-            </p>
-          </div>
-        )}
-
-        {/* Failed */}
-        {status === 'failed' && (
-          <div className="mt-6 p-5 bg-red-500/10 border border-red-500/30 rounded-2xl">
-            <p className="text-red-400 font-bold text-sm mb-1">Job failed</p>
-            <p className="text-xs text-red-300/70">{job?.error_message || 'Unknown error'}</p>
-            <button onClick={() => navigate('/')} className="mt-3 text-xs text-violet-400 hover:text-violet-300 transition-colors cursor-pointer">
-              Try again →
-            </button>
-          </div>
-        )}
-
-        {showDebug && (
-          <div className="mt-6 p-5 bg-yellow-500/10 border border-yellow-500/25 rounded-2xl">
-            <p className="text-yellow-300 font-bold text-sm mb-1">Still queued</p>
-            <p className="text-xs text-yellow-100/70 mb-3">
-              The backend has not moved this job into downloading yet. In development, this usually means the worker/broker path is not running.
-            </p>
-            {debugHealth && (
-              <div className="text-[11px] font-mono text-yellow-100/60 space-y-1 mb-3">
-                <p>inline: {String(debugHealth.run_jobs_inline)}</p>
-                <p>redis DNS: {String(debugHealth.redis_dns_ok)}</p>
-                <p>worker: {debugHealth.celery_worker_ping ? 'online' : 'not responding'}</p>
-              </div>
-            )}
-            <button
-              onClick={rerunJob}
-              className="px-3 py-2 text-xs font-semibold border border-yellow-500/35 rounded-xl text-yellow-200 hover:text-yellow-100 transition-colors cursor-pointer"
-            >
-              Rerun in backend
-            </button>
-          </div>
-        )}
-
-        {/* Ready */}
-        {status === 'ready' && (
-          <div className="mt-6 p-5 bg-green-500/10 border border-green-500/30 rounded-2xl flex items-center gap-3">
-            <CheckCircle2 size={20} className="text-green-400 shrink-0" />
-            <p className="text-green-400 font-semibold text-sm">Done! Redirecting to clips...</p>
-          </div>
-        )}
-
-        {/* Meta */}
-        {job?.detected_language && (
-          <div className="mt-5 flex gap-5 text-xs text-forge-muted font-mono">
-            <span>lang: <span className="text-forge-text uppercase font-bold">{job.detected_language}</span></span>
-            {job.video_duration_seconds && (
-              <span>
-                dur: <span className="text-forge-text font-bold">
-                  {Math.floor(job.video_duration_seconds / 60)}m {Math.round(job.video_duration_seconds % 60)}s
-                </span>
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="mt-8 flex gap-3">
-          <button
-            onClick={requestNotification}
-            className="px-4 py-2 text-xs font-semibold border border-forge-border rounded-xl text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-all cursor-pointer"
-          >
-            <Zap size={11} className="inline mr-1 mb-0.5" />
-            Notify when done
-          </button>
-          <button
-            onClick={() => navigate('/')}
-            className="px-4 py-2 text-xs text-forge-dim hover:text-forge-muted transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-        </div>
+      {/* Content */}
+      <div className="flex-1 flex items-center justify-center px-4 pt-24 pb-12">
+        {innerContent}
       </div>
     </div>
   )
