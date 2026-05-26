@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Scissors, Mail, CheckCircle2, XCircle, Loader2, ArrowRight, LogOut, RefreshCw } from 'lucide-react'
+import { Mail, CheckCircle2, XCircle, Loader2, ArrowRight, LogOut, RefreshCw } from 'lucide-react'
+import VibeClipLogo from '../components/VibeClipLogo'
 import type { AxiosError } from 'axios'
 import api from '../api'
 import useStore from '../store'
@@ -107,9 +108,7 @@ export default function VerifyEmail() {
         
         <div className="w-full max-w-md relative text-center">
           <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="w-11 h-11 rounded-2xl bg-violet-600/20 border border-violet-500/35 flex items-center justify-center shadow-glow-violet-sm">
-              <Scissors size={20} className="text-violet-400" />
-            </div>
+            <VibeClipLogo size={44} className="rounded-2xl" />
             <span className="text-3xl font-black gradient-text">VibeClip</span>
           </div>
 
@@ -135,9 +134,7 @@ export default function VerifyEmail() {
         
         <div className="w-full max-w-md relative text-center">
           <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="w-11 h-11 rounded-2xl bg-violet-600/20 border border-violet-500/35 flex items-center justify-center shadow-glow-violet-sm">
-              <Scissors size={20} className="text-violet-400" />
-            </div>
+            <VibeClipLogo size={44} className="rounded-2xl" />
             <span className="text-3xl font-black gradient-text">VibeClip</span>
           </div>
 
@@ -204,9 +201,7 @@ export default function VerifyEmail() {
       
       <div className="w-full max-w-md relative">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-11 h-11 rounded-2xl bg-violet-600/20 border border-violet-500/35 flex items-center justify-center shadow-glow-violet-sm">
-            <Scissors size={20} className="text-violet-400" />
-          </div>
+          <VibeClipLogo size={44} className="rounded-2xl" />
           <span className="text-3xl font-black gradient-text">VibeClip</span>
         </div>
 

@@ -2,10 +2,11 @@ import { useState, FormEvent, memo } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
-  Scissors, ChevronDown, ChevronUp, Clock, ArrowRight, Zap,
+  ChevronDown, ChevronUp, Clock, ArrowRight, Zap,
   Flame, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
   LucideIcon, SlidersHorizontal, Wand2, Play,
 } from 'lucide-react'
+import VibeClipLogo from '../components/VibeClipLogo'
 import type { AxiosError } from 'axios'
 import { uploadAndCreateJob } from '../lib/r2Upload'
 import useStore from '../store'
@@ -321,9 +322,7 @@ export default function Home() {
       {/* ── Nav ─────────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-10 h-16 bg-forge-bg/85 backdrop-blur-xl border-b border-forge-border/50">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-forge-accent/15 border border-forge-accent/30 flex items-center justify-center">
-            <Scissors size={15} className="text-forge-accent" />
-          </div>
+          <VibeClipLogo size={32} className="rounded-xl" />
           <span className="text-lg font-black tracking-tight text-forge-text">VibeClip</span>
         </div>
         <div className="flex items-center gap-2">

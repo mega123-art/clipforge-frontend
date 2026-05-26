@@ -1,7 +1,8 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useGoogleLogin } from '@react-oauth/google'
-import { Scissors, Mail, Lock, User as UserIcon, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, User as UserIcon, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import VibeClipLogo from '../components/VibeClipLogo'
 import type { AxiosError } from 'axios'
 import api from '../api'
 import useStore from '../store'
@@ -100,9 +101,7 @@ export default function SignUp() {
 
       <div className="w-full max-w-md relative">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-11 h-11 rounded-2xl bg-violet-600/20 border border-violet-500/35 flex items-center justify-center shadow-glow-violet-sm">
-            <Scissors size={20} className="text-violet-400" />
-          </div>
+          <VibeClipLogo size={44} className="rounded-2xl" />
           <span className="text-3xl font-black gradient-text">VibeClip</span>
         </div>
 
