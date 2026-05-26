@@ -218,7 +218,7 @@ export default function Admin() {
           <div className="w-7 h-7 rounded-lg bg-violet-500/12 border border-violet-500/22 flex items-center justify-center">
             <Scissors size={13} className="text-violet-400" />
           </div>
-          <span className="font-black text-sm gradient-text">ClipForge</span>
+          <span className="font-black text-sm gradient-text">VibeClip</span>
         </button>
         <div className="w-px h-4 bg-forge-border" />
         <div className="flex items-center gap-2 flex-1">

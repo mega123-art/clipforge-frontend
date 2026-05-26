@@ -103,7 +103,7 @@ export default function SignUp() {
           <div className="w-11 h-11 rounded-2xl bg-violet-600/20 border border-violet-500/35 flex items-center justify-center shadow-glow-violet-sm">
             <Scissors size={20} className="text-violet-400" />
           </div>
-          <span className="text-3xl font-black gradient-text">ClipForge</span>
+          <span className="text-3xl font-black gradient-text">VibeClip</span>
         </div>
 
         <div className="glass-card rounded-2xl p-8 border border-forge-border">

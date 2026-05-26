@@ -1,13 +1,13 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, memo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, Query } from '@tanstack/react-query'
+import { motion, AnimatePresence } from 'framer-motion'
 import api from '../api'
 import {
-  Scissors, Sparkles, CheckCircle2, Wand2, Zap,
+  Scissors, CheckCircle2, Wand2, Zap,
   Download, Mic, Users, Brain, AlertCircle, Clock, LucideIcon,
 } from 'lucide-react'
 import ProgressStepper from '../components/ProgressStepper'
-import MetaballLoader from '../components/MetaballLoader'
 import useStore from '../store'
 import type { JobOut, JobStatus, DebugHealth } from '../types/api'
 
@@ -20,7 +20,7 @@ const STAGE_LABELS: Record<string, string> = {
   diarizing:    'Diarizing',
   analyzing:    'AI Analysis',
   clipping:     'Clipping',
-  ready:        'Done!',
+  ready:        'Done',
   failed:       'Failed',
 }
 
@@ -79,15 +79,129 @@ const STAGE_QUIPS: Record<string, string[]> = {
 
 const MORE_CLIPS_MESSAGES: string[] = [
   "Claude is hunting for moments you haven't seen yet...",
-  'Scanning transcript for non-overlapping viral clips...',
+  'Scanning for non-overlapping viral clips...',
   'Finding the hidden gems in the footage...',
   'Digging deeper into the transcript...',
   'Almost there — burning captions into new clips...',
 ]
 
-interface LocationState {
-  moreClips?: boolean
-}
+interface LocationState { moreClips?: boolean }
+
+// ── Stage visual — orbital rings loader ───────────────────────
+
+const StageVisual = memo(({ icon: Icon, status, active }: {
+  icon: LucideIcon
+  status: string
+  active: boolean
+}) => {
+  const isDone = status === 'ready'
+  const isFailed = status === 'failed'
+
+  return (
+    <div className="relative w-52 h-52 flex items-center justify-center select-none">
+      {/* Ambient bloom */}
+      <div
+        className="absolute inset-0 rounded-full blur-3xl scale-110 pointer-events-none transition-all duration-1000"
+        style={{
+          background: isDone
+            ? 'rgba(52, 211, 153, 0.08)'
+            : isFailed
+              ? 'rgba(249, 115, 122, 0.08)'
+              : 'rgba(6, 182, 212, 0.07)',
+        }}
+      />
+
+      {/* Outer dashed ring — slow clockwise */}
+      {active && (
+        <motion.div
+          className="absolute inset-0 rounded-full"
+          style={{ border: '1px dashed rgba(6, 182, 212, 0.22)' }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+        >
+          {/* Orbiting dot on outer ring */}
+          <motion.div
+            className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full"
+            style={{ background: '#06b6d4', boxShadow: '0 0 10px rgba(6,182,212,0.8)' }}
+          />
+        </motion.div>
+      )}
+
+      {/* Middle ring — counter-clockwise */}
+      {active && (
+        <motion.div
+          className="absolute inset-6 rounded-full"
+          style={{ border: '1px solid rgba(6, 182, 212, 0.15)' }}
+          animate={{ rotate: -360 }}
+          transition={{ duration: 11, repeat: Infinity, ease: 'linear' }}
+        >
+          {/* Second orbiting dot */}
+          <motion.div
+            className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full"
+            style={{ background: '#14b8a6', boxShadow: '0 0 8px rgba(20,184,166,0.7)' }}
+          />
+        </motion.div>
+      )}
+
+      {/* Static ring when not active */}
+      {!active && (
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{ border: '1px dashed rgba(6, 182, 212, 0.12)' }}
+        />
+      )}
+
+      {/* Inner glow ring */}
+      <motion.div
+        className="absolute inset-12 rounded-full"
+        style={{ border: '1px solid rgba(6, 182, 212, 0.35)' }}
+        animate={active ? {
+          boxShadow: [
+            '0 0 16px rgba(6,182,212,0.10), inset 0 0 16px rgba(6,182,212,0.05)',
+            '0 0 32px rgba(6,182,212,0.22), inset 0 0 24px rgba(6,182,212,0.10)',
+            '0 0 16px rgba(6,182,212,0.10), inset 0 0 16px rgba(6,182,212,0.05)',
+          ],
+        } : {}}
+        transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      {/* Center circle */}
+      <div
+        className="relative w-[76px] h-[76px] rounded-full flex items-center justify-center"
+        style={{
+          background: 'rgb(var(--c-card))',
+          border: '1px solid rgb(var(--c-border))',
+          boxShadow: isDone
+            ? '0 0 24px rgba(52,211,153,0.18)'
+            : isFailed
+              ? '0 0 24px rgba(249,115,122,0.15)'
+              : '0 0 24px rgba(6,182,212,0.10)',
+        }}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={status}
+            initial={{ scale: 0, opacity: 0, rotate: -20 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            exit={{ scale: 0, opacity: 0, rotate: 20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+          >
+            <Icon
+              size={30}
+              className={
+                isDone ? 'text-emerald-400'
+                : isFailed ? 'text-red-400'
+                : 'text-forge-accent'
+              }
+            />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  )
+})
+
+// ── Main component ─────────────────────────────────────────────
 
 export default function Processing() {
   const { jobId } = useParams<{ jobId: string }>()
@@ -210,160 +324,12 @@ export default function Processing() {
   const quips = isMoreClips ? MORE_CLIPS_MESSAGES : (STAGE_QUIPS[status] || [])
   const currentQuip = quips[quipIdx % Math.max(1, quips.length)] || ''
   const isRunning = status !== 'failed' && status !== 'ready'
-  const StageIcon = STAGE_ICONS[status] || Zap
-
-  // ── Shared inner content ─────────────────────────────────
-  const innerContent = (
-    <div className="relative z-10 w-full max-w-lg mx-auto">
-
-      {/* Video title + job id */}
-      {job?.video_title && (
-        <div className="text-center mb-8">
-          <h2 className="text-xl font-black text-forge-text truncate">{job.video_title}</h2>
-          <p className="text-[11px] font-mono text-forge-dim mt-1 opacity-50">{jobId}</p>
-        </div>
-      )}
-
-      {/* Animated loader */}
-      {isRunning && (
-        <div className="flex flex-col items-center mb-8">
-          <MetaballLoader icon={isMoreClips ? Wand2 : StageIcon} />
-
-          {/* Stage badge */}
-          <div className="mt-6 flex items-center gap-2 px-5 py-2 rounded-full bg-forge-accent/10 border border-forge-accent/25 backdrop-blur-sm">
-            <StageIcon size={13} className="text-forge-accent" />
-            <span className="text-sm font-black text-forge-accent tracking-widest uppercase">
-              {isMoreClips ? 'Finding clips' : STAGE_LABELS[status]}
-            </span>
-          </div>
-
-          {/* Rotating quip */}
-          <p
-            className="mt-4 text-center text-sm font-mono text-forge-muted max-w-xs leading-relaxed transition-opacity duration-300"
-            style={{ opacity: quipVisible ? 1 : 0 }}
-          >
-            {currentQuip}
-          </p>
-        </div>
-      )}
-
-      {/* Stage stepper (main flow only) */}
-      {!isMoreClips && (
-        <ProgressStepper currentStage={status} stages={STAGES} stageLabels={STAGE_LABELS} />
-      )}
-
-      {/* Progress bar */}
-      {isRunning && (
-        <div className="mt-6 glass-card rounded-2xl p-5 border border-forge-border">
-          <div className="flex justify-between items-center text-xs mb-3">
-            <span className="font-semibold text-forge-subtext">
-              {isMoreClips ? 'Finding clips' : STAGE_LABELS[status]}
-            </span>
-            <div className="flex items-center gap-3">
-              <span className="font-black text-forge-accent tabular-nums">{progress}%</span>
-              <span className="text-forge-dim font-mono">{formatElapsed(elapsedSeconds)}</span>
-            </div>
-          </div>
-          <div className="h-2 bg-forge-surface rounded-full overflow-hidden">
-            <div
-              className="h-full cyan-shimmer-bar rounded-full transition-all duration-700"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Meta (language, duration) */}
-      {job?.detected_language && (
-        <div className="mt-4 flex gap-5 text-xs text-forge-muted font-mono">
-          <span>lang: <span className="text-forge-text uppercase font-bold">{job.detected_language}</span></span>
-          {job.video_duration_seconds && (
-            <span>
-              dur: <span className="text-forge-text font-bold">
-                {Math.floor(job.video_duration_seconds / 60)}m {Math.round(job.video_duration_seconds % 60)}s
-              </span>
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Failed state */}
-      {status === 'failed' && (
-        <div className="mt-6 p-5 bg-red-500/10 border border-red-500/30 rounded-2xl">
-          <p className="text-red-400 font-bold text-sm mb-1">Job failed</p>
-          <p className="text-xs text-red-300/70">{job?.error_message || 'Unknown error'}</p>
-          <button onClick={() => navigate('/')} className="mt-3 text-xs text-forge-accent hover:underline transition-colors cursor-pointer">
-            Try again
-          </button>
-        </div>
-      )}
-
-      {/* Ready state */}
-      {status === 'ready' && (
-        <div className="mt-6 p-5 bg-green-500/10 border border-green-500/30 rounded-2xl flex items-center gap-3">
-          <CheckCircle2 size={20} className="text-green-400 shrink-0" />
-          <p className="text-green-400 font-semibold text-sm">Done! Redirecting to clips...</p>
-        </div>
-      )}
-
-      {/* Debug panel */}
-      {showDebug && (
-        <div className="mt-6 p-5 bg-yellow-500/10 border border-yellow-500/25 rounded-2xl">
-          <p className="text-yellow-300 font-bold text-sm mb-1">Still queued</p>
-          <p className="text-xs text-yellow-100/70 mb-3">
-            Backend has not started this job. In development, the worker or broker may not be running.
-          </p>
-          {debugHealth && (
-            <div className="text-[11px] font-mono text-yellow-100/60 space-y-1 mb-3">
-              <p>inline: {String(debugHealth.run_jobs_inline)}</p>
-              <p>redis DNS: {String(debugHealth.redis_dns_ok)}</p>
-              <p>worker: {debugHealth.celery_worker_ping ? 'online' : 'not responding'}</p>
-            </div>
-          )}
-          <button
-            onClick={rerunJob}
-            className="px-3 py-2 text-xs font-semibold border border-yellow-500/35 rounded-xl text-yellow-200 hover:text-yellow-100 transition-colors cursor-pointer"
-          >
-            Rerun in backend
-          </button>
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="mt-8 flex gap-3 justify-center">
-        {isMoreClips ? (
-          <button
-            onClick={() => navigate(`/review/${jobId}`)}
-            className="px-4 py-2 text-sm text-forge-dim hover:text-forge-muted transition-colors cursor-pointer"
-          >
-            Back to review
-          </button>
-        ) : (
-          <>
-            <button
-              onClick={requestNotification}
-              className="px-4 py-2 text-xs font-semibold border border-forge-border rounded-xl text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-all cursor-pointer flex items-center gap-1.5"
-            >
-              <Zap size={11} />
-              Notify when done
-            </button>
-            <button
-              onClick={() => navigate('/')}
-              className="px-4 py-2 text-xs text-forge-dim hover:text-forge-muted transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  )
+  const StageIcon = isMoreClips ? Wand2 : (STAGE_ICONS[status] || Zap)
 
   return (
     <div className="processing-bg min-h-[100dvh] flex flex-col relative overflow-hidden page-enter">
       <div className="bg-orb bg-orb-1" aria-hidden="true" />
       <div className="bg-orb bg-orb-2" aria-hidden="true" />
-      <div className="bg-orb bg-orb-3" aria-hidden="true" />
 
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-10 h-16 bg-forge-bg/80 backdrop-blur-xl border-b border-forge-border/50">
@@ -381,9 +347,182 @@ export default function Processing() {
         )}
       </nav>
 
-      {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-4 pt-24 pb-12">
-        {innerContent}
+      {/* ── Main split layout ──────────────────────────────── */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_1px_1fr] min-h-[100dvh] pt-16">
+
+        {/* Left — visual + stage name + quip */}
+        <section className="flex flex-col items-center justify-center px-8 py-12 lg:py-0">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <StageVisual icon={StageIcon} status={status} active={isRunning} />
+          </motion.div>
+
+          {/* Stage name */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="mt-8 text-center"
+          >
+            <AnimatePresence mode="wait">
+              <motion.h2
+                key={status}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.35 }}
+                className="text-3xl font-black tracking-tight text-forge-text"
+              >
+                {isMoreClips ? 'Finding clips' : STAGE_LABELS[status]}
+              </motion.h2>
+            </AnimatePresence>
+
+            {/* Quip */}
+            <p
+              className="mt-3 text-sm font-mono text-forge-muted max-w-[28ch] leading-relaxed transition-opacity duration-300 mx-auto"
+              style={{ opacity: quipVisible ? 1 : 0 }}
+            >
+              {currentQuip}
+            </p>
+          </motion.div>
+        </section>
+
+        {/* Divider */}
+        <div className="hidden lg:block bg-forge-border/40" />
+
+        {/* Right — progress info */}
+        <section className="flex flex-col justify-center px-8 lg:px-12 xl:px-16 py-12 lg:py-0">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-sm mx-auto lg:mx-0"
+          >
+
+            {/* Video title */}
+            {job?.video_title && (
+              <div className="mb-8">
+                <p className="text-[11px] font-mono text-forge-dim uppercase tracking-widest mb-1.5">Processing</p>
+                <h3 className="text-lg font-black text-forge-text leading-snug line-clamp-2">{job.video_title}</h3>
+                <p className="text-[10px] font-mono text-forge-dim/50 mt-1">{jobId}</p>
+              </div>
+            )}
+
+            {/* Stage stepper */}
+            {!isMoreClips && (
+              <div className="mb-6">
+                <ProgressStepper currentStage={status} stages={STAGES} stageLabels={STAGE_LABELS} />
+              </div>
+            )}
+
+            {/* Progress bar */}
+            {isRunning && (
+              <div className="glass-card rounded-2xl p-5 border border-forge-border">
+                <div className="flex justify-between items-center text-xs mb-3">
+                  <span className="font-semibold text-forge-subtext">
+                    {isMoreClips ? 'Progress' : STAGE_LABELS[status]}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-black text-forge-accent tabular-nums">{progress}%</span>
+                    <span className="text-forge-dim font-mono">{formatElapsed(elapsedSeconds)}</span>
+                  </div>
+                </div>
+                <div className="h-1.5 bg-forge-surface rounded-full overflow-hidden">
+                  <div
+                    className="h-full cyan-shimmer-bar rounded-full transition-all duration-700"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Meta info */}
+            {job?.detected_language && (
+              <div className="mt-4 flex gap-5 text-xs text-forge-muted font-mono">
+                <span>lang: <span className="text-forge-text uppercase font-bold">{job.detected_language}</span></span>
+                {job.video_duration_seconds && (
+                  <span>
+                    dur: <span className="text-forge-text font-bold">
+                      {Math.floor(job.video_duration_seconds / 60)}m {Math.round(job.video_duration_seconds % 60)}s
+                    </span>
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Failed */}
+            {status === 'failed' && (
+              <div className="mt-6 p-5 bg-red-500/10 border border-red-500/30 rounded-2xl">
+                <p className="text-red-400 font-bold text-sm mb-1">Job failed</p>
+                <p className="text-xs text-red-300/70">{job?.error_message || 'Unknown error'}</p>
+                <button onClick={() => navigate('/')} className="mt-3 text-xs text-forge-accent hover:underline cursor-pointer">
+                  Try again
+                </button>
+              </div>
+            )}
+
+            {/* Ready */}
+            {status === 'ready' && (
+              <div className="mt-6 p-5 bg-green-500/10 border border-green-500/30 rounded-2xl flex items-center gap-3">
+                <CheckCircle2 size={20} className="text-green-400 shrink-0" />
+                <p className="text-green-400 font-semibold text-sm">Done! Redirecting to clips...</p>
+              </div>
+            )}
+
+            {/* Debug */}
+            {showDebug && (
+              <div className="mt-6 p-5 bg-yellow-500/10 border border-yellow-500/25 rounded-2xl">
+                <p className="text-yellow-300 font-bold text-sm mb-1">Still queued</p>
+                <p className="text-xs text-yellow-100/70 mb-3">
+                  Backend has not started this job. Worker or broker may not be running.
+                </p>
+                {debugHealth && (
+                  <div className="text-[11px] font-mono text-yellow-100/60 space-y-1 mb-3">
+                    <p>inline: {String(debugHealth.run_jobs_inline)}</p>
+                    <p>redis: {String(debugHealth.redis_dns_ok)}</p>
+                    <p>worker: {debugHealth.celery_worker_ping ? 'online' : 'offline'}</p>
+                  </div>
+                )}
+                <button onClick={rerunJob} className="px-3 py-2 text-xs font-semibold border border-yellow-500/35 rounded-xl text-yellow-200 hover:text-yellow-100 transition-colors cursor-pointer">
+                  Rerun in backend
+                </button>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="mt-8 flex gap-3">
+              {isMoreClips ? (
+                <button
+                  onClick={() => navigate(`/review/${jobId}`)}
+                  className="px-4 py-2 text-sm text-forge-dim hover:text-forge-muted transition-colors cursor-pointer"
+                >
+                  Back to review
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={requestNotification}
+                    className="px-4 py-2 text-xs font-semibold border border-forge-border rounded-xl text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Zap size={11} />
+                    Notify when done
+                  </button>
+                  <button
+                    onClick={() => navigate('/')}
+                    className="px-4 py-2 text-xs text-forge-dim hover:text-forge-muted transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
+
+          </motion.div>
+        </section>
+
       </div>
     </div>
   )

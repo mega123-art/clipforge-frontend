@@ -208,7 +208,7 @@ export default function Processing() {
             <div className="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center shadow-glow-violet-sm">
               <Scissors className="text-violet-400" size={18} />
             </div>
-            <span className="font-bold text-lg gradient-text">ClipForge</span>
+            <span className="font-bold text-lg gradient-text">VibeClip</span>
           </div>
 
           <div className="flex items-center justify-center mb-8">
@@ -278,7 +278,7 @@ export default function Processing() {
             <div className="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center shadow-glow-violet-sm">
               <Scissors size={16} className="text-violet-400" />
             </div>
-            <span className="font-bold text-lg gradient-text">ClipForge</span>
+            <span className="font-bold text-lg gradient-text">VibeClip</span>
           </div>
           {isRunning && (
             <div className="flex items-center gap-1.5 text-xs font-mono text-forge-dim">

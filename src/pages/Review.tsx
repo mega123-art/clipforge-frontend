@@ -78,7 +78,7 @@ export default function Review() {
         <header className="sticky top-0 z-10 glass border-b border-forge-border px-6 py-3 flex items-center gap-4">
           <button onClick={() => navigate('/')} className="flex items-center gap-2 text-forge-muted hover:text-forge-text transition-colors cursor-pointer">
             <Scissors size={18} className="text-violet-400" />
-            <span className="font-bold text-sm gradient-text">ClipForge</span>
+            <span className="font-bold text-sm gradient-text">VibeClip</span>
           </button>
           <div className="h-4 w-px bg-forge-border" />
           <div className="h-4 w-48 bg-forge-border rounded animate-pulse" />
@@ -130,7 +130,7 @@ export default function Review() {
           <div className="w-7 h-7 rounded-lg bg-violet-500/12 border border-violet-500/22 flex items-center justify-center group-hover:bg-violet-500/22 group-hover:shadow-glow-violet-sm transition-all">
             <Scissors size={13} className="text-violet-400" />
           </div>
-          <span className="font-black text-sm gradient-text">ClipForge</span>
+          <span className="font-black text-sm gradient-text">VibeClip</span>
         </button>
 
         <div className="w-px h-4 bg-forge-border" />
