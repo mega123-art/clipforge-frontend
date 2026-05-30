@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient, Query } from '@tanstack/react-query'
 import api from '../api'
 import { Scissors, CheckCheck, Download, Plus, SplitSquareHorizontal } from 'lucide-react'
+import VibeClipLogo from '../components/VibeClipLogo'
 import ThemeToggle from '../components/ThemeToggle'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
@@ -77,7 +78,7 @@ export default function Review() {
       <div className="min-h-screen flex flex-col">
         <header className="sticky top-0 z-10 glass border-b border-forge-border px-6 py-3 flex items-center gap-4">
           <button onClick={() => navigate('/')} className="flex items-center gap-2 text-forge-muted hover:text-forge-text transition-colors cursor-pointer">
-            <Scissors size={18} className="text-violet-400" />
+            <VibeClipLogo size={28} className="rounded-lg" />
             <span className="font-bold text-sm gradient-text">VibeClip</span>
           </button>
           <div className="h-4 w-px bg-forge-border" />
@@ -108,7 +109,7 @@ export default function Review() {
         <div className="text-center max-w-md px-4">
           <p className="text-red-400">{msg}</p>
           {httpStatus ? <p className="text-zinc-500 text-xs mt-1">HTTP {httpStatus}</p> : null}
-          <button onClick={() => navigate('/')} className="mt-3 text-violet-400 hover:underline text-sm cursor-pointer">
+          <button onClick={() => navigate('/')} className="mt-3 text-forge-accent hover:underline text-sm cursor-pointer">
             Go home
           </button>
         </div>
@@ -127,9 +128,7 @@ export default function Review() {
           onClick={() => navigate('/')}
           className="flex items-center gap-2 text-forge-muted hover:text-forge-text transition-colors group cursor-pointer"
         >
-          <div className="w-7 h-7 rounded-lg bg-violet-500/12 border border-violet-500/22 flex items-center justify-center group-hover:bg-violet-500/22 group-hover:shadow-glow-violet-sm transition-all">
-            <Scissors size={13} className="text-violet-400" />
-          </div>
+          <VibeClipLogo size={28} className="rounded-lg" />
           <span className="font-black text-sm gradient-text">VibeClip</span>
         </button>
 
@@ -155,7 +154,7 @@ export default function Review() {
 
         {approvedClips.length > 0 && (
           <span className="hidden sm:flex items-center gap-1.5 text-xs text-forge-dim px-2.5 py-1 rounded-full bg-forge-surface border border-forge-border">
-            <span className="font-bold text-violet-400">{approvedClips.length}</span> approved
+            <span className="font-bold text-forge-accent">{approvedClips.length}</span> approved
           </span>
         )}
 
@@ -173,7 +172,7 @@ export default function Review() {
               onClick={() => setShowManualClipper((v) => !v)}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg transition-all cursor-pointer ${
                 showManualClipper
-                  ? 'border-violet-500/60 text-violet-400 bg-violet-500/10'
+                  ? 'border-forge-accent/60 text-forge-accent bg-forge-accent/10'
                   : 'border-forge-border text-forge-muted hover:text-forge-text hover:border-forge-border-bright'
               }`}
             >

@@ -96,8 +96,8 @@ export default function SignUp() {
         <ThemeToggle />
       </div>
 
-      <div className="fixed top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-violet-600/10 blur-3xl animate-float pointer-events-none" />
-      <div className="fixed bottom-1/4 -right-32 w-[350px] h-[350px] rounded-full bg-indigo-600/8 blur-3xl animate-float-slow pointer-events-none" />
+      <div className="fixed top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-cyan-500/8 blur-3xl animate-float pointer-events-none" />
+      <div className="fixed bottom-1/4 -right-32 w-[350px] h-[350px] rounded-full bg-teal-600/6 blur-3xl animate-float-slow pointer-events-none" />
 
       <div className="w-full max-w-md relative">
         <div className="flex items-center justify-center gap-3 mb-8">
@@ -126,7 +126,7 @@ export default function SignUp() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
-            <div className="flex items-center gap-3 bg-forge-surface rounded-xl px-4 py-3 border border-forge-border focus-within:border-violet-500/50 transition-colors">
+            <div className="flex items-center gap-3 bg-forge-surface rounded-xl px-4 py-3 border border-forge-border focus-within:border-forge-accent/50 transition-colors">
               <UserIcon size={15} className="text-forge-dim shrink-0" />
               <input
                 type="text"
@@ -137,7 +137,7 @@ export default function SignUp() {
               />
             </div>
 
-            <div className="flex items-center gap-3 bg-forge-surface rounded-xl px-4 py-3 border border-forge-border focus-within:border-violet-500/50 transition-colors">
+            <div className="flex items-center gap-3 bg-forge-surface rounded-xl px-4 py-3 border border-forge-border focus-within:border-forge-accent/50 transition-colors">
               <Mail size={15} className="text-forge-dim shrink-0" />
               <input
                 type="email"
@@ -149,7 +149,7 @@ export default function SignUp() {
               />
             </div>
 
-            <div className="flex items-center gap-3 bg-forge-surface rounded-xl px-4 py-3 border border-forge-border focus-within:border-violet-500/50 transition-colors">
+            <div className="flex items-center gap-3 bg-forge-surface rounded-xl px-4 py-3 border border-forge-border focus-within:border-forge-accent/50 transition-colors">
               <Lock size={15} className="text-forge-dim shrink-0" />
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -197,7 +197,7 @@ export default function SignUp() {
 
           <p className="text-center text-sm text-forge-muted mt-6">
             Already have an account?{' '}
-            <Link to="/signin" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
+            <Link to="/signin" className="text-forge-accent hover:text-forge-accent font-semibold transition-colors">
               Sign in
             </Link>
           </p>

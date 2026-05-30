@@ -93,12 +93,12 @@ function TimeInput({ label, value, max, onChange }: TimeInputProps) {
           onBlur={commit}
           onKeyDown={(e) => e.key === 'Enter' && commit()}
           placeholder="m:ss"
-          className="bg-forge-surface border border-violet-500/50 rounded-lg px-3 py-2 text-sm font-mono text-forge-text outline-none w-full"
+          className="bg-forge-surface border border-forge-accent/50 rounded-lg px-3 py-2 text-sm font-mono text-forge-text outline-none w-full"
         />
       ) : (
         <button
           onClick={() => { setRaw(toMMSS(value)); setEditing(true) }}
-          className="bg-forge-surface border border-forge-border hover:border-violet-500/50 rounded-lg px-3 py-2 text-sm font-mono text-forge-text text-left transition-colors cursor-pointer"
+          className="bg-forge-surface border border-forge-border hover:border-forge-accent/50 rounded-lg px-3 py-2 text-sm font-mono text-forge-text text-left transition-colors cursor-pointer"
         >
           {toMMSS(value)}
         </button>
@@ -213,8 +213,8 @@ export default function ManualClipper({ duration, jobId, onCreated }: ManualClip
     <div className="glass-card rounded-2xl p-5 border border-forge-border space-y-4">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-violet-500/12 border border-violet-500/22 flex items-center justify-center">
-          <Scissors size={13} className="text-violet-400" />
+        <div className="w-7 h-7 rounded-lg bg-forge-accent/10 border border-forge-accent/20 flex items-center justify-center">
+          <Scissors size={13} className="text-forge-accent" />
         </div>
         <span className="text-sm font-black text-forge-text">Manual Clip</span>
         <span className="ml-auto flex items-center gap-1.5 text-xs text-forge-dim px-2.5 py-1 rounded-full bg-forge-surface border border-forge-border">
@@ -225,8 +225,8 @@ export default function ManualClipper({ duration, jobId, onCreated }: ManualClip
 
       {/* NLP input */}
       <div className="flex gap-2">
-        <div className="flex-1 flex items-center gap-2 bg-forge-surface border border-forge-border focus-within:border-violet-500/40 rounded-xl px-3 py-2.5 transition-colors">
-          <Wand2 size={13} className="text-violet-400 shrink-0" />
+        <div className="flex-1 flex items-center gap-2 bg-forge-surface border border-forge-border focus-within:border-forge-accent/40 rounded-xl px-3 py-2.5 transition-colors">
+          <Wand2 size={13} className="text-forge-accent shrink-0" />
           <input
             type="text"
             value={nlpText}
@@ -241,7 +241,7 @@ export default function ManualClipper({ duration, jobId, onCreated }: ManualClip
           className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold rounded-xl border transition-all cursor-pointer shrink-0 ${
             nlpParsed
               ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
-              : 'bg-violet-500/10 border-violet-500/30 text-violet-400 hover:bg-violet-500/20'
+              : 'bg-forge-accent/10 border-forge-accent/30 text-forge-accent hover:bg-forge-accent/20'
           }`}
         >
           {nlpParsed ? <><Check size={13} /> Parsed</> : <><Wand2 size={13} /> Parse</>}
@@ -256,18 +256,18 @@ export default function ManualClipper({ duration, jobId, onCreated }: ManualClip
       >
         <div className="absolute inset-x-0 h-2 bg-forge-surface rounded-full border border-forge-border" />
         <div
-          className="absolute h-2 bg-violet-500/70 rounded-full"
+          className="absolute h-2 bg-forge-accent/70 rounded-full"
           style={{ left: `${startPct}%`, width: `${endPct - startPct}%` }}
         />
         <div
-          className="absolute w-5 h-5 rounded-full bg-white border-2 border-violet-500 shadow-lg cursor-ew-resize z-10 -translate-x-1/2 hover:scale-110 transition-transform"
+          className="absolute w-5 h-5 rounded-full bg-white border-2 border-forge-accent shadow-lg cursor-ew-resize z-10 -translate-x-1/2 hover:scale-110 transition-transform"
           style={{ left: `${startPct}%` }}
           onMouseDown={(e) => startDrag(e, 'start')}
           onTouchStart={(e) => startDrag(e, 'start')}
           onClick={(e) => e.stopPropagation()}
         />
         <div
-          className="absolute w-5 h-5 rounded-full bg-white border-2 border-violet-500 shadow-lg cursor-ew-resize z-10 -translate-x-1/2 hover:scale-110 transition-transform"
+          className="absolute w-5 h-5 rounded-full bg-white border-2 border-forge-accent shadow-lg cursor-ew-resize z-10 -translate-x-1/2 hover:scale-110 transition-transform"
           style={{ left: `${endPct}%` }}
           onMouseDown={(e) => startDrag(e, 'end')}
           onTouchStart={(e) => startDrag(e, 'end')}

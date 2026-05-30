@@ -846,11 +846,11 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                       fm.comingSoon
                         ? 'border-forge-border text-gray-500 opacity-60 cursor-not-allowed'
                         : focusMode === fm.id
-                          ? 'bg-pink-950 border-violet-600 text-pink-200 cursor-pointer'
+                          ? 'bg-forge-card border-forge-accent text-pink-200 cursor-pointer'
                           : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white cursor-pointer'
                     }`}
                   >
-                    <span className={`mt-1 w-3 h-3 rounded-full border-2 shrink-0 transition-colors duration-200 ${focusMode === fm.id && !fm.comingSoon ? 'bg-violet-500 border-violet-500' : 'border-gray-600'}`} />
+                    <span className={`mt-1 w-3 h-3 rounded-full border-2 shrink-0 transition-colors duration-200 ${focusMode === fm.id && !fm.comingSoon ? 'bg-forge-accent border-forge-accent' : 'border-gray-600'}`} />
                     <span className="flex-1">
                       <span className="flex items-center gap-2">
                         <span className="font-medium">{fm.label}</span>
@@ -924,7 +924,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     onClick={() => setCaptionStyle(cs.id)}
                     className={`relative rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                       captionStyle === cs.id
-                        ? 'border-violet-500 ring-2 ring-pink-400/40'
+                        ? 'border-forge-accent ring-2 ring-forge-accent/30'
                         : 'border-forge-border hover:border-gray-500'
                     }`}
                   >
@@ -1034,7 +1034,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                         onClick={() => setHookStyle(hs.id)}
                         className={`relative rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                           hookStyle === hs.id
-                            ? 'border-violet-500 ring-2 ring-pink-400/40'
+                            ? 'border-forge-accent ring-2 ring-forge-accent/30'
                             : 'border-forge-border hover:border-gray-500'
                         }`}
                       >
@@ -1104,7 +1104,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     step="0.1"
                     value={hookFontScale}
                     onChange={(e) => setHookFontScale(parseFloat(e.target.value))}
-                    className="flex-1 accent-violet-500"
+                    className="flex-1 accent-[#06b6d4]"
                   />
                 </div>
               </div>
@@ -1118,7 +1118,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             </div>
           )}
           {focusMode === 'face' && (
-            <div className="flex items-start gap-2 p-2.5 bg-pink-950/40 border border-pink-800/50 rounded-lg text-xs text-pink-200">
+            <div className="flex items-start gap-2 p-2.5 bg-forge-card/40 border border-pink-800/50 rounded-lg text-xs text-pink-200">
               <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
               <span>Face Focus uses MediaPipe + One-Euro smoothing + scene-cut locking + max-quality encode. First export adds ~30–60s.</span>
             </div>

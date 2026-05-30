@@ -65,7 +65,7 @@ export default function TrimHandle({ start, end, duration, onStartChange, onEndC
 
         {/* Selected range */}
         <div
-          className="absolute h-1.5 bg-violet-500 rounded-full"
+          className="absolute h-1.5 bg-forge-accent rounded-full"
           style={{ left: `${startPct}%`, width: `${endPct - startPct}%` }}
         />
 

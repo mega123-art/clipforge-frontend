@@ -103,8 +103,8 @@ export default function VerifyEmail() {
         <div className="fixed top-5 right-5 z-20">
           <ThemeToggle />
         </div>
-        <div className="fixed top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-violet-600/10 blur-3xl pointer-events-none" />
-        <div className="fixed bottom-1/4 -right-32 w-[350px] h-[350px] rounded-full bg-indigo-600/8 blur-3xl pointer-events-none" />
+        <div className="fixed top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-cyan-500/8 blur-3xl pointer-events-none" />
+        <div className="fixed bottom-1/4 -right-32 w-[350px] h-[350px] rounded-full bg-teal-600/6 blur-3xl pointer-events-none" />
         
         <div className="w-full max-w-md relative text-center">
           <div className="flex items-center justify-center gap-3 mb-8">
@@ -113,7 +113,7 @@ export default function VerifyEmail() {
           </div>
 
           <div className="glass-card rounded-2xl p-8 border border-forge-border flex flex-col items-center justify-center">
-            <Loader2 size={40} className="text-violet-400 animate-spin mb-4" />
+            <Loader2 size={40} className="text-forge-accent animate-spin mb-4" />
             <h1 className="text-xl font-black text-forge-text mb-2">Verifying your email</h1>
             <p className="text-sm text-forge-muted">Please hold on while we confirm your email address...</p>
           </div>
@@ -129,8 +129,8 @@ export default function VerifyEmail() {
         <div className="fixed top-5 right-5 z-20">
           <ThemeToggle />
         </div>
-        <div className="fixed top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-violet-600/10 blur-3xl pointer-events-none" />
-        <div className="fixed bottom-1/4 -right-32 w-[350px] h-[350px] rounded-full bg-indigo-600/8 blur-3xl pointer-events-none" />
+        <div className="fixed top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-cyan-500/8 blur-3xl pointer-events-none" />
+        <div className="fixed bottom-1/4 -right-32 w-[350px] h-[350px] rounded-full bg-teal-600/6 blur-3xl pointer-events-none" />
         
         <div className="w-full max-w-md relative text-center">
           <div className="flex items-center justify-center gap-3 mb-8">
@@ -146,7 +146,7 @@ export default function VerifyEmail() {
                 </div>
                 <h1 className="text-2xl font-black text-forge-text mb-2">Verification Successful</h1>
                 <p className="text-sm text-forge-muted mb-6">Thank you! Your email has been verified. You can now start creating viral clips.</p>
-                <div className="flex items-center gap-2 text-xs text-violet-400 font-semibold bg-violet-500/5 px-4 py-2.5 rounded-full border border-violet-500/15">
+                <div className="flex items-center gap-2 text-xs text-forge-accent font-semibold bg-forge-accent/8 px-4 py-2.5 rounded-full border border-forge-accent/15">
                   <Loader2 size={12} className="animate-spin" />
                   Redirecting to dashboard...
                 </div>
@@ -196,8 +196,8 @@ export default function VerifyEmail() {
       <div className="fixed top-5 right-5 z-20">
         <ThemeToggle />
       </div>
-      <div className="fixed top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-violet-600/10 blur-3xl pointer-events-none" />
-      <div className="fixed bottom-1/4 -right-32 w-[350px] h-[350px] rounded-full bg-indigo-600/8 blur-3xl pointer-events-none" />
+      <div className="fixed top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-cyan-500/8 blur-3xl pointer-events-none" />
+      <div className="fixed bottom-1/4 -right-32 w-[350px] h-[350px] rounded-full bg-teal-600/6 blur-3xl pointer-events-none" />
       
       <div className="w-full max-w-md relative">
         <div className="flex items-center justify-center gap-3 mb-8">
@@ -206,8 +206,8 @@ export default function VerifyEmail() {
         </div>
 
         <div className="glass-card rounded-2xl p-8 border border-forge-border text-center">
-          <div className="w-16 h-16 rounded-full bg-violet-600/10 border border-violet-500/25 flex items-center justify-center mx-auto mb-5 animate-pulse-soft">
-            <Mail size={28} className="text-violet-400" />
+          <div className="w-16 h-16 rounded-full bg-cyan-500/8 border border-forge-accent/25 flex items-center justify-center mx-auto mb-5 animate-pulse-soft">
+            <Mail size={28} className="text-forge-accent" />
           </div>
 
           <h1 className="text-2xl font-black text-forge-text mb-2">Verify your email</h1>

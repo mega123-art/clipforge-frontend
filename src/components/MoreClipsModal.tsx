@@ -116,7 +116,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
                   onClick={() => toggleClipType(ct.id)}
                   className={`px-3 py-1 rounded-full text-sm border transition-all ${
                     options.clip_types.includes(ct.id)
-                      ? 'bg-violet-600 border-violet-500 text-white'
+                      ? 'bg-forge-accent border-forge-accent text-white'
                       : 'border-forge-border text-forge-muted hover:border-forge-border-bright'
                   }`}
                 >
@@ -138,7 +138,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
               onChange={(e) => setCustomPrompt(e.target.value)}
               placeholder={`Examples:\n• Clips that make John Doe look credible and likeable — positive PR\n• Most engaging, scroll-stopping moments for max virality\n• Heated debate moments and strong pushbacks\n• Quotable insights worth sharing`}
               rows={5}
-              className="w-full bg-forge-surface border border-forge-border rounded-xl px-3.5 py-3 text-sm text-forge-text placeholder:text-forge-dim resize-none focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/20 transition-colors"
+              className="w-full bg-forge-surface border border-forge-border rounded-xl px-3.5 py-3 text-sm text-forge-text placeholder:text-forge-dim resize-none focus:outline-none focus:border-forge-accent/60 focus:ring-1 focus:ring-forge-accent/20 transition-colors"
             />
           </div>
         )}
@@ -151,7 +151,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
           <input
             type="range" min={1} max={10} value={options.max_clips}
             onChange={(e) => setOptions((o) => ({ ...o, max_clips: +e.target.value }))}
-            className="w-full accent-violet-500"
+            className="w-full accent-[#06b6d4]"
           />
         </div>
 
@@ -164,7 +164,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
             <input
               type="range" min={10} max={60} value={options.min_clip_duration}
               onChange={(e) => setOptions((o) => ({ ...o, min_clip_duration: +e.target.value }))}
-              className="w-full accent-violet-500"
+              className="w-full accent-[#06b6d4]"
             />
           </div>
           <div>
@@ -174,7 +174,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
             <input
               type="range" min={30} max={180} value={options.max_clip_duration}
               onChange={(e) => setOptions((o) => ({ ...o, max_clip_duration: +e.target.value }))}
-              className="w-full accent-violet-500"
+              className="w-full accent-[#06b6d4]"
             />
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
                 onClick={() => setOptions((o) => ({ ...o, target_aspect_ratio: ar }))}
                 className={`px-4 py-2 rounded-lg text-sm border transition-all ${
                   options.target_aspect_ratio === ar
-                    ? 'bg-violet-600 border-violet-500 text-white'
+                    ? 'bg-forge-accent border-forge-accent text-white'
                     : 'border-forge-border text-forge-muted hover:border-forge-border-bright'
                 }`}
               >
@@ -210,7 +210,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
           <button
             onClick={handleConfirm}
             disabled={!canSubmit}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-sm font-semibold text-white transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-forge-accent hover:bg-forge-accent/85 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-sm font-semibold text-white transition-colors"
           >
             {mode === 'custom' ? <Wand2 size={16} /> : <Plus size={16} />}
             {loading ? 'Finding...' : 'Find clips'}

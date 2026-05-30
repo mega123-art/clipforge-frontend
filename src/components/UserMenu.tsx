@@ -30,7 +30,7 @@ export default function UserMenu() {
         {user.avatar_url ? (
           <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full" />
         ) : (
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-forge-accent to-teal-600 flex items-center justify-center text-white text-xs font-bold">
             {initial}
           </div>
         )}
@@ -46,8 +46,8 @@ export default function UserMenu() {
             <p className="text-xs text-forge-dim">Signed in as</p>
             <p className="text-sm font-bold text-forge-text truncate">{user.email}</p>
             <div className="flex items-center gap-1.5 mt-1.5 text-xs">
-              <Coins size={11} className="text-violet-400" />
-              <span className="font-bold text-violet-300 tabular-nums">{user.credits ?? 0}</span>
+              <Coins size={11} className="text-forge-accent" />
+              <span className="font-bold text-forge-accent tabular-nums">{user.credits ?? 0}</span>
               <span className="text-forge-dim">credits</span>
             </div>
           </div>

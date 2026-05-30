@@ -70,7 +70,7 @@ export default function MyClips() {
 
         {loading && (
           <div className="flex justify-center py-20">
-            <Loader2 size={28} className="animate-spin text-violet-400" />
+            <Loader2 size={28} className="animate-spin text-forge-accent" />
           </div>
         )}
 
@@ -84,7 +84,7 @@ export default function MyClips() {
             <p>No videos processed yet.</p>
             <button
               onClick={() => navigate('/')}
-              className="mt-4 text-sm text-violet-400 hover:text-violet-300 transition-colors cursor-pointer"
+              className="mt-4 text-sm text-forge-accent hover:text-forge-accent transition-colors cursor-pointer"
             >
               Upload your first video →
             </button>
@@ -102,8 +102,8 @@ export default function MyClips() {
                   onClick={() => navigate(`/review/${job.job_id}`)}
                   className="w-full flex items-center gap-4 px-4 py-4 glass-card rounded-xl border border-forge-border card-hover-glow text-left group cursor-pointer"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-violet-500/12 border border-violet-500/22 flex items-center justify-center shrink-0 group-hover:bg-violet-500/22 transition-colors">
-                    <Film size={16} className="text-violet-400" />
+                  <div className="w-9 h-9 rounded-lg bg-forge-accent/10 border border-forge-accent/20 flex items-center justify-center shrink-0 group-hover:bg-forge-accent/22 transition-colors">
+                    <Film size={16} className="text-forge-accent" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-forge-text truncate">
@@ -127,7 +127,7 @@ export default function MyClips() {
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <StatusBadge status={job.status} />
-                    <ArrowRight size={14} className="text-forge-dim group-hover:text-violet-400 transition-colors" />
+                    <ArrowRight size={14} className="text-forge-dim group-hover:text-forge-accent transition-colors" />
                   </div>
                 </button>
               )

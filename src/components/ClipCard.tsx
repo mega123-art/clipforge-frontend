@@ -27,7 +27,7 @@ const CLIP_TYPE_COLOR: Record<string, string> = {
   myth_bust:      'text-green-500  bg-green-500/10  border-green-500/22',
   shocking_stat:  'text-cyan-500   bg-cyan-500/10   border-cyan-500/22',
   emotional_peak: 'text-pink-500   bg-pink-500/10   border-pink-500/22',
-  debate_moment:  'text-purple-500 bg-purple-500/10 border-purple-500/22',
+  debate_moment:  'text-forge-accent bg-forge-accent/10 border-forge-accent/20',
   story_arc:      'text-blue-500   bg-blue-500/10   border-blue-500/22',
 }
 
@@ -76,7 +76,7 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
   const [trimEnd, setTrimEnd] = useState<number>(clip.user_end_seconds ?? clip.end_seconds)
   const [saving, setSaving] = useState(false)
 
-  const typeClass = CLIP_TYPE_COLOR[clip.clip_type] || 'text-violet-500 bg-violet-500/10 border-violet-500/22'
+  const typeClass = CLIP_TYPE_COLOR[clip.clip_type] || 'text-violet-500 bg-forge-accent/10 border-forge-accent/20'
   const TypeIcon: LucideIcon = CLIP_TYPE_ICON[clip.clip_type] || Zap
 
   const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000'
@@ -126,7 +126,7 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
       className={`glass-card rounded-2xl overflow-hidden cursor-pointer transition-all duration-250 ${
         isSelected
           ? 'clip-glow-selected'
-          : 'border border-forge-border hover:border-violet-500/35 hover:-translate-y-0.5 hover:shadow-card-hover'
+          : 'border border-forge-border hover:border-forge-accent/30 hover:-translate-y-0.5 hover:shadow-card-hover'
       }`}
     >
       {/* Video player */}
@@ -230,7 +230,7 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
             <button
               onClick={(e) => { stop(e); handleSaveTrim() }}
               disabled={saving}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-600/80 hover:bg-violet-600 text-white disabled:opacity-50 transition-all border border-violet-500/55 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/60 hover:bg-forge-accent text-white disabled:opacity-50 transition-all border border-forge-accent/50 cursor-pointer"
             >
               {saving ? 'Saving...' : 'Save'}
             </button>
@@ -238,7 +238,7 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
 
           <button
             onClick={(e) => { stop(e); onExport() }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-forge-border text-forge-muted hover:border-violet-500/55 hover:text-violet-400 hover:bg-violet-500/8 transition-all ml-auto cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-forge-border text-forge-muted hover:border-forge-accent/50 hover:text-forge-accent hover:bg-forge-accent/8 transition-all ml-auto cursor-pointer"
           >
             <Download size={11} />
             Export

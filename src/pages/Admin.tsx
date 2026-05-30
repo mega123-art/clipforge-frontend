@@ -2,10 +2,11 @@ import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  Scissors, Coins, Users, FileText, Search, Plus, ShieldCheck,
+  Coins, Users, FileText, Search, Plus, ShieldCheck,
   ArrowLeft, AlertCircle, CheckCircle2, ServerCog, Lock,
   LucideIcon,
 } from 'lucide-react'
+import VibeClipLogo from '../components/VibeClipLogo'
 import type { AxiosError } from 'axios'
 import api from '../api'
 import useStore from '../store'
@@ -110,7 +111,7 @@ function StatTile({ icon: Icon, label, value, hint, accent }: StatTileProps) {
   return (
     <div className="glass-card rounded-2xl p-5 border border-forge-border">
       <div className="flex items-center gap-2.5 mb-2">
-        <Icon size={14} className={accent || 'text-violet-400'} />
+        <Icon size={14} className={accent || 'text-forge-accent'} />
         <span className="text-xs font-bold uppercase tracking-wider text-forge-muted">{label}</span>
       </div>
       <div className="text-3xl font-black text-forge-text tabular-nums">{value}</div>
@@ -215,9 +216,7 @@ export default function Admin() {
           className="flex items-center gap-2 text-forge-muted hover:text-forge-text transition-colors group cursor-pointer"
         >
           <ArrowLeft size={15} />
-          <div className="w-7 h-7 rounded-lg bg-violet-500/12 border border-violet-500/22 flex items-center justify-center">
-            <Scissors size={13} className="text-violet-400" />
-          </div>
+          <VibeClipLogo size={28} className="rounded-lg" />
           <span className="font-black text-sm gradient-text">VibeClip</span>
         </button>
         <div className="w-px h-4 bg-forge-border" />
@@ -250,7 +249,7 @@ export default function Admin() {
         {/* Grant credits */}
         <div className="glass-card rounded-2xl p-6 border border-forge-border">
           <div className="flex items-center gap-2 mb-4">
-            <Coins size={16} className="text-violet-400" />
+            <Coins size={16} className="text-forge-accent" />
             <h2 className="text-base font-black text-forge-text">Grant credits</h2>
           </div>
 
@@ -261,7 +260,7 @@ export default function Admin() {
               value={grantEmail}
               onChange={(e) => setGrantEmail(e.target.value)}
               placeholder="user@example.com"
-              className="md:col-span-5 bg-forge-surface border border-forge-border rounded-xl px-4 py-2.5 text-sm text-forge-text placeholder-forge-dim outline-none focus:border-violet-500/50 transition-colors"
+              className="md:col-span-5 bg-forge-surface border border-forge-border rounded-xl px-4 py-2.5 text-sm text-forge-text placeholder-forge-dim outline-none focus:border-forge-accent/50 transition-colors"
             />
             <input
               type="number"
@@ -271,7 +270,7 @@ export default function Admin() {
               value={grantAmount}
               onChange={(e) => setGrantAmount(e.target.value)}
               placeholder="10"
-              className="md:col-span-2 bg-forge-surface border border-forge-border rounded-xl px-4 py-2.5 text-sm text-forge-text placeholder-forge-dim outline-none focus:border-violet-500/50 transition-colors tabular-nums"
+              className="md:col-span-2 bg-forge-surface border border-forge-border rounded-xl px-4 py-2.5 text-sm text-forge-text placeholder-forge-dim outline-none focus:border-forge-accent/50 transition-colors tabular-nums"
             />
             <input
               type="text"
@@ -279,7 +278,7 @@ export default function Admin() {
               onChange={(e) => setGrantNote(e.target.value)}
               placeholder="Note (optional)"
               maxLength={200}
-              className="md:col-span-3 bg-forge-surface border border-forge-border rounded-xl px-4 py-2.5 text-sm text-forge-text placeholder-forge-dim outline-none focus:border-violet-500/50 transition-colors"
+              className="md:col-span-3 bg-forge-surface border border-forge-border rounded-xl px-4 py-2.5 text-sm text-forge-text placeholder-forge-dim outline-none focus:border-forge-accent/50 transition-colors"
             />
             <button
               type="submit"
@@ -308,7 +307,7 @@ export default function Admin() {
         {/* Users */}
         <div className="glass-card rounded-2xl border border-forge-border overflow-hidden">
           <div className="flex items-center gap-3 px-6 py-4 border-b border-forge-border">
-            <Users size={16} className="text-violet-400" />
+            <Users size={16} className="text-forge-accent" />
             <h2 className="text-base font-black text-forge-text">Users</h2>
             <div className="flex-1" />
             <div className="flex items-center gap-2 bg-forge-surface border border-forge-border rounded-lg px-3 py-1.5 w-64">
@@ -344,7 +343,7 @@ export default function Admin() {
                         {u.avatar_url ? (
                           <img src={u.avatar_url} alt="" className="w-7 h-7 rounded-full" />
                         ) : (
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-[10px] font-bold">
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-forge-accent to-teal-600 flex items-center justify-center text-white text-[10px] font-bold">
                             {(u.name || u.email).charAt(0).toUpperCase()}
                           </div>
                         )}
@@ -358,14 +357,14 @@ export default function Admin() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-forge-muted">{u.auth_provider}</td>
-                    <td className="px-4 py-3 text-right font-bold tabular-nums text-violet-300">{u.credits}</td>
+                    <td className="px-4 py-3 text-right font-bold tabular-nums text-forge-accent">{u.credits}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-forge-muted">{u.job_count}</td>
                     <td className="px-4 py-3 text-forge-muted">{u.created_at ? fmtDate(u.created_at) : '—'}</td>
                     <td className="px-4 py-3 text-forge-muted">{u.last_login_at ? fmtDate(u.last_login_at) : '—'}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={() => { setGrantEmail(u.email); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                        className="text-violet-400 hover:text-violet-300 font-semibold cursor-pointer"
+                        className="text-forge-accent hover:text-forge-accent font-semibold cursor-pointer"
                       >
                         Grant →
                       </button>
@@ -420,7 +419,7 @@ export default function Admin() {
           {/* Credit transactions */}
           <div className="glass-card rounded-2xl border border-forge-border overflow-hidden">
             <div className="flex items-center gap-2 px-5 py-3.5 border-b border-forge-border">
-              <Coins size={15} className="text-violet-400" />
+              <Coins size={15} className="text-forge-accent" />
               <h2 className="text-sm font-black text-forge-text">Recent credit activity</h2>
               <span className="ml-auto text-xs text-forge-dim">last {txns.length}</span>
             </div>

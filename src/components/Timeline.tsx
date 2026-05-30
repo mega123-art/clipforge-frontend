@@ -93,7 +93,7 @@ export default function Timeline({ duration, clips, selectedClipId, onClipClick 
             stroke="currentColor"
             strokeWidth="0.6"
             fill="none"
-            className="text-violet-300"
+            className="text-forge-accent"
           />
         </svg>
 
@@ -101,11 +101,11 @@ export default function Timeline({ duration, clips, selectedClipId, onClipClick 
         {hoverX !== null && hoverTime !== null && (
           <>
             <div
-              className="absolute top-0 bottom-0 w-px bg-violet-400/70 pointer-events-none z-20"
+              className="absolute top-0 bottom-0 w-px bg-forge-accent/70 pointer-events-none z-20"
               style={{ left: hoverX }}
             />
             <div
-              className="absolute -top-7 px-2 py-0.5 rounded bg-violet-600 text-white text-[10px] font-mono pointer-events-none z-30 shadow-lg"
+              className="absolute -top-7 px-2 py-0.5 rounded bg-forge-accent text-white text-[10px] font-mono pointer-events-none z-30 shadow-lg"
               style={{ left: hoverX, transform: 'translateX(-50%)' }}
             >
               {formatTime(hoverTime)}
@@ -159,7 +159,7 @@ export default function Timeline({ duration, clips, selectedClipId, onClipClick 
                   {formatTime(clip.start_seconds)} → {formatTime(clip.end_seconds)} ({Math.round(clip.end_seconds - clip.start_seconds)}s)
                 </div>
                 {clip.score != null && (
-                  <div className="text-violet-300 text-[10px]">score {(clip.score * 100).toFixed(0)}</div>
+                  <div className="text-forge-accent text-[10px]">score {(clip.score * 100).toFixed(0)}</div>
                 )}
               </div>
             </button>
