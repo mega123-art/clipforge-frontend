@@ -56,6 +56,15 @@ export default function Review() {
     }
   }, [job, setCurrentJob, setClips])
 
+  useEffect(() => {
+    if (selectedClipId) {
+      const element = document.getElementById(`clip-${selectedClipId}`)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
+  }, [selectedClipId])
+
   const approveAllMutation = useMutation({
     mutationFn: (clips: ClipOut[]) =>
       Promise.all(
@@ -247,14 +256,15 @@ export default function Review() {
               clip.status === 'rendering' ? (
                 <ClipCardSkeleton key={clip.id} rank={clip.rank} />
               ) : (
-                <ClipCard
-                  key={clip.id}
-                  clip={clip}
-                  isSelected={selectedClipId === clip.id}
-                  onSelect={() => setSelectedClipId(clip.id)}
-                  onExport={() => startExport([clip.id])}
-                  onUpdate={() => queryClient.invalidateQueries({ queryKey: ['job', jobId] })}
-                />
+                <div key={clip.id} id={`clip-${clip.id}`}>
+                  <ClipCard
+                    clip={clip}
+                    isSelected={selectedClipId === clip.id}
+                    onSelect={() => setSelectedClipId(clip.id)}
+                    onExport={() => startExport([clip.id])}
+                    onUpdate={() => queryClient.invalidateQueries({ queryKey: ['job', jobId] })}
+                  />
+                </div>
               )
             )}
           </div>
