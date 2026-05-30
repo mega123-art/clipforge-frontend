@@ -3,11 +3,18 @@ import ReactPlayer from 'react-player'
 import api from '../api'
 import {
   Check, Scissors, Download, ChevronDown, ChevronUp,
-  Flame, Zap, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
+  Flame, Zap, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen, AlertTriangle,
   LucideIcon,
 } from 'lucide-react'
 import TrimHandle from './TrimHandle'
 import type { ClipOut } from '../types/api'
+
+interface ExpiryInfo {
+  credit_type: string
+  days_left?: number
+  is_expired: boolean
+  expiry_date?: string
+}
 
 const CLIP_TYPE_ICON: Record<string, LucideIcon> = {
   controversy:    Flame,
@@ -75,11 +82,25 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
   const [trimStart, setTrimStart] = useState<number>(clip.user_start_seconds ?? clip.start_seconds)
   const [trimEnd, setTrimEnd] = useState<number>(clip.user_end_seconds ?? clip.end_seconds)
   const [saving, setSaving] = useState(false)
+  const [expiryInfo, setExpiryInfo] = useState<ExpiryInfo | null>(null)
 
   const typeClass = CLIP_TYPE_COLOR[clip.clip_type] || 'text-violet-500 bg-forge-accent/10 border-forge-accent/20'
   const TypeIcon: LucideIcon = CLIP_TYPE_ICON[clip.clip_type] || Zap
 
   const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000'
+
+  // Fetch expiry info for free clips
+  useEffect(() => {
+    let cancelled = false
+    api.get<ExpiryInfo>(`/api/clips/${clip.id}/expiry-info`)
+      .then(({ data }) => {
+        if (!cancelled) setExpiryInfo(data)
+      })
+      .catch(() => {
+        if (!cancelled) setExpiryInfo(null)
+      })
+    return () => { cancelled = true }
+  }, [clip.id])
 
   // Fetch a time-limited, HMAC-signed stream URL from the authenticated
   // /stream-url endpoint. <video> tags can't send Authorization headers,
@@ -163,6 +184,22 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
       </div>
 
       <div className="p-4 space-y-3">
+        {/* Expiry warning */}
+        {expiryInfo && expiryInfo.credit_type === 'free' && expiryInfo.days_left !== undefined && (
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+            expiryInfo.days_left <= 1
+              ? 'bg-red-500/10 border-red-500/30 text-red-400'
+              : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+          }`}>
+            <AlertTriangle size={14} />
+            <span className="text-xs font-semibold">
+              {expiryInfo.is_expired
+                ? 'Clip has expired'
+                : `Expires in ${expiryInfo.days_left} day${expiryInfo.days_left !== 1 ? 's' : ''}`}
+            </span>
+          </div>
+        )}
+
         {/* Type + timestamp */}
         <div className="flex items-center justify-between gap-2">
           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${typeClass}`}>
@@ -236,6 +273,18 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
             </button>
           )}
 
+          {expiryInfo && expiryInfo.credit_type === 'free' && (
+            <a
+              href={clip.download_url || '#'}
+              download
+              onClick={(e) => { stop(e) }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-forge-border text-forge-muted hover:border-green-500/50 hover:text-green-400 hover:bg-green-500/8 transition-all cursor-pointer"
+            >
+              <Download size={11} />
+              Download
+            </a>
+          )}
+
           <button
             onClick={(e) => { stop(e); onExport() }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-forge-border text-forge-muted hover:border-forge-accent/50 hover:text-forge-accent hover:bg-forge-accent/8 transition-all ml-auto cursor-pointer"
@@ -244,6 +293,19 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
             Export
           </button>
         </div>
+
+        {/* Contact admin for expiry */}
+        {expiryInfo && expiryInfo.credit_type === 'free' && expiryInfo.days_left !== undefined && expiryInfo.days_left <= 1 && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-forge-border/30 border border-forge-border">
+            <span className="text-xs text-forge-muted">
+              Need to keep this clip? Contact{' '}
+              <a href="mailto:admin" className="text-forge-accent hover:underline font-semibold">
+                admin
+              </a>
+              {' '}for credit top-up.
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )
