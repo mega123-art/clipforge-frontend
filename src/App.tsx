@@ -8,9 +8,11 @@ import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
 import Admin from './pages/Admin'
 import MyClips from './pages/MyClips'
+import Billing from './pages/Billing'
 import VerifyEmail from './pages/VerifyEmail'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminRoute from './components/AdminRoute'
+import SubscriptionModalProvider from './components/SubscriptionModalProvider'
 import useStore from './store'
 import type { AuthOut } from './types/api'
 
@@ -43,6 +45,7 @@ export default function App() {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <BrowserRouter>
         <AuthHydrator />
+        <SubscriptionModalProvider />
         <div className="min-h-screen bg-forge-bg text-forge-text">
           <Routes>
             <Route path="/signin" element={<SignIn />} />
@@ -52,6 +55,7 @@ export default function App() {
             <Route path="/processing/:jobId" element={<ProtectedRoute><Processing /></ProtectedRoute>} />
             <Route path="/review/:jobId" element={<ProtectedRoute><Review /></ProtectedRoute>} />
             <Route path="/clips" element={<ProtectedRoute><MyClips /></ProtectedRoute>} />
+            <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

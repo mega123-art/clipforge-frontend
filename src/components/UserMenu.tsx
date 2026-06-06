@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, User as UserIcon, ChevronDown, Coins, ShieldCheck } from 'lucide-react'
+import { LogOut, User as UserIcon, ChevronDown, Coins, ShieldCheck, CreditCard } from 'lucide-react'
 import useStore from '../store'
 
 export default function UserMenu() {
@@ -57,6 +57,13 @@ export default function UserMenu() {
           >
             <UserIcon size={14} />
             My Clips
+          </button>
+          <button
+            onClick={() => { setOpen(false); navigate('/billing') }}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-forge-subtext hover:bg-forge-card-hover hover:text-forge-text transition-colors cursor-pointer border-t border-forge-border"
+          >
+            <CreditCard size={14} />
+            Billing
           </button>
           {user.is_admin && (
             <button

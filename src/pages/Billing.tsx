@@ -1,0 +1,339 @@
+import { useState, useEffect } from 'react'
+import { Crown, Zap, Calendar, AlertCircle, ArrowUp } from 'lucide-react'
+import api from '../api'
+import useStore from '../store'
+import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
+import type { SubscriptionTier } from '../components/SubscriptionModal'
+
+interface SubscriptionInfo {
+  subscription_id: string
+  tier_id: number
+  tier_name: string
+  status: 'active' | 'pending' | 'paused' | 'canceled'
+  next_billing_date: string
+  current_period_end: string
+  subscription_credits_balance: number
+  price_paise: number
+}
+
+interface CreditBreakdown {
+  subscription_credits: number
+  subscription_tier: string | null
+  subscription_status: string | null
+  topup_credits: number
+  total: number
+  next_billing_date: string | null
+}
+
+export default function BillingPage() {
+  const user = useStore((s) => s.user)
+  const { openSubscription, openTopup } = useSubscriptionModal()
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null)
+  const [breakdown, setBreakdown] = useState<CreditBreakdown | null>(null)
+  const [tiers, setTiers] = useState<SubscriptionTier[]>([])
+  const [selectedUpgradeTierId, setSelectedUpgradeTierId] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const [subRes, breakdownRes, tiersRes] = await Promise.allSettled([
+        api.get('/api/subscriptions/current'),
+        api.get('/api/subscriptions/breakdown'),
+        api.get('/api/subscriptions/tiers'),
+      ])
+
+      if (subRes.status === 'fulfilled') {
+        setSubscription(subRes.value.data)
+      }
+
+      if (breakdownRes.status === 'fulfilled') {
+        setBreakdown(breakdownRes.value.data)
+      }
+
+      if (tiersRes.status === 'fulfilled') {
+        setTiers(tiersRes.value.data)
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to load billing info')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const handleCancelSubscription = async () => {
+    if (!window.confirm('Cancel subscription? You can re-subscribe anytime.')) return
+
+    setActionLoading(true)
+    try {
+      await api.post('/api/subscriptions/cancel')
+      fetchData()
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to cancel subscription')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handlePauseSubscription = async () => {
+    if (!window.confirm('Pause subscription? You can resume later.')) return
+
+    setActionLoading(true)
+    try {
+      await api.post('/api/subscriptions/pause')
+      fetchData()
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to pause subscription')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleResumeSubscription = async () => {
+    setActionLoading(true)
+    try {
+      await api.post('/api/subscriptions/resume')
+      fetchData()
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to resume subscription')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleUpgradeSubscription = async () => {
+    if (!selectedUpgradeTierId) return
+
+    setActionLoading(true)
+    setError(null)
+    try {
+      await api.post('/api/subscriptions/upgrade', { tier_id: selectedUpgradeTierId })
+      setSelectedUpgradeTierId(null)
+      fetchData()
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to upgrade subscription')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-forge-bg p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="animate-pulse space-y-8">
+            <div className="h-8 bg-forge-border/30 rounded w-1/4" />
+            <div className="grid gap-6">
+              {[1, 2].map((i) => (
+                <div key={i} className="h-40 bg-forge-border/30 rounded-xl" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-forge-bg p-6">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-2">Billing & Subscription</h1>
+        <p className="text-forge-text-muted mb-8">Manage your subscription and credits</p>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-8 flex items-start gap-3">
+            <AlertCircle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-red-400">{error}</div>
+          </div>
+        )}
+
+        {/* Current Credits */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-forge-border/10 rounded-xl p-6">
+            <div className="text-sm text-forge-text-muted mb-2">Total Credits</div>
+            <div className="text-3xl font-bold text-forge-accent">{breakdown?.total ?? 0}</div>
+          </div>
+
+          <div className="bg-forge-border/10 rounded-xl p-6">
+            <div className="text-sm text-forge-text-muted mb-2">Subscription Credits</div>
+            <div className="text-3xl font-bold">{breakdown?.subscription_credits ?? 0}</div>
+            <div className="text-xs text-forge-text-muted mt-1">{breakdown?.subscription_tier ?? 'None'}</div>
+          </div>
+
+          <div className="bg-forge-border/10 rounded-xl p-6">
+            <div className="text-sm text-forge-text-muted mb-2">Top-up Credits</div>
+            <div className="text-3xl font-bold">{breakdown?.topup_credits ?? 0}</div>
+          </div>
+        </div>
+
+        {/* Subscription Status */}
+        {/* Upgrade Section */}
+        {subscription && tiers.length > 0 && (
+          <div className="bg-forge-border/10 rounded-xl p-8 mb-8">
+            <div className="flex items-start gap-4 mb-6">
+              <ArrowUp size={24} className="text-amber-400 flex-shrink-0" />
+              <div>
+                <h3 className="text-xl font-bold mb-1">Upgrade Plan</h3>
+                <p className="text-sm text-forge-text-muted">Get more credits and features</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              {tiers
+                .filter((t) => t.id > subscription.tier_id) // Only show higher tiers
+                .map((tier) => (
+                  <button
+                    key={tier.id}
+                    onClick={() => setSelectedUpgradeTierId(tier.id)}
+                    className={`p-4 rounded-lg border-2 transition-all text-left ${
+                      selectedUpgradeTierId === tier.id
+                        ? 'border-forge-accent bg-forge-accent/10'
+                        : 'border-forge-border hover:border-forge-accent/50'
+                    }`}
+                  >
+                    <div className="font-bold text-sm mb-1">{tier.display_name}</div>
+                    <div className="text-forge-text-muted text-xs">₹{(tier.price_paise / 100).toLocaleString('en-IN')}/mo</div>
+                    <div className="text-forge-accent font-bold text-sm mt-2">{tier.total_credits} cr</div>
+                  </button>
+                ))}
+            </div>
+
+            <button
+              onClick={handleUpgradeSubscription}
+              disabled={!selectedUpgradeTierId || actionLoading}
+              className="px-6 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/30 disabled:opacity-50 transition-colors font-medium text-amber-300"
+            >
+              {actionLoading ? 'Upgrading...' : 'Upgrade Now'}
+            </button>
+          </div>
+        )}
+
+        {subscription ? (
+          <div className="bg-forge-border/10 rounded-xl p-8 mb-8">
+            <div className="flex items-start justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="bg-forge-accent/20 rounded-lg p-3">
+                  <Crown size={24} className="text-forge-accent" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">{subscription.tier_name}</h2>
+                  <div className="text-sm text-forge-text-muted capitalize">
+                    Status: {subscription.status}
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-forge-accent">
+                  ₹{(subscription.price_paise / 100).toLocaleString('en-IN')}
+                </div>
+                <div className="text-xs text-forge-text-muted">/month</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div>
+                <div className="text-sm text-forge-text-muted mb-1">Next Billing</div>
+                <div className="flex items-center gap-2">
+                  <Calendar size={16} className="text-forge-text-muted" />
+                  <span className="font-medium">
+                    {new Date(subscription.next_billing_date).toLocaleDateString('en-IN')}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-forge-text-muted mb-1">Period Ends</div>
+                <div className="flex items-center gap-2">
+                  <Calendar size={16} className="text-forge-text-muted" />
+                  <span className="font-medium">
+                    {new Date(subscription.current_period_end).toLocaleDateString('en-IN')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {subscription.status === 'pending' && (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-8 flex items-start gap-3">
+                <AlertCircle size={20} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-amber-300">
+                  Subscription pending. Waiting for payment confirmation...
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              {subscription.status === 'active' && (
+                <>
+                  <button
+                    onClick={handlePauseSubscription}
+                    disabled={actionLoading}
+                    className="px-4 py-2 rounded-lg border border-forge-border hover:bg-forge-border/20 disabled:opacity-50 transition-colors font-medium"
+                  >
+                    Pause
+                  </button>
+                  <button
+                    onClick={handleCancelSubscription}
+                    disabled={actionLoading}
+                    className="px-4 py-2 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 disabled:opacity-50 transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+
+              {subscription.status === 'paused' && (
+                <button
+                  onClick={handleResumeSubscription}
+                  disabled={actionLoading}
+                  className="px-4 py-2 rounded-lg bg-forge-accent hover:bg-forge-accent/90 disabled:opacity-50 transition-colors font-medium text-forge-bg"
+                >
+                  Resume
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-forge-border/10 rounded-xl p-8 mb-8">
+            <div className="flex items-center gap-4 mb-6">
+              <Crown size={28} className="text-forge-accent" />
+              <div>
+                <h2 className="text-xl font-bold">No Active Subscription</h2>
+                <p className="text-sm text-forge-text-muted">Start a subscription to get monthly credits + bonus</p>
+              </div>
+            </div>
+            <button
+              onClick={openSubscription}
+              className="px-6 py-2 rounded-lg bg-forge-accent hover:bg-forge-accent/90 transition-colors font-medium text-forge-bg"
+            >
+              View Plans
+            </button>
+          </div>
+        )}
+
+        {/* Top-up Option */}
+        <div className="bg-forge-border/10 rounded-xl p-8">
+          <div className="flex items-center gap-4 mb-6">
+            <Zap size={28} className="text-amber-400" />
+            <div>
+              <h3 className="text-xl font-bold">Buy Extra Credits</h3>
+              <p className="text-sm text-forge-text-muted">Top-up your account anytime with one-time purchases</p>
+            </div>
+          </div>
+          <button
+            onClick={openTopup}
+            className="px-6 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/30 transition-colors font-medium text-amber-300"
+          >
+            Buy Credits
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
