@@ -3,6 +3,7 @@ import { Crown, Zap, Calendar, AlertCircle, ArrowUp } from 'lucide-react'
 import api from '../api'
 import useStore from '../store'
 import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
+import TierBadge from '../components/TierBadge'
 import type { SubscriptionTier } from '../components/SubscriptionModal'
 
 interface SubscriptionInfo {
@@ -224,7 +225,10 @@ export default function BillingPage() {
                   <Crown size={24} className="text-forge-accent" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold">{subscription.tier_name}</h2>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h2 className="text-xl font-bold">{subscription.tier_name}</h2>
+                    <TierBadge tier={subscription.tier_name} size="sm" showLabel={false} />
+                  </div>
                   <div className="text-sm text-forge-text-muted capitalize">
                     Status: {subscription.status}
                   </div>

@@ -7,6 +7,8 @@ import VibeClipLogo from '../components/VibeClipLogo'
 import ThemeToggle from '../components/ThemeToggle'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
+import TopupButton from '../components/TopupButton'
+import PlanButton from '../components/PlanButton'
 import ClipCard from '../components/ClipCard'
 import ClipCardSkeleton from '../components/ClipCardSkeleton'
 import Timeline from '../components/Timeline'
@@ -210,6 +212,8 @@ export default function Review() {
           )}
 
           <CreditsBadge />
+          <PlanButton />
+          <TopupButton />
           <ThemeToggle />
           <UserMenu />
         </div>

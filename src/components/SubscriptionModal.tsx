@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Crown, Check } from 'lucide-react'
 import api from '../api'
 import { useRazorpay } from '../hooks/useRazorpay'
+import TierBadge from './TierBadge'
 
 export interface SubscriptionTier {
   id: number
@@ -108,7 +109,10 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
                   <Check size={18} className="text-forge-accent" />
                 </div>
               )}
-              <h3 className="font-bold text-lg mb-2">{tier.display_name}</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-lg">{tier.display_name}</h3>
+                <TierBadge tier={tier.display_name} size="sm" showLabel={false} />
+              </div>
               <div className="mb-4">
                 <div className="text-2xl font-bold text-forge-accent">
                   ₹{(tier.price_paise / 100).toLocaleString('en-IN')}

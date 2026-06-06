@@ -4,6 +4,8 @@ import { ArrowLeft, Clock, Film, CheckCircle, XCircle, Loader2, ArrowRight } fro
 import api from '../api'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
+import TopupButton from '../components/TopupButton'
+import PlanButton from '../components/PlanButton'
 import type { JobOut } from '../types/api'
 
 function fmtDate(iso: string) {
@@ -61,6 +63,8 @@ export default function MyClips() {
         </button>
         <div className="flex items-center gap-3">
           <CreditsBadge />
+          <PlanButton />
+          <TopupButton />
           <UserMenu />
         </div>
       </header>

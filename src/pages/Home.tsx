@@ -14,6 +14,9 @@ import URLInput from '../components/URLInput'
 import ThemeToggle from '../components/ThemeToggle'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
+import TopupButton from '../components/TopupButton'
+import PlanButton from '../components/PlanButton'
+import TierBadge from '../components/TierBadge'
 import type { AspectRatio } from '../types/api'
 
 interface ClipTypeDef {
@@ -327,6 +330,8 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-2">
           <CreditsBadge />
+          <PlanButton />
+          <TopupButton />
           <UserMenu />
           <ThemeToggle />
         </div>
