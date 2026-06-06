@@ -583,6 +583,16 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [hookSuggestions, setHookSuggestions] = useState<string[]>([])
   const [hookGenLoading, setHookGenLoading] = useState(false)
   const [hookGenError, setHookGenError] = useState<string | null>(null)
+  const [musicEnabled, setMusicEnabled] = useState(false)
+  const [musicTrackId, setMusicTrackId] = useState<string | null>(null)
+  const [musicVolume, setMusicVolume] = useState(0.5)
+  const [musicFadeIn, setMusicFadeIn] = useState(0)
+  const [musicFadeOut, setMusicFadeOut] = useState(0)
+  const [musicTrimStart, setMusicTrimStart] = useState(0)
+  const [musicTrimEnd, setMusicTrimEnd] = useState(0)
+  const [musicFile, setMusicFile] = useState<File | null>(null)
+  const [musicTracks, setMusicTracks] = useState<Array<{id: string, filename: string, duration: number}>>([])
+  const [loadingTracks, setLoadingTracks] = useState(false)
 
   const handleGenerateHook = async () => {
     if (!clipId) return
@@ -617,7 +627,8 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     setDownloadUrl(null)
     setError(null)
   }, [aspectRatio, captionStyle, captionPosition, includeCaptions, focusMode,
-      hookText, hookPosition, hookFontScale, hookStyle, hookYPct])
+      hookText, hookPosition, hookFontScale, hookStyle, hookYPct,
+      musicEnabled, musicTrackId, musicVolume, musicFadeIn, musicFadeOut, musicTrimStart, musicTrimEnd])
 
   const goPrev = () => {
     if (safeIndex > 0 && onIndexChange) onIndexChange(safeIndex - 1)
@@ -656,6 +667,13 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           hook_font_scale: hookFontScale,
           hook_style: hookStyle,
           hook_y_pct: hookYPct,
+          music_enabled: musicEnabled,
+          music_track_id: musicTrackId,
+          music_volume: musicVolume,
+          music_fade_in: musicFadeIn,
+          music_fade_out: musicFadeOut,
+          music_trim_start: musicTrimStart,
+          music_trim_end: musicTrimEnd,
         },
       )
       if (targetId !== clipId) return
@@ -709,7 +727,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     const win = window.open('', '_blank')
     try {
       const resp = await api.get(downloadUrl, { responseType: 'arraybuffer' })
-      const contentType = (resp.headers['content-type'] || '').toLowerCase()
+      const contentType = (String(resp.headers['content-type'] || '')).toLowerCase()
 
       if (contentType.includes('application/json')) {
         const text = new TextDecoder().decode(resp.data as ArrayBuffer)
@@ -1123,6 +1141,131 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               <span>Face Focus uses MediaPipe + One-Euro smoothing + scene-cut locking + max-quality encode. First export adds ~30–60s.</span>
             </div>
           )}
+
+          {/* Music Settings */}
+          <div className="space-y-3 border border-gray-700 rounded-lg p-3.5 bg-gray-950/40">
+            <div className="flex items-center gap-2">
+              <input
+                id="music-enabled"
+                type="checkbox"
+                checked={musicEnabled}
+                onChange={(e) => setMusicEnabled(e.target.checked)}
+                className="rounded cursor-pointer accent-[#06b6d4]"
+              />
+              <label htmlFor="music-enabled" className="text-sm font-medium text-gray-200 cursor-pointer">
+                Add background music
+              </label>
+            </div>
+
+            {musicEnabled && (
+              <div className="space-y-3 pl-6 border-l border-gray-700">
+                <div className="space-y-1">
+                  <label htmlFor="music-upload" className="text-xs text-gray-400 block">
+                    Upload music track
+                  </label>
+                  <input
+                    id="music-upload"
+                    type="file"
+                    accept=".mp3,.m4a,.wav"
+                    onChange={(e) => {
+                      setMusicFile(e.target.files?.[0] || null)
+                      if (e.target.files?.[0]) {
+                        // In a real app, would upload here
+                        // For now, just store filename as track_id
+                        setMusicTrackId(e.target.files[0].name.replace(/\.[^.]+$/, ''))
+                      }
+                    }}
+                    className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded text-xs text-gray-300 file:bg-cyan-600 file:text-white file:border-0 file:py-1 file:px-2 file:rounded file:text-xs file:font-semibold file:cursor-pointer"
+                  />
+                  {musicFile && <p className="text-[10px] text-gray-500 mt-1">{musicFile.name} ({(musicFile.size / 1024 / 1024).toFixed(1)} MB)</p>}
+                </div>
+
+                {musicTrackId && (
+                  <>
+                    <div className="space-y-1">
+                      <label htmlFor="music-trim-start" className="text-xs text-gray-400 block">
+                        Trim start {musicTrimStart.toFixed(1)}s
+                      </label>
+                      <input
+                        id="music-trim-start"
+                        type="range"
+                        min="0"
+                        max="30"
+                        step="0.1"
+                        value={musicTrimStart}
+                        onChange={(e) => setMusicTrimStart(parseFloat(e.target.value))}
+                        className="w-full accent-[#06b6d4]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label htmlFor="music-trim-end" className="text-xs text-gray-400 block">
+                        Trim end {musicTrimEnd.toFixed(1)}s (0 = full)
+                      </label>
+                      <input
+                        id="music-trim-end"
+                        type="range"
+                        min="0"
+                        max="30"
+                        step="0.1"
+                        value={musicTrimEnd}
+                        onChange={(e) => setMusicTrimEnd(parseFloat(e.target.value))}
+                        className="w-full accent-[#06b6d4]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label htmlFor="music-volume" className="text-xs text-gray-400 block">
+                        Volume {(musicVolume * 100).toFixed(0)}%
+                      </label>
+                      <input
+                        id="music-volume"
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={musicVolume}
+                        onChange={(e) => setMusicVolume(parseFloat(e.target.value))}
+                        className="w-full accent-[#06b6d4]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label htmlFor="music-fade-in" className="text-xs text-gray-400 block">
+                        Fade in {musicFadeIn.toFixed(1)}s
+                      </label>
+                      <input
+                        id="music-fade-in"
+                        type="range"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        value={musicFadeIn}
+                        onChange={(e) => setMusicFadeIn(parseFloat(e.target.value))}
+                        className="w-full accent-[#06b6d4]"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label htmlFor="music-fade-out" className="text-xs text-gray-400 block">
+                        Fade out {musicFadeOut.toFixed(1)}s
+                      </label>
+                      <input
+                        id="music-fade-out"
+                        type="range"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        value={musicFadeOut}
+                        onChange={(e) => setMusicFadeOut(parseFloat(e.target.value))}
+                        className="w-full accent-[#06b6d4]"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
           {error && (
             <p role="alert" className="text-red-400 text-sm">{error}</p>

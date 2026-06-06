@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -208,6 +208,16 @@ export default function Admin() {
 
   const fmtDate = (d: string): string => new Date(d).toLocaleString()
 
+  const downloadCsv = useCallback(async (endpoint: string, filename: string) => {
+    const resp = await api.get(endpoint, { responseType: 'blob' })
+    const url = URL.createObjectURL(new Blob([resp.data], { type: 'text/csv' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [])
+
   return (
     <div className="min-h-screen flex flex-col page-enter">
       {/* Header */}
@@ -279,6 +289,30 @@ export default function Admin() {
             hint="All time consumed"
             accent="text-orange-400"
           />
+        </div>
+
+        {/* Export CSV */}
+        <div className="glass-card rounded-2xl p-5 border border-forge-border">
+          <div className="flex items-center gap-2 mb-4">
+            <Download size={15} className="text-forge-accent" />
+            <h2 className="text-sm font-black text-forge-text">Export data</h2>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {[
+              { label: 'Users', endpoint: '/api/admin/export/users.csv', file: 'users.csv' },
+              { label: 'Jobs', endpoint: '/api/admin/export/jobs.csv', file: 'jobs.csv' },
+              { label: 'Transactions', endpoint: '/api/admin/export/transactions.csv', file: 'transactions.csv' },
+            ].map(({ label, endpoint, file }) => (
+              <button
+                key={file}
+                onClick={() => downloadCsv(endpoint, file)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-forge-surface border border-forge-border hover:border-forge-accent/40 text-sm font-semibold text-forge-text transition-colors cursor-pointer"
+              >
+                <Download size={13} className="text-forge-accent" />
+                {label} CSV
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Grant credits */}

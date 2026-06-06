@@ -88,9 +88,22 @@ export interface ExportRequest {
   aspect_ratio: AspectRatio | string
   caption_style: string
   caption_language?: string
+  caption_position?: string
   include_captions: boolean
   output_format: string
   focus_mode: 'none' | 'speaker' | 'center' | string
+  hook_text?: string | null
+  hook_position?: string
+  hook_font_scale?: number
+  hook_style?: string
+  hook_y_pct?: number | null
+  music_enabled?: boolean
+  music_track_id?: string | null
+  music_volume?: number
+  music_fade_in?: number
+  music_fade_out?: number
+  music_trim_start?: number
+  music_trim_end?: number
 }
 
 export interface ExportResponse {
