@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Coins, Users, FileText, Search, Plus, ShieldCheck,
   ArrowLeft, AlertCircle, CheckCircle2, ServerCog, Lock,
+  Clapperboard, Download, Activity, XCircle,
   LucideIcon,
 } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
@@ -234,15 +235,49 @@ export default function Admin() {
 
       <main className="flex-1 px-6 py-6 max-w-6xl mx-auto w-full space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <StatTile icon={Users} label="Total users" value={stats?.total_users ?? '—'} />
           <StatTile icon={FileText} label="Total jobs" value={stats?.total_jobs ?? '—'} />
           <StatTile
+            icon={Activity}
+            label="Active jobs"
+            value={stats?.active_jobs ?? '—'}
+            hint="Currently processing"
+            accent="text-emerald-400"
+          />
+          <StatTile
+            icon={XCircle}
+            label="Failed jobs"
+            value={stats?.failed_jobs ?? '—'}
+            accent="text-rose-400"
+          />
+          <StatTile
+            icon={Clapperboard}
+            label="Clips generated"
+            value={stats?.total_clips ?? '—'}
+            hint="All time"
+            accent="text-violet-400"
+          />
+          <StatTile
+            icon={Download}
+            label="Clips exported"
+            value={stats?.total_exports ?? '—'}
+            hint="Status: ready"
+            accent="text-sky-400"
+          />
+          <StatTile
             icon={Coins}
-            label="Outstanding credits"
+            label="Credits outstanding"
             value={stats?.total_credits_outstanding ?? '—'}
-            hint="Sum across all users"
+            hint="Unspent across all users"
             accent="text-amber-400"
+          />
+          <StatTile
+            icon={Coins}
+            label="Credits spent"
+            value={stats?.total_credits_spent ?? '—'}
+            hint="All time consumed"
+            accent="text-orange-400"
           />
         </div>
 

@@ -128,7 +128,12 @@ export interface JobCreateResponse {
 export interface AdminStats {
   total_users: number
   total_jobs: number
+  active_jobs: number
+  failed_jobs: number
+  total_clips: number
+  total_exports: number
   total_credits_outstanding: number
+  total_credits_spent: number
   dev_mode?: boolean
 }
 
