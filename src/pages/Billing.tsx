@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Crown, Zap, Calendar, AlertCircle, ArrowUp } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Crown, Zap, Calendar, AlertCircle, ArrowUp, ArrowLeft } from 'lucide-react'
 import api from '../api'
 import useStore from '../store'
 import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
+import { useRazorpay } from '../hooks/useRazorpay'
 import TierBadge from '../components/TierBadge'
 import type { SubscriptionTier } from '../components/SubscriptionModal'
 
@@ -15,6 +17,8 @@ interface SubscriptionInfo {
   current_period_end: string
   subscription_credits_balance: number
   price_paise: number
+  razorpay_subscription_id?: string
+  razorpay_key_id?: string
 }
 
 interface CreditBreakdown {
@@ -28,6 +32,8 @@ interface CreditBreakdown {
 
 export default function BillingPage() {
   const user = useStore((s) => s.user)
+  const refreshUser = useStore((s) => s.refreshUser)
+  const navigate = useNavigate()
   const { openSubscription, openTopup } = useSubscriptionModal()
   const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null)
   const [breakdown, setBreakdown] = useState<CreditBreakdown | null>(null)
@@ -36,6 +42,7 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const { openCheckout, error: razorpayError, setError: setRazorpayError } = useRazorpay()
 
   const fetchData = async () => {
     try {
@@ -59,6 +66,9 @@ export default function BillingPage() {
       if (tiersRes.status === 'fulfilled') {
         setTiers(tiersRes.value.data)
       }
+
+      // Sync user profile / credits in navbar/menu
+      await refreshUser()
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load billing info')
     } finally {
@@ -71,7 +81,12 @@ export default function BillingPage() {
   }, [])
 
   const handleCancelSubscription = async () => {
-    if (!window.confirm('Cancel subscription? You can re-subscribe anytime.')) return
+    const isPending = subscription?.status === 'pending'
+    const confirmMsg = isPending
+      ? 'Cancel pending subscription?'
+      : 'Cancel subscription? You can re-subscribe anytime.'
+
+    if (!window.confirm(confirmMsg)) return
 
     setActionLoading(true)
     try {
@@ -79,6 +94,33 @@ export default function BillingPage() {
       fetchData()
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to cancel subscription')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handlePayNow = async () => {
+    if (!subscription || !subscription.razorpay_subscription_id || !subscription.razorpay_key_id) return
+
+    setActionLoading(true)
+    setError(null)
+    setRazorpayError(null)
+    try {
+      const success = await openCheckout(
+        {
+          key: subscription.razorpay_key_id,
+          subscription_id: subscription.razorpay_subscription_id,
+        },
+        'subscription',
+      )
+
+      if (success) {
+        fetchData()
+      } else {
+        setError(razorpayError || 'Payment verification failed')
+      }
+    } catch (err: any) {
+      setError('Failed to complete payment')
     } finally {
       setActionLoading(false)
     }
@@ -116,7 +158,7 @@ export default function BillingPage() {
     setActionLoading(true)
     setError(null)
     try {
-      await api.post('/api/subscriptions/upgrade', { tier_id: selectedUpgradeTierId })
+      await api.post('/api/subscriptions/create', { tier_id: selectedUpgradeTierId })
       setSelectedUpgradeTierId(null)
       fetchData()
     } catch (err: any) {
@@ -146,13 +188,20 @@ export default function BillingPage() {
   return (
     <div className="min-h-screen bg-forge-bg p-6">
       <div className="max-w-4xl mx-auto">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1.5 text-xs font-bold text-forge-muted hover:text-forge-text transition-colors mb-6 cursor-pointer"
+        >
+          <ArrowLeft size={14} />
+          <span>Back</span>
+        </button>
         <h1 className="text-3xl font-bold mb-2">Billing & Subscription</h1>
         <p className="text-forge-text-muted mb-8">Manage your subscription and credits</p>
 
-        {error && (
+        {(error || razorpayError) && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-8 flex items-start gap-3">
             <AlertCircle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-red-400">{error}</div>
+            <div className="text-sm text-red-400">{error || razorpayError}</div>
           </div>
         )}
 
@@ -264,24 +313,37 @@ export default function BillingPage() {
             </div>
 
             {subscription.status === 'pending' && (
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-8 flex items-start gap-3">
-                <AlertCircle size={20} className="text-amber-400 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-amber-300">
-                  Subscription pending. Waiting for payment confirmation...
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle size={20} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-amber-300">
+                    Subscription pending. Waiting for payment confirmation...
+                  </div>
                 </div>
+                {subscription.razorpay_subscription_id && (
+                  <button
+                    onClick={handlePayNow}
+                    disabled={actionLoading}
+                    className="px-4 py-1.5 rounded-lg bg-amber-500 text-forge-bg hover:bg-amber-600 disabled:opacity-50 transition-colors font-semibold text-sm"
+                  >
+                    {actionLoading ? 'Processing...' : 'Pay Now'}
+                  </button>
+                )}
               </div>
             )}
 
             <div className="flex gap-3">
-              {subscription.status === 'active' && (
+              {(subscription.status === 'active' || subscription.status === 'pending') && (
                 <>
-                  <button
-                    onClick={handlePauseSubscription}
-                    disabled={actionLoading}
-                    className="px-4 py-2 rounded-lg border border-forge-border hover:bg-forge-border/20 disabled:opacity-50 transition-colors font-medium"
-                  >
-                    Pause
-                  </button>
+                  {subscription.status === 'active' && (
+                    <button
+                      onClick={handlePauseSubscription}
+                      disabled={actionLoading}
+                      className="px-4 py-2 rounded-lg border border-forge-border hover:bg-forge-border/20 disabled:opacity-50 transition-colors font-medium"
+                    >
+                      Pause
+                    </button>
+                  )}
                   <button
                     onClick={handleCancelSubscription}
                     disabled={actionLoading}

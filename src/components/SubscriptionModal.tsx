@@ -49,14 +49,32 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
     if (!selectedTierId) return
 
     setError(null)
+    setRazorpayError(null)
 
     try {
       const res = await api.post('/api/subscriptions/create', { tier_id: selectedTierId })
+      const { razorpay_subscription_id, razorpay_key_id } = res.data
 
-      // Subscription created locally. Razorpay will charge via webhook.
-      // Check your email for payment confirmation.
-      onSubscribed?.()
-      onClose()
+      if (razorpay_subscription_id && razorpay_key_id) {
+        const success = await openCheckout(
+          {
+            key: razorpay_key_id,
+            subscription_id: razorpay_subscription_id,
+          },
+          'subscription',
+        )
+
+        if (success) {
+          onSubscribed?.()
+          onClose()
+        } else {
+          setError(razorpayError || 'Payment verification failed')
+        }
+      } else {
+        // Direct success / upgraded path
+        onSubscribed?.()
+        onClose()
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Subscription failed')
     }
@@ -152,9 +170,9 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
           </div>
         )}
 
-        {error && (
+        {(error || razorpayError) && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-8 text-sm text-red-400">
-            {error}
+            {error || razorpayError}
           </div>
         )}
 

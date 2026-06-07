@@ -124,6 +124,7 @@ export interface User {
   created_at?: string
   last_login_at?: string | null
   job_count?: number
+  subscription_tier_name?: string | null
 }
 
 export interface AuthOut {

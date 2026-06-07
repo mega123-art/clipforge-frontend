@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   ChevronDown, ChevronUp, Clock, ArrowRight, Zap,
   Flame, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
-  LucideIcon, SlidersHorizontal, Wand2, Play,
+  LucideIcon, SlidersHorizontal, Wand2, Play, Crown,
 } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
 import type { AxiosError } from 'axios'
@@ -259,7 +259,7 @@ const AnimatedClipPanel = memo(() => (
 
 export default function Home() {
   const navigate = useNavigate()
-  const { getRecentJobs, addRecentJob, refreshUser } = useStore()
+  const { getRecentJobs, addRecentJob, refreshUser, user } = useStore()
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [clipMode, setClipMode] = useState<ClipMode>('quick')
   const [customPrompt, setCustomPrompt] = useState('')
@@ -330,8 +330,10 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-2">
           <CreditsBadge />
-          <PlanButton />
-          <TopupButton />
+          <div className="hidden sm:flex items-center gap-2">
+            <PlanButton />
+            <TopupButton />
+          </div>
           <UserMenu />
           <ThemeToggle />
         </div>
@@ -345,16 +347,30 @@ export default function Home() {
           <HeroBg />
           <div className="relative z-10 w-full max-w-xl">
 
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full glass border border-forge-border mb-8 text-xs text-forge-muted cursor-default"
-            >
-              <span className="pulse-dot" />
-              <span className="font-medium">Claude AI · Whisper large-v3 · Real-time</span>
-            </motion.div>
+            {/* Badges container */}
+            <div className="flex flex-wrap items-center gap-3 mb-8">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full glass border border-forge-border text-xs text-forge-muted cursor-default"
+              >
+                <span className="pulse-dot" />
+                <span className="font-medium">Claude AI · Whisper large-v3 · Real-time</span>
+              </motion.div>
+
+              {user?.subscription_tier_name && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.05 }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-forge-accent/15 border border-forge-accent/35 text-xs text-forge-accent font-bold cursor-default shadow-glow-violet-sm"
+                >
+                  <Crown size={12} className="text-forge-accent animate-pulse" />
+                  <span>{user.subscription_tier_name} Plan</span>
+                </motion.div>
+              )}
+            </div>
 
             {/* H1 */}
             <motion.h1

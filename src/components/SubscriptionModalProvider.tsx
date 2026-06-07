@@ -15,7 +15,7 @@ export default function SubscriptionModalProvider() {
           onClose={closeSubscription}
           onSubscribed={() => {
             closeSubscription()
-            // Show success toast or refresh user
+            window.location.reload()
           }}
         />
       )}
@@ -25,7 +25,7 @@ export default function SubscriptionModalProvider() {
           onClose={closeTopup}
           onTopup={() => {
             closeTopup()
-            // Show success toast or refresh user
+            window.location.reload()
           }}
         />
       )}

@@ -3,13 +3,15 @@ import api from '../api'
 
 interface RazorpayCheckoutOptions {
   key: string
-  order_id: string
-  amount: number
+  order_id?: string
+  subscription_id?: string
+  amount?: number
 }
 
 interface PaymentResponse {
   razorpay_payment_id: string
-  razorpay_order_id: string
+  razorpay_order_id?: string
+  razorpay_subscription_id?: string
   razorpay_signature: string
 }
 
@@ -30,10 +32,8 @@ export function useRazorpay() {
         return
       }
 
-      const razorpay = new window.Razorpay({
+      const checkoutConfig: any = {
         key: options.key,
-        order_id: options.order_id,
-        amount: options.amount,
         currency: 'INR',
         handler: async (response: PaymentResponse) => {
           try {
@@ -46,11 +46,17 @@ export function useRazorpay() {
                 ? '/api/subscriptions/verify'
                 : '/api/payments/topup/verify'
 
-            await api.post(endpoint, {
-              razorpay_order_id: response.razorpay_order_id,
+            const payload: any = {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-            })
+            }
+            if (paymentType === 'subscription') {
+              payload.razorpay_subscription_id = response.razorpay_subscription_id || options.subscription_id
+            } else {
+              payload.razorpay_order_id = response.razorpay_order_id || options.order_id
+            }
+
+            await api.post(endpoint, payload)
 
             resolve(true)
           } catch (err: any) {
@@ -68,7 +74,16 @@ export function useRazorpay() {
         theme: {
           color: '#3b82f6',
         },
-      })
+      }
+
+      if (options.subscription_id) {
+        checkoutConfig.subscription_id = options.subscription_id
+      } else {
+        checkoutConfig.order_id = options.order_id
+        checkoutConfig.amount = options.amount
+      }
+
+      const razorpay = new window.Razorpay(checkoutConfig)
 
       razorpay.open()
     })

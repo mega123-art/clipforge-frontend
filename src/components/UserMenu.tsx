@@ -45,10 +45,17 @@ export default function UserMenu() {
           <div className="px-3.5 py-3 border-b border-forge-border">
             <p className="text-xs text-forge-dim">Signed in as</p>
             <p className="text-sm font-bold text-forge-text truncate">{user.email}</p>
-            <div className="flex items-center gap-1.5 mt-1.5 text-xs">
-              <Coins size={11} className="text-forge-accent" />
-              <span className="font-bold text-forge-accent tabular-nums">{user.credits ?? 0}</span>
-              <span className="text-forge-dim">credits</span>
+            <div className="flex items-center justify-between mt-2 text-xs">
+              <div className="flex items-center gap-1.5">
+                <Coins size={11} className="text-forge-accent" />
+                <span className="font-bold text-forge-accent tabular-nums">{user.credits ?? 0}</span>
+                <span className="text-forge-dim">credits</span>
+              </div>
+              {user.subscription_tier_name && (
+                <span className="text-[10px] font-bold text-forge-accent bg-forge-accent/10 border border-forge-accent/25 px-1.5 py-0.5 rounded">
+                  {user.subscription_tier_name}
+                </span>
+              )}
             </div>
           </div>
           <button

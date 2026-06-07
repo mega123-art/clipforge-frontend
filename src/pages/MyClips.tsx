@@ -42,6 +42,7 @@ export default function MyClips() {
   const [jobs, setJobs] = useState<JobOut[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     api.get<JobOut[]>('/api/jobs')
@@ -63,8 +64,10 @@ export default function MyClips() {
         </button>
         <div className="flex items-center gap-3">
           <CreditsBadge />
-          <PlanButton />
-          <TopupButton />
+          <div className="hidden sm:flex items-center gap-2">
+            <PlanButton />
+            <TopupButton />
+          </div>
           <UserMenu />
         </div>
       </header>
@@ -96,47 +99,76 @@ export default function MyClips() {
         )}
 
         {!loading && !error && jobs.length > 0 && (
-          <div className="space-y-3">
-            {jobs.map(job => {
-              const exportedCount = job.clips.filter(c => c.status === 'exported').length
-              const totalClips = job.clips.length
+          <>
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search by video title..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl bg-forge-border/10 border border-forge-border focus:border-forge-accent focus:outline-none transition-colors text-sm text-forge-text placeholder:text-forge-dim"
+              />
+            </div>
+
+            {(() => {
+              const filteredJobs = jobs.filter(job => {
+                const title = (job.video_title || job.source_filename || job.job_id || '').toLowerCase()
+                return title.includes(searchQuery.toLowerCase())
+              })
+
+              if (filteredJobs.length === 0) {
+                return (
+                  <div className="text-center py-10 text-forge-dim text-sm">
+                    No matching videos found.
+                  </div>
+                )
+              }
+
               return (
-                <button
-                  key={job.job_id}
-                  onClick={() => navigate(`/review/${job.job_id}`)}
-                  className="w-full flex items-center gap-4 px-4 py-4 glass-card rounded-xl border border-forge-border card-hover-glow text-left group cursor-pointer"
-                >
-                  <div className="w-9 h-9 rounded-lg bg-forge-accent/10 border border-forge-accent/20 flex items-center justify-center shrink-0 group-hover:bg-forge-accent/22 transition-colors">
-                    <Film size={16} className="text-forge-accent" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-forge-text truncate">
-                      {job.video_title || job.source_filename || job.job_id}
-                    </p>
-                    <div className="flex items-center gap-3 mt-0.5">
-                      <span className="flex items-center gap-1 text-xs text-forge-dim">
-                        <Clock size={10} />
-                        {fmtDate(job.created_at)}
-                      </span>
-                      {job.video_duration_seconds && (
-                        <span className="text-xs text-forge-dim">{fmtDuration(job.video_duration_seconds)}</span>
-                      )}
-                      {totalClips > 0 && (
-                        <span className="text-xs text-forge-dim">{totalClips} clip{totalClips !== 1 ? 's' : ''}</span>
-                      )}
-                      {exportedCount > 0 && (
-                        <span className="text-xs text-emerald-400">{exportedCount} exported</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <StatusBadge status={job.status} />
-                    <ArrowRight size={14} className="text-forge-dim group-hover:text-forge-accent transition-colors" />
-                  </div>
-                </button>
+                <div className="space-y-3">
+                  {filteredJobs.map(job => {
+                    const exportedCount = job.clips.filter(c => c.status === 'exported').length
+                    const totalClips = job.clips.length
+                    return (
+                      <button
+                        key={job.job_id}
+                        onClick={() => navigate(`/review/${job.job_id}`)}
+                        className="w-full flex items-center gap-4 px-4 py-4 glass-card rounded-xl border border-forge-border card-hover-glow text-left group cursor-pointer"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-forge-accent/10 border border-forge-accent/20 flex items-center justify-center shrink-0 group-hover:bg-forge-accent/22 transition-colors">
+                          <Film size={16} className="text-forge-accent" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-forge-text truncate">
+                            {job.video_title || job.source_filename || job.job_id}
+                          </p>
+                          <div className="flex items-center gap-3 mt-0.5">
+                            <span className="flex items-center gap-1 text-xs text-forge-dim">
+                              <Clock size={10} />
+                              {fmtDate(job.created_at)}
+                            </span>
+                            {job.video_duration_seconds && (
+                              <span className="text-xs text-forge-dim">{fmtDuration(job.video_duration_seconds)}</span>
+                            )}
+                            {totalClips > 0 && (
+                              <span className="text-xs text-forge-dim">{totalClips} clip{totalClips !== 1 ? 's' : ''}</span>
+                            )}
+                            {exportedCount > 0 && (
+                              <span className="text-xs text-emerald-400">{exportedCount} exported</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <StatusBadge status={job.status} />
+                          <ArrowRight size={14} className="text-forge-dim group-hover:text-forge-accent transition-colors" />
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
               )
-            })}
-          </div>
+            })()}
+          </>
         )}
       </div>
     </div>
