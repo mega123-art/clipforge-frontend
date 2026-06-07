@@ -1,4 +1,5 @@
 import { useState, FormEvent, memo } from 'react'
+import type React from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -255,6 +256,50 @@ const AnimatedClipPanel = memo(() => (
   </div>
 ))
 
+// ── Mobile horizontal reel strip (shown below form on < lg) ───
+const MobileReelStrip = memo(() => {
+  const allClips = [...LEFT_REELS, ...RIGHT_REELS]
+  const doubled = [...allClips, ...allClips]
+  return (
+    <div className="relative overflow-hidden border-t border-forge-border/30 bg-forge-surface/10 py-5">
+      <div className="absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-forge-bg to-transparent z-10 pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-forge-bg to-transparent z-10 pointer-events-none" />
+      <motion.div
+        className="flex gap-2.5"
+        animate={{ x: ['0%', '-50%'] }}
+        transition={{ duration: 32, repeat: Infinity, ease: 'linear' }}
+      >
+        {doubled.map((clip, i) => (
+          <div
+            key={`ms-${i}`}
+            className="w-[126px] shrink-0 glass-card rounded-xl overflow-hidden border border-forge-border/70"
+          >
+            <div className={`relative h-[158px] bg-gradient-to-b ${clip.gradient} flex items-center justify-center`}>
+              <div className="absolute inset-0 bg-forge-bg/30" />
+              <div className="relative w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+                <Play size={12} className="text-white ml-0.5" fill="white" />
+              </div>
+              <span className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-white/80 bg-black/55 px-1 py-0.5 rounded font-mono">
+                {clip.dur}
+              </span>
+              <span className="absolute top-1.5 left-1.5 text-[8px] font-bold px-1 py-0.5 rounded bg-black/55 text-white/90">
+                {clip.platform}
+              </span>
+            </div>
+            <div className="px-2.5 py-2">
+              <span className={`inline-block text-[8px] font-bold px-1 py-0.5 rounded border mb-1 ${clip.tagColor}`}>
+                {clip.tag}
+              </span>
+              <p className="text-[10px] font-semibold text-forge-text leading-snug line-clamp-2">{clip.title}</p>
+              <p className="text-[9px] text-forge-dim mt-0.5">{clip.views} views</p>
+            </div>
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  )
+})
+
 // ── Main component ─────────────────────────────────────────────
 
 export default function Home() {
@@ -328,7 +373,7 @@ export default function Home() {
           <VibeClipLogo size={32} className="rounded-xl" />
           <span className="text-lg font-black tracking-tight text-forge-text">VibeClip</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <CreditsBadge />
           <div className="hidden sm:flex items-center gap-2">
             <PlanButton />
@@ -343,12 +388,12 @@ export default function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px] min-h-[100dvh]">
 
         {/* Left — hero + form */}
-        <section className="relative flex flex-col justify-center pt-28 pb-16 px-6 sm:px-10 lg:px-14 xl:px-20 page-enter overflow-hidden">
+        <section className="relative flex flex-col justify-center pt-20 sm:pt-28 pb-0 sm:pb-16 px-6 sm:px-10 lg:px-14 xl:px-20 page-enter overflow-hidden">
           <HeroBg />
           <div className="relative z-10 w-full max-w-xl">
 
             {/* Badges container */}
-            <div className="flex flex-wrap items-center gap-3 mb-8">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mb-5 sm:mb-8">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -377,7 +422,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-              className="text-5xl sm:text-6xl xl:text-7xl font-black tracking-tighter leading-[0.95] mb-5"
+              className="text-[2.35rem] sm:text-6xl xl:text-7xl font-black tracking-tighter leading-[0.93] mb-4 sm:mb-5"
             >
               Turn any video<br />
               into <span className="gradient-text">viral clips.</span>
@@ -388,7 +433,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.18, duration: 0.6 }}
-              className="text-forge-subtext text-lg leading-relaxed mb-8 max-w-[50ch]"
+              className="text-forge-subtext text-[0.9rem] sm:text-lg leading-relaxed mb-6 sm:mb-8 max-w-[50ch]"
             >
               AI finds the moments worth posting. Captions burned in, ready for TikTok, Reels, and Shorts.
             </motion.p>
@@ -398,16 +443,19 @@ export default function Home() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.55 }}
-              className="flex w-fit divide-x divide-forge-border border border-forge-border rounded-2xl overflow-hidden mb-10"
+              className="overflow-x-auto mb-6 sm:mb-10"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
             >
-              {STATS.map((s, i) => (
-                <div key={s.label} className="px-5 py-3.5">
-                  <span className={`text-xl font-black leading-none ${i === 2 ? 'gradient-text' : 'text-forge-text'}`}>
-                    {s.value}
-                  </span>
-                  <p className="text-[11px] text-forge-muted mt-0.5 whitespace-nowrap">{s.label}</p>
-                </div>
-              ))}
+              <div className="flex w-fit divide-x divide-forge-border border border-forge-border rounded-2xl overflow-hidden">
+                {STATS.map((s, i) => (
+                  <div key={s.label} className="px-3.5 sm:px-5 py-2.5 sm:py-3.5">
+                    <span className={`text-lg sm:text-xl font-black leading-none ${i === 2 ? 'gradient-text' : 'text-forge-text'}`}>
+                      {s.value}
+                    </span>
+                    <p className="text-[10px] sm:text-[11px] text-forge-muted mt-0.5 whitespace-nowrap">{s.label}</p>
+                  </div>
+                ))}
+              </div>
             </motion.div>
 
             {/* ── Form ─────────────────────────────────────── */}
@@ -452,7 +500,7 @@ export default function Home() {
                   </div>
 
                   {/* Duration sliders */}
-                  <div className="grid grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     {DURATION_SLIDERS.map(({ key, label, min, max }) => (
                       <div key={key}>
                         <div className="flex justify-between items-center mb-3">
@@ -619,6 +667,11 @@ export default function Home() {
                 </div>
               </motion.div>
             )}
+          </div>
+
+          {/* Mobile reel preview — shown below form, hidden on lg where sidebar shows */}
+          <div className="lg:hidden relative z-10 -mx-6 sm:-mx-10 mt-8 sm:mt-10">
+            <MobileReelStrip />
           </div>
         </section>
 
