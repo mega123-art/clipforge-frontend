@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Zap } from 'lucide-react'
 import api from '../api'
 import { useRazorpay } from '../hooks/useRazorpay'
@@ -14,10 +14,21 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
   const [amount, setAmount] = useState(0)
   const [customAmount, setCustomAmount] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [creditPrice, setCreditPrice] = useState(99.99)
   const { openCheckout, loading: paying, error: razorpayError, setError: setRazorpayError } = useRazorpay()
 
+  // Fetch credit price from backend
+  useEffect(() => {
+    api.get('/api/subscriptions/config')
+      .then((res) => {
+        if (res?.data?.credit_price_inr) {
+          setCreditPrice(res.data.credit_price_inr)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   const displayAmount = customAmount ? parseInt(customAmount) : amount
-  const creditPrice = 99.99 // From CREDIT_PRICE_INR env var
   const credits = displayAmount > 0 ? Math.floor((displayAmount * 100) / (creditPrice * 100)) : 0
 
   const handleCustomChange = (e: string) => {
