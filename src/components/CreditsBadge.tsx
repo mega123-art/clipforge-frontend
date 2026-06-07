@@ -18,8 +18,9 @@ export default function CreditsBadge() {
 
   useEffect(() => {
     if (!user) return
-    api.get('/api/subscriptions/breakdown').catch(() => {})
-      .then((res) => setBreakdown(res?.data))
+    api.get('/api/subscriptions/breakdown')
+      .then((res) => setBreakdown(res.data))
+      .catch(() => {})
   }, [user])
 
   if (!user) return null
