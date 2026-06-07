@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Crown, Zap, Calendar, AlertCircle, ArrowUp, ArrowLeft } from 'lucide-react'
+import { Crown, Zap, Calendar, AlertCircle, ArrowUp, ArrowLeft, Receipt, CheckCircle, XCircle, Clock } from 'lucide-react'
 import api from '../api'
 import useStore from '../store'
 import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
@@ -30,6 +30,18 @@ interface CreditBreakdown {
   next_billing_date: string | null
 }
 
+interface PaymentRecord {
+  id: string
+  razorpay_order_id: string
+  razorpay_payment_id: string | null
+  amount_paise: number
+  credits_granted: number
+  status: string
+  payment_type: string
+  verified_at: string | null
+  created_at: string | null
+}
+
 export default function BillingPage() {
   const user = useStore((s) => s.user)
   const refreshUser = useStore((s) => s.refreshUser)
@@ -39,6 +51,7 @@ export default function BillingPage() {
   const [breakdown, setBreakdown] = useState<CreditBreakdown | null>(null)
   const [tiers, setTiers] = useState<SubscriptionTier[]>([])
   const [selectedUpgradeTierId, setSelectedUpgradeTierId] = useState<number | null>(null)
+  const [payments, setPayments] = useState<PaymentRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
@@ -49,10 +62,11 @@ export default function BillingPage() {
       setLoading(true)
       setError(null)
 
-      const [subRes, breakdownRes, tiersRes] = await Promise.allSettled([
+      const [subRes, breakdownRes, tiersRes, paymentsRes] = await Promise.allSettled([
         api.get('/api/subscriptions/current'),
         api.get('/api/subscriptions/breakdown'),
         api.get('/api/subscriptions/tiers'),
+        api.get('/api/payments/history'),
       ])
 
       if (subRes.status === 'fulfilled') {
@@ -65,6 +79,10 @@ export default function BillingPage() {
 
       if (tiersRes.status === 'fulfilled') {
         setTiers(tiersRes.value.data)
+      }
+
+      if (paymentsRes.status === 'fulfilled') {
+        setPayments(paymentsRes.value.data)
       }
 
       // Sync user profile / credits in navbar/menu
@@ -384,7 +402,7 @@ export default function BillingPage() {
         )}
 
         {/* Top-up Option */}
-        <div className="bg-forge-border/10 rounded-xl p-8">
+        <div className="bg-forge-border/10 rounded-xl p-8 mb-8">
           <div className="flex items-center gap-4 mb-6">
             <Zap size={28} className="text-amber-400" />
             <div>
@@ -398,6 +416,77 @@ export default function BillingPage() {
           >
             Buy Credits
           </button>
+        </div>
+
+        {/* Payment History */}
+        <div className="bg-forge-border/10 rounded-xl p-8">
+          <div className="flex items-center gap-4 mb-6">
+            <Receipt size={28} className="text-forge-accent" />
+            <div>
+              <h3 className="text-xl font-bold">Payment History</h3>
+              <p className="text-sm text-forge-muted">All your top-up and subscription payments</p>
+            </div>
+          </div>
+
+          {payments.length === 0 ? (
+            <p className="text-sm text-forge-muted py-4">No payments yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-forge-border/40">
+                    <th className="text-left text-forge-muted font-semibold pb-3 pr-4">Date</th>
+                    <th className="text-left text-forge-muted font-semibold pb-3 pr-4">Type</th>
+                    <th className="text-right text-forge-muted font-semibold pb-3 pr-4">Amount</th>
+                    <th className="text-right text-forge-muted font-semibold pb-3 pr-4">Credits</th>
+                    <th className="text-right text-forge-muted font-semibold pb-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-forge-border/20">
+                  {payments.map((p) => (
+                    <tr key={p.id} className="group">
+                      <td className="py-3.5 pr-4 text-forge-subtext font-mono text-xs">
+                        {p.created_at
+                          ? new Date(p.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                          : '—'}
+                      </td>
+                      <td className="py-3.5 pr-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold border ${
+                          p.payment_type === 'topup'
+                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                            : 'bg-forge-accent/10 border-forge-accent/30 text-forge-accent'
+                        }`}>
+                          {p.payment_type === 'topup' ? <Zap size={10} /> : <Crown size={10} />}
+                          {p.payment_type === 'topup' ? 'Top-up' : 'Subscription'}
+                        </span>
+                      </td>
+                      <td className="py-3.5 pr-4 text-right font-semibold tabular-nums">
+                        ₹{(p.amount_paise / 100).toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-3.5 pr-4 text-right text-forge-accent font-bold tabular-nums">
+                        +{p.credits_granted}
+                      </td>
+                      <td className="py-3.5 text-right">
+                        {p.status === 'success' ? (
+                          <span className="inline-flex items-center gap-1 text-emerald-400 text-xs font-semibold">
+                            <CheckCircle size={13} /> Paid
+                          </span>
+                        ) : p.status === 'failed' ? (
+                          <span className="inline-flex items-center gap-1 text-red-400 text-xs font-semibold">
+                            <XCircle size={13} /> Failed
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-forge-muted text-xs font-semibold">
+                            <Clock size={13} /> Pending
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
