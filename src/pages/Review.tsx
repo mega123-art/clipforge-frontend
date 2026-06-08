@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient, Query } from '@tanstack/react-query'
 import api from '../api'
-import { Scissors, CheckCheck, Download, Plus, SplitSquareHorizontal } from 'lucide-react'
+import { Scissors, Download, Plus, SplitSquareHorizontal } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
 import ThemeToggle from '../components/ThemeToggle'
 import UserMenu from '../components/UserMenu'
@@ -67,13 +67,6 @@ export default function Review() {
     }
   }, [selectedClipId])
 
-  const approveAllMutation = useMutation({
-    mutationFn: (clips: ClipOut[]) =>
-      Promise.all(
-        clips.map((c) => api.patch(`/api/clips/${c.id}`, { user_approved: true }))
-      ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['job', jobId] }),
-  })
 
   const moreClipsMutation = useMutation({
     mutationFn: (options: MoreClipsOptions) => api.post(`/api/jobs/${jobId}/more-clips`, options),
@@ -172,17 +165,6 @@ export default function Review() {
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full lg:w-auto">
-          <button
-            onClick={() => approveAllMutation.mutate(clips)}
-            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold border border-forge-border rounded-lg text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-all cursor-pointer"
-            title="Approve all clips"
-          >
-            <CheckCheck size={10} className="sm:block hidden" />
-            <CheckCheck size={9} className="sm:hidden block" />
-            <span className="hidden sm:inline">Approve</span>
-            <span className="sm:hidden">All</span>
-          </button>
-
           {job.video_duration_seconds && (
             <button
               onClick={() => setShowManualClipper((v) => !v)}
