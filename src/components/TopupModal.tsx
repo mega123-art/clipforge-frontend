@@ -14,6 +14,8 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
   const [error, setError] = useState<string | null>(null)
   const [creditPrice, setCreditPrice] = useState(99.99)
   const [presets, setPresets] = useState<number[]>([100, 500, 1000, 2000, 5000])
+  const [minAmount, setMinAmount] = useState(100)
+  const [maxAmount, setMaxAmount] = useState(99999)
   const { openCheckout, loading: paying, error: razorpayError, setError: setRazorpayError } = useRazorpay()
 
   // Fetch topup config from backend
@@ -22,6 +24,8 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
       .then((res) => {
         if (res?.data?.presets) setPresets(res.data.presets)
         if (res?.data?.credit_price_inr) setCreditPrice(res.data.credit_price_inr)
+        if (res?.data?.min_amount_paise) setMinAmount(Math.floor(res.data.min_amount_paise / 100))
+        if (res?.data?.max_amount_paise) setMaxAmount(Math.floor(res.data.max_amount_paise / 100))
       })
       .catch(() => {})
   }, [])
@@ -41,6 +45,16 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
 
   const handleTopup = async () => {
     if (displayAmount <= 0) return
+
+    if (displayAmount < minAmount) {
+      setError(`Minimum top-up amount is ₹${minAmount}`)
+      return
+    }
+
+    if (displayAmount > maxAmount) {
+      setError(`Maximum top-up amount is ₹${maxAmount}`)
+      return
+    }
 
     setError(null)
     setRazorpayError(null)
