@@ -375,18 +375,20 @@ export default function Admin() {
 
         {/* Users */}
         <div className="glass-card rounded-2xl border border-forge-border overflow-hidden">
-          <div className="flex items-center gap-3 px-6 py-4 border-b border-forge-border">
-            <Users size={16} className="text-forge-accent" />
-            <h2 className="text-base font-black text-forge-text">Users</h2>
-            <div className="flex-1" />
-            <div className="flex items-center gap-2 bg-forge-surface border border-forge-border rounded-lg px-3 py-1.5 w-64">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-6 py-4 border-b border-forge-border">
+            <div className="flex items-center gap-3">
+              <Users size={16} className="text-forge-accent" />
+              <h2 className="text-base font-black text-forge-text">Users</h2>
+            </div>
+            <div className="hidden sm:block flex-1" />
+            <div className="flex items-center gap-2 bg-forge-surface border border-forge-border rounded-lg px-3 py-1.5 w-full sm:w-64">
               <Search size={13} className="text-forge-dim" />
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search email or name..."
-                className="flex-1 bg-transparent outline-none text-xs text-forge-text placeholder-forge-dim"
+                className="flex-1 min-w-0 bg-transparent outline-none text-xs text-forge-text placeholder-forge-dim"
               />
             </div>
           </div>
