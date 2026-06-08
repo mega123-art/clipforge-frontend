@@ -319,6 +319,7 @@ export default function Home() {
   })
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploadPct, setUploadPct] = useState<number>(0)
+  const [youtubeUrl, setYoutubeUrl] = useState('')
 
   const toggleClipType = (id: string) => {
     setOptions((o) => ({
@@ -331,8 +332,8 @@ export default function Home() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!uploadedFile) {
-      setError('Upload a video or audio file to continue.')
+    if (!uploadedFile && !youtubeUrl) {
+      setError('Paste a YouTube URL or upload a video file.')
       return
     }
     setError(null)
@@ -340,18 +341,34 @@ export default function Home() {
     setUploadPct(0)
     try {
       const prompt = clipMode === 'custom' ? customPrompt.trim() : ''
-      const res = await uploadAndCreateJob(
-        { file: uploadedFile, onProgress: setUploadPct },
-        {
-          max_clips: options.max_clips,
-          clip_types: prompt ? [] : options.clip_types,
-          min_clip_duration: options.min_clip_duration,
-          max_clip_duration: options.max_clip_duration,
-          target_aspect_ratio: options.target_aspect_ratio,
-          ...(prompt ? { custom_prompt: prompt } : {}),
-        },
-      )
-      addRecentJob({ job_id: res.job_id, video_title: uploadedFile.name })
+      const jobOptions = {
+        max_clips: options.max_clips,
+        clip_types: prompt ? [] : options.clip_types,
+        min_clip_duration: options.min_clip_duration,
+        max_clip_duration: options.max_clip_duration,
+        target_aspect_ratio: options.target_aspect_ratio,
+        ...(prompt ? { custom_prompt: prompt } : {}),
+      }
+
+      let res: { job_id: string }
+      if (youtubeUrl) {
+        const { default: api } = await import('../api')
+        const form = new FormData()
+        form.append('source_url', youtubeUrl)
+        Object.entries(jobOptions).forEach(([k, v]) =>
+          form.append(k, Array.isArray(v) ? v.join(',') : String(v))
+        )
+        const r = await api.post('/api/jobs', form)
+        res = { job_id: r.data.job_id }
+        addRecentJob({ job_id: res.job_id, video_title: youtubeUrl })
+      } else {
+        res = await uploadAndCreateJob(
+          { file: uploadedFile!, onProgress: setUploadPct },
+          jobOptions,
+        )
+        addRecentJob({ job_id: res.job_id, video_title: uploadedFile!.name })
+      }
+
       refreshUser()
       navigate(`/processing/${res.job_id}`)
     } catch (err) {
@@ -467,7 +484,12 @@ export default function Home() {
             >
               <div className="gradient-ring rounded-2xl">
                 <div className="glass-card rounded-2xl p-1 input-glow border border-forge-border transition-all duration-300">
-                  <URLInput onFileSelect={setUploadedFile} uploadedFile={uploadedFile} />
+                  <URLInput
+                    onFileSelect={setUploadedFile}
+                    uploadedFile={uploadedFile}
+                    onYoutubeUrl={setYoutubeUrl}
+                    youtubeUrl={youtubeUrl}
+                  />
                 </div>
               </div>
 
