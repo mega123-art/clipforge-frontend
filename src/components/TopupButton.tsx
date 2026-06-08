@@ -8,18 +8,20 @@ interface TopupButtonProps {
 
 export default function TopupButton({ onSuccess }: TopupButtonProps) {
   const user = useStore((s) => s.user)
-  const { openTopup: openTopupModal } = useSubscriptionModal()
+  const { openTopup } = useSubscriptionModal((s) => ({
+    openTopup: s.openTopup
+  }))
 
   if (!user) return null
 
-  const openTopup = () => {
-    useSubscriptionModal.setState({ topupOpen: true, onPaymentSuccess: onSuccess })
-    openTopupModal()
+  const handleClick = () => {
+    useSubscriptionModal.setState({ onPaymentSuccess: onSuccess })
+    openTopup()
   }
 
   return (
     <button
-      onClick={openTopup}
+      onClick={handleClick}
       title="Buy credits"
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-forge-accent/45 bg-forge-accent/10 text-forge-accent hover:bg-forge-accent/20 transition-colors text-xs font-bold"
     >

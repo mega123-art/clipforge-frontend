@@ -506,7 +506,7 @@ function PreviewPanel({
 
   return (
     <div className="shrink-0 w-full lg:w-[280px] flex flex-col items-center">
-      <div className={`relative w-full ${aspectClass} max-h-[60vh] rounded-xl overflow-hidden border border-forge-border bg-gradient-to-br from-zinc-800 via-zinc-900 to-black`}>
+      <div className={`relative w-full sm:w-72 ${aspectClass} max-h-[50vh] sm:max-h-[60vh] rounded-xl overflow-hidden border border-forge-border bg-gradient-to-br from-zinc-800 via-zinc-900 to-black`}>
         {/* Mock subject silhouette */}
         <div className="absolute inset-0 flex items-end justify-center pb-12 opacity-30 pointer-events-none">
           <div className="w-32 h-32 rounded-full bg-zinc-600" />

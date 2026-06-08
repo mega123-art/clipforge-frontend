@@ -100,7 +100,7 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
         if (!cancelled) setExpiryInfo(null)
       })
     return () => { cancelled = true }
-  }, [clip.id])
+  }, [clip.id, clip.credit_type])
 
   // Fetch a time-limited, HMAC-signed stream URL from the authenticated
   // /stream-url endpoint. <video> tags can't send Authorization headers,
