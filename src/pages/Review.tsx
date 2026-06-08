@@ -209,7 +209,7 @@ export default function Review() {
               <CreditsBadge />
             </div>
             <PlanButton />
-            <TopupButton />
+            <TopupButton onSuccess={() => queryClient.invalidateQueries({ queryKey: ['job', jobId] })} />
             <ThemeToggle />
             <UserMenu />
           </div>

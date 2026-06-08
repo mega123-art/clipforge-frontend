@@ -4,7 +4,25 @@ import TopupModal from './TopupModal'
 import UpgradeBanner from './UpgradeBanner'
 
 export default function SubscriptionModalProvider() {
-  const { subscriptionOpen, topupOpen, closeSubscription, closeTopup, openTopup } = useSubscriptionModal()
+  const { subscriptionOpen, topupOpen, closeSubscription, closeTopup, onPaymentSuccess } = useSubscriptionModal()
+
+  const handleTopupSuccess = () => {
+    closeTopup()
+    if (onPaymentSuccess) {
+      onPaymentSuccess()
+    } else {
+      window.location.reload()
+    }
+  }
+
+  const handleSubscriptionSuccess = () => {
+    closeSubscription()
+    if (onPaymentSuccess) {
+      onPaymentSuccess()
+    } else {
+      window.location.reload()
+    }
+  }
 
   return (
     <>
@@ -13,20 +31,14 @@ export default function SubscriptionModalProvider() {
       {subscriptionOpen && (
         <SubscriptionModal
           onClose={closeSubscription}
-          onSubscribed={() => {
-            closeSubscription()
-            window.location.reload()
-          }}
+          onSubscribed={handleSubscriptionSuccess}
         />
       )}
 
       {topupOpen && (
         <TopupModal
           onClose={closeTopup}
-          onTopup={() => {
-            closeTopup()
-            window.location.reload()
-          }}
+          onTopup={handleTopupSuccess}
         />
       )}
     </>

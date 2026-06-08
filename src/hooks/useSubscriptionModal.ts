@@ -3,6 +3,7 @@ import { create } from 'zustand'
 interface SubscriptionModalStore {
   subscriptionOpen: boolean
   topupOpen: boolean
+  onPaymentSuccess?: () => void
   openSubscription: () => void
   closeSubscription: () => void
   openTopup: () => void
@@ -12,6 +13,7 @@ interface SubscriptionModalStore {
 export const useSubscriptionModal = create<SubscriptionModalStore>((set) => ({
   subscriptionOpen: false,
   topupOpen: false,
+  onPaymentSuccess: undefined,
   openSubscription: () => set({ subscriptionOpen: true }),
   closeSubscription: () => set({ subscriptionOpen: false }),
   openTopup: () => set({ topupOpen: true }),
