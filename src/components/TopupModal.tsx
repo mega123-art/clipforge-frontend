@@ -3,8 +3,6 @@ import { X, Zap } from 'lucide-react'
 import api from '../api'
 import { useRazorpay } from '../hooks/useRazorpay'
 
-const TOPUP_PRESETS = [100, 500, 1000, 2000, 5000]
-
 interface TopupModalProps {
   onClose: () => void
   onTopup?: () => void
@@ -15,15 +13,15 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
   const [customAmount, setCustomAmount] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [creditPrice, setCreditPrice] = useState(99.99)
+  const [presets, setPresets] = useState<number[]>([100, 500, 1000, 2000, 5000])
   const { openCheckout, loading: paying, error: razorpayError, setError: setRazorpayError } = useRazorpay()
 
-  // Fetch credit price from backend
+  // Fetch topup config from backend
   useEffect(() => {
-    api.get('/api/subscriptions/config')
+    api.get('/api/payments/topup/config')
       .then((res) => {
-        if (res?.data?.credit_price_inr) {
-          setCreditPrice(res.data.credit_price_inr)
-        }
+        if (res?.data?.presets) setPresets(res.data.presets)
+        if (res?.data?.credit_price_inr) setCreditPrice(res.data.credit_price_inr)
       })
       .catch(() => {})
   }, [])
@@ -104,7 +102,7 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
         <div className="mb-6">
           <label className="block text-sm font-medium mb-3">Quick presets</label>
           <div className="grid grid-cols-3 gap-2">
-            {TOPUP_PRESETS.map((preset) => (
+            {presets.map((preset) => (
               <button
                 key={preset}
                 onClick={() => handlePresetClick(preset)}
