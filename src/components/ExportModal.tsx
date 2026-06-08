@@ -593,6 +593,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [musicFile, setMusicFile] = useState<File | null>(null)
   const [musicTracks, setMusicTracks] = useState<Array<{id: string, filename: string, duration: number}>>([])
   const [loadingTracks, setLoadingTracks] = useState(false)
+  const [activeTab, setActiveTab] = useState<'preview' | 'settings' | 'export'>('preview')
 
   const handleGenerateHook = async () => {
     if (!clipId) return
@@ -809,21 +810,42 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 max-h-[75vh]">
-          {/* Live preview */}
-          <PreviewPanel
-            aspectRatio={aspectRatio}
-            captionStyle={captionStyle}
-            captionPosition={captionPosition}
-            includeCaptions={includeCaptions}
-            hookText={hookText}
-            hookPosition={hookPosition}
-            hookFontScale={hookFontScale}
-            hookStyle={hookStyle}
-            hookYPct={hookYPct}
-          />
+        {/* Tabs for mobile */}
+        <div className="lg:hidden flex gap-2 mb-4 border-b border-forge-border pb-0">
+          {(['preview', 'settings', 'export'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`py-2 px-3 text-sm font-semibold transition-colors border-b-2 ${
+                activeTab === tab
+                  ? 'border-forge-accent text-forge-accent'
+                  : 'border-transparent text-forge-muted hover:text-forge-text'
+              }`}
+            >
+              {tab === 'preview' ? '👁️ Preview' : tab === 'settings' ? '⚙️ Settings' : '✨ Export'}
+            </button>
+          ))}
+        </div>
 
-          <div className="flex-1 space-y-3 sm:space-y-4 lg:space-y-5 overflow-y-auto pr-0.5 sm:pr-1 lg:max-h-[75vh]">
+        {/* Content: Tabs on mobile, side-by-side on desktop */}
+        <div className={`flex ${activeTab === 'preview' || activeTab === 'settings' ? 'flex-col' : 'flex-col'} lg:flex-row gap-3 sm:gap-4 lg:gap-6 max-h-[75vh]`}>
+          {/* Preview */}
+          <div className={`${activeTab !== 'preview' ? 'hidden lg:block' : 'block'}`}>
+            <PreviewPanel
+              aspectRatio={aspectRatio}
+              captionStyle={captionStyle}
+              captionPosition={captionPosition}
+              includeCaptions={includeCaptions}
+              hookText={hookText}
+              hookPosition={hookPosition}
+              hookFontScale={hookFontScale}
+              hookStyle={hookStyle}
+              hookYPct={hookYPct}
+            />
+          </div>
+
+          {/* Settings */}
+          <div className={`flex-1 space-y-3 sm:space-y-4 lg:space-y-5 overflow-y-auto pr-0.5 sm:pr-1 ${activeTab !== 'settings' ? 'hidden lg:block' : 'block'} lg:max-h-[75vh]`}>
           {/* Aspect ratio */}
           <div>
             <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Aspect ratio</label>
@@ -1266,39 +1288,44 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               </div>
             )}
           </div>
+          </div>
 
-          {error && (
-            <p role="alert" className="text-red-400 text-sm">{error}</p>
-          )}
+          {/* Export Tab - mobile only or always visible with preview+settings on desktop */}
+          <div className={`flex-1 flex flex-col ${activeTab !== 'export' ? 'hidden lg:flex' : 'flex'}`}>
+            {error && (
+              <p role="alert" className="text-red-400 text-sm mb-4">{error}</p>
+            )}
 
-          {downloadUrl ? (
-            <div className="space-y-2">
-              <button
-                key={clipId}
-                onClick={handleDownload}
-                disabled={downloading}
-                className="flex items-center justify-center gap-2 w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-medium cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
-              >
-                {downloading ? <><Loader size={16} className="animate-spin" aria-hidden="true" /> Downloading...</> : <><Download size={16} aria-hidden="true" /> Download clip</>}
-              </button>
-              {total > 1 && safeIndex < total - 1 && (
+            <div className="flex-1 flex flex-col justify-end gap-3">
+              {downloadUrl ? (
+                <div className="space-y-2">
+                  <button
+                    key={clipId}
+                    onClick={handleDownload}
+                    disabled={downloading}
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-medium cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
+                  >
+                    {downloading ? <><Loader size={16} className="animate-spin" aria-hidden="true" /> Downloading...</> : <><Download size={16} aria-hidden="true" /> Download clip</>}
+                  </button>
+                  {total > 1 && safeIndex < total - 1 && (
+                    <button
+                      onClick={goNext}
+                      className="w-full py-2 text-sm text-gray-300 hover:text-white border border-forge-border hover:border-gray-500 rounded-xl cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+                    >
+                      Next clip ({safeIndex + 2} of {total}) →
+                    </button>
+                  )}
+                </div>
+              ) : (
                 <button
-                  onClick={goNext}
-                  className="w-full py-2 text-sm text-gray-300 hover:text-white border border-forge-border hover:border-gray-500 rounded-xl cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+                  onClick={handleExport}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-semibold cursor-pointer transition-all duration-200 shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
                 >
-                  Next clip ({safeIndex + 2} of {total}) →
+                  {loading ? <><Loader size={16} className="animate-spin" aria-hidden="true" /> Exporting...</> : <><Download size={16} aria-hidden="true" /> Export</>}
                 </button>
               )}
             </div>
-          ) : (
-            <button
-              onClick={handleExport}
-              disabled={loading}
-              className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-semibold cursor-pointer transition-all duration-200 shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
-            >
-              {loading ? <><Loader size={16} className="animate-spin" aria-hidden="true" /> Exporting...</> : <><Download size={16} aria-hidden="true" /> Export</>}
-            </button>
-          )}
           </div>
         </div>
       </div>
