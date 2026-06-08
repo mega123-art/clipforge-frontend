@@ -822,7 +822,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                   : 'border-transparent text-forge-muted hover:text-forge-text'
               }`}
             >
-              {tab === 'preview' ? '👁️ Preview' : tab === 'settings' ? '⚙️ Settings' : '✨ Export'}
+              {tab === 'preview' ? 'Preview' : tab === 'settings' ? 'Settings' : 'Export'}
             </button>
           ))}
         </div>
