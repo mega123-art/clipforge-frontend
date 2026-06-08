@@ -48,7 +48,7 @@ function AdminPasswordGate({ onUnlock }: AdminPasswordGateProps) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 page-enter">
       <div className="fixed top-5 right-5 z-20"><ThemeToggle /></div>
-      <div className="fixed top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-amber-600/8 blur-3xl pointer-events-none" />
+      <div className="hidden md:fixed md:top-1/4 md:-left-32 md:w-[400px] md:h-[400px] rounded-full bg-amber-600/8 blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-sm">
         <div className="flex items-center justify-center gap-3 mb-8">

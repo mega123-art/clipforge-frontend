@@ -183,7 +183,7 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
         )}
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className="p-3 sm:p-4 space-y-2.5 sm:space-y-3">
         {/* Expiry warning */}
         {expiryInfo && expiryInfo.credit_type === 'free' && expiryInfo.days_left !== undefined && (
           <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
@@ -201,12 +201,14 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
         )}
 
         {/* Type + timestamp */}
-        <div className="flex items-center justify-between gap-2">
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${typeClass}`}>
-            <TypeIcon size={10} />
-            {clip.clip_type.replace('_', ' ')}
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+          <span className={`inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold border ${typeClass}`}>
+            <TypeIcon size={9} className="sm:block hidden" />
+            <TypeIcon size={8} className="sm:hidden block" />
+            <span className="hidden sm:inline">{clip.clip_type.replace('_', ' ')}</span>
+            <span className="sm:hidden">{clip.clip_type.split('_')[0].substring(0, 3)}</span>
           </span>
-          <span className="text-xs text-forge-muted font-mono tabular-nums">
+          <span className="text-[10px] sm:text-xs text-forge-muted font-mono tabular-nums shrink-0">
             {formatTime(clip.start_seconds)} – {formatTime(clip.end_seconds)}
           </span>
         </div>
@@ -242,34 +244,39 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1">
           <button
             onClick={(e) => { stop(e); handleApprove() }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold transition-all cursor-pointer ${
               clip.user_approved
                 ? 'bg-green-500/15 border border-green-500/45 text-green-400'
                 : 'border border-forge-border text-forge-muted hover:border-green-500/45 hover:text-green-400 hover:bg-green-500/8'
             }`}
+            title={clip.user_approved ? 'Click to unapprove' : 'Click to approve'}
           >
-            <Check size={11} />
-            {clip.user_approved ? 'Approved' : 'Approve'}
+            <Check size={9} className="sm:block hidden" />
+            <Check size={8} className="sm:hidden block" />
+            <span className="hidden sm:inline">{clip.user_approved ? 'Approved' : 'Approve'}</span>
+            <span className="sm:hidden">{clip.user_approved ? '✓' : 'OK'}</span>
           </button>
 
           <button
             onClick={(e) => { stop(e); setTrimMode((t) => !t) }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-forge-border text-forge-muted hover:border-forge-border-bright hover:text-forge-text transition-all cursor-pointer"
+            className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold border border-forge-border text-forge-muted hover:border-forge-border-bright hover:text-forge-text transition-all cursor-pointer"
+            title="Edit clip boundaries"
           >
-            <Scissors size={11} />
-            Trim
+            <Scissors size={9} className="sm:block hidden" />
+            <Scissors size={8} className="sm:hidden block" />
+            <span className="hidden sm:inline">Trim</span>
           </button>
 
           {trimMode && (
             <button
               onClick={(e) => { stop(e); handleSaveTrim() }}
               disabled={saving}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/60 hover:bg-forge-accent text-white disabled:opacity-50 transition-all border border-forge-accent/50 cursor-pointer"
+              className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold bg-cyan-500/60 hover:bg-forge-accent text-white disabled:opacity-50 transition-all border border-forge-accent/50 cursor-pointer"
             >
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? '...' : 'Save'}
             </button>
           )}
 
@@ -278,19 +285,23 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
               href={clip.download_url || '#'}
               download
               onClick={(e) => { stop(e) }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-forge-border text-forge-muted hover:border-green-500/50 hover:text-green-400 hover:bg-green-500/8 transition-all cursor-pointer"
+              className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold border border-forge-border text-forge-muted hover:border-green-500/50 hover:text-green-400 hover:bg-green-500/8 transition-all cursor-pointer"
+              title="Download this clip"
             >
-              <Download size={11} />
-              Download
+              <Download size={9} className="sm:block hidden" />
+              <Download size={8} className="sm:hidden block" />
+              <span className="hidden sm:inline">Download</span>
             </a>
           )}
 
           <button
             onClick={(e) => { stop(e); onExport() }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-forge-border text-forge-muted hover:border-forge-accent/50 hover:text-forge-accent hover:bg-forge-accent/8 transition-all ml-auto cursor-pointer"
+            className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold border border-forge-border text-forge-muted hover:border-forge-accent/50 hover:text-forge-accent hover:bg-forge-accent/8 transition-all cursor-pointer ml-auto sm:ml-auto"
+            title="Export with effects"
           >
-            <Download size={11} />
-            Export
+            <Download size={9} className="sm:block hidden" />
+            <Download size={8} className="sm:hidden block" />
+            <span className="hidden sm:inline">Export</span>
           </button>
         </div>
 

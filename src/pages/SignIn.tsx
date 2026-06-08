@@ -112,8 +112,8 @@ export default function SignIn() {
         <ThemeToggle />
       </div>
 
-      <div className="fixed top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-cyan-500/8 blur-3xl animate-float pointer-events-none" />
-      <div className="fixed bottom-1/4 -right-32 w-[350px] h-[350px] rounded-full bg-teal-600/6 blur-3xl animate-float-slow pointer-events-none" />
+      <div className="hidden md:fixed md:top-1/4 md:-left-32 md:w-[400px] md:h-[400px] rounded-full bg-cyan-500/8 blur-3xl animate-float pointer-events-none" />
+      <div className="hidden md:fixed md:bottom-1/4 md:-right-32 md:w-[350px] md:h-[350px] rounded-full bg-teal-600/6 blur-3xl animate-float-slow pointer-events-none" />
 
       <div className="w-full max-w-md relative">
         <div className="flex items-center justify-center gap-3 mb-8">

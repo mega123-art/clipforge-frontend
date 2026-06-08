@@ -134,20 +134,20 @@ export default function Review() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* ── Header ─────────────────────────────────────────── */}
-      <header className="sticky top-0 z-10 glass border-b border-forge-border px-4 lg:px-6 py-3 flex flex-col lg:flex-row items-start lg:items-center gap-4">
-        <div className="flex items-center gap-3 w-full lg:w-auto lg:flex-1 min-w-0">
+      <header className="sticky top-0 z-10 glass border-b border-forge-border px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 flex flex-col lg:flex-row items-start lg:items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto lg:flex-1 min-w-0">
           <button
             onClick={() => navigate('/')}
             className="flex items-center gap-2 text-forge-muted hover:text-forge-text transition-colors group cursor-pointer shrink-0"
           >
             <VibeClipLogo size={28} className="rounded-lg" />
-            <span className="font-black text-sm gradient-text hidden sm:inline">VibeClip</span>
+            <span className="font-black text-xs sm:text-sm gradient-text hidden sm:inline">VibeClip</span>
           </button>
 
           <div className="w-px h-4 bg-forge-border shrink-0" />
 
-          <div className="flex-1 min-w-0 flex items-baseline gap-2">
-            <h1 className="text-sm text-forge-muted truncate">{job.video_title || jobId}</h1>
+          <div className="flex-1 min-w-0 flex items-baseline gap-1.5 sm:gap-2">
+            <h1 className="text-xs sm:text-sm text-forge-muted truncate">{job.video_title || jobId}</h1>
             {(() => {
               const meta: string[] = []
               if (job.detected_language) meta.push(job.detected_language.toUpperCase())
@@ -159,62 +159,73 @@ export default function Review() {
                 meta.push(h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${sec}s` : `${sec}s`)
               }
               return meta.length ? (
-                <span className="hidden md:inline text-xs text-forge-dim shrink-0">· {meta.join(' · ')}</span>
+                <span className="hidden lg:inline text-xs text-forge-dim shrink-0">· {meta.join(' · ')}</span>
               ) : null
             })()}
           </div>
 
           {approvedClips.length > 0 && (
-            <span className="hidden sm:flex items-center gap-1.5 text-xs text-forge-dim px-2.5 py-1 rounded-full bg-forge-surface border border-forge-border shrink-0">
-              <span className="font-bold text-forge-accent">{approvedClips.length}</span> approved
+            <span className="hidden md:flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-forge-dim px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-forge-surface border border-forge-border shrink-0">
+              <span className="font-bold text-forge-accent">{approvedClips.length}</span> <span className="hidden sm:inline">approved</span>
             </span>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full lg:w-auto">
           <button
             onClick={() => approveAllMutation.mutate(clips)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-forge-border rounded-lg text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-all cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold border border-forge-border rounded-lg text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-all cursor-pointer"
+            title="Approve all clips"
           >
-            <CheckCheck size={12} />
-            Approve all
+            <CheckCheck size={10} className="sm:block hidden" />
+            <CheckCheck size={9} className="sm:hidden block" />
+            <span className="hidden sm:inline">Approve</span>
+            <span className="sm:hidden">All</span>
           </button>
 
           {job.video_duration_seconds && (
             <button
               onClick={() => setShowManualClipper((v) => !v)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold border rounded-lg transition-all cursor-pointer ${
                 showManualClipper
                   ? 'border-forge-accent/60 text-forge-accent bg-forge-accent/10'
                   : 'border-forge-border text-forge-muted hover:text-forge-text hover:border-forge-border-bright'
               }`}
+              title="Manual clip editor"
             >
-              <SplitSquareHorizontal size={12} />
-              Manual clip
+              <SplitSquareHorizontal size={10} className="sm:block hidden" />
+              <SplitSquareHorizontal size={9} className="sm:hidden block" />
+              <span className="hidden sm:inline">Clip</span>
             </button>
           )}
 
           <button
             onClick={() => setShowMoreClipsModal(true)}
             disabled={job.status === 'analyzing'}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-forge-border rounded-lg text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold border border-forge-border rounded-lg text-forge-muted hover:text-forge-text hover:border-forge-border-bright transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            title="Generate more clips"
           >
-            <Plus size={12} />
-            More clips
+            <Plus size={10} className="sm:block hidden" />
+            <Plus size={9} className="sm:hidden block" />
+            <span className="hidden sm:inline">More</span>
           </button>
 
           {approvedClips.length > 0 && (
             <button
               onClick={() => startExport(approvedClips.map((c) => c.id))}
-              className="btn-primary flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-lg cursor-pointer whitespace-nowrap"
+              className="btn-primary flex items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-xs font-bold rounded-lg cursor-pointer"
+              title={`Export ${approvedClips.length} clip${approvedClips.length !== 1 ? 's' : ''}`}
             >
-              <Download size={12} />
-              Export {approvedClips.length}
+              <Download size={10} className="sm:block hidden" />
+              <Download size={9} className="sm:hidden block" />
+              <span className="hidden xs:inline">{approvedClips.length}</span>
             </button>
           )}
 
-          <div className="flex items-center gap-2 ml-auto lg:ml-0">
-            <CreditsBadge />
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto lg:ml-0">
+            <div className="hidden sm:block">
+              <CreditsBadge />
+            </div>
             <PlanButton />
             <TopupButton />
             <ThemeToggle />
@@ -250,7 +261,7 @@ export default function Review() {
       )}
 
       {/* ── Clip grid ──────────────────────────────────────── */}
-      <main className="flex-1 px-4 lg:px-6 py-6">
+      <main className="flex-1 px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
         {clips.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 gap-3">
             <div className="w-14 h-14 rounded-2xl bg-forge-surface border border-forge-border flex items-center justify-center">
@@ -259,7 +270,7 @@ export default function Review() {
             <p className="text-forge-muted text-sm">No clips found for this job.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {clips.map((clip) =>
               clip.status === 'rendering' ? (
                 <ClipCardSkeleton key={clip.id} rank={clip.rank} />

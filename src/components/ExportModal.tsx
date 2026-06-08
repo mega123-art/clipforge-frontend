@@ -505,7 +505,7 @@ function PreviewPanel({
   }
 
   return (
-    <div className="shrink-0 w-full md:w-[280px] flex flex-col items-center">
+    <div className="shrink-0 w-full lg:w-[280px] flex flex-col items-center">
       <div className={`relative w-full ${aspectClass} max-h-[60vh] rounded-xl overflow-hidden border border-forge-border bg-gradient-to-br from-zinc-800 via-zinc-900 to-black`}>
         {/* Mock subject silhouette */}
         <div className="absolute inset-0 flex items-end justify-center pb-12 opacity-30 pointer-events-none">
@@ -768,10 +768,10 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
       role="dialog"
       aria-modal="true"
       aria-labelledby="export-modal-title"
-      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto py-6 sm:py-8"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto py-3 sm:py-8"
     >
-      <div className="bg-forge-card border border-forge-border rounded-2xl p-6 w-full max-w-4xl mx-4 my-auto shadow-2xl">
-        <div className="flex items-center justify-between mb-5 gap-2">
+      <div className="bg-forge-card border border-forge-border rounded-2xl p-3 sm:p-4 lg:p-6 w-full max-w-2xl md:max-w-4xl mx-2 sm:mx-4 my-auto shadow-2xl">
+        <div className="flex items-center justify-between mb-3 sm:mb-5 gap-2">
           <div className="flex items-center gap-2">
             {total > 1 && (
               <button
@@ -784,9 +784,9 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               </button>
             )}
             <div>
-              <h2 id="export-modal-title" className="font-semibold text-lg">Export Clip</h2>
+              <h2 id="export-modal-title" className="font-semibold text-sm sm:text-lg">Export Clip</h2>
               {total > 1 && (
-                <p className="text-xs text-gray-500 mt-0.5">{safeIndex + 1} of {total}</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{safeIndex + 1} of {total}</p>
               )}
             </div>
             {total > 1 && (
@@ -809,7 +809,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           </button>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6 max-h-[75vh]">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 max-h-[75vh]">
           {/* Live preview */}
           <PreviewPanel
             aspectRatio={aspectRatio}
@@ -823,18 +823,18 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             hookYPct={hookYPct}
           />
 
-          <div className="flex-1 space-y-5 overflow-y-auto pr-1 md:max-h-[75vh]">
+          <div className="flex-1 space-y-3 sm:space-y-4 lg:space-y-5 overflow-y-auto pr-0.5 sm:pr-1 lg:max-h-[75vh]">
           {/* Aspect ratio */}
           <div>
-            <label className="block text-sm text-gray-400 mb-2">Aspect ratio</label>
-            <div className="flex gap-2" role="radiogroup" aria-label="Aspect ratio">
+            <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Aspect ratio</label>
+            <div className="grid grid-cols-2 sm:flex gap-1.5 sm:gap-2" role="radiogroup" aria-label="Aspect ratio">
               {ASPECT_RATIOS.map((ar) => (
                 <button
                   key={ar.id}
                   role="radio"
                   aria-checked={aspectRatio === ar.id}
                   onClick={() => setAspectRatio(ar.id)}
-                  className={`flex-1 py-2 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
+                  className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                     aspectRatio === ar.id
                       ? 'bg-pink-500 border-pink-400 text-white'
                       : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
@@ -931,8 +931,8 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           {/* Caption style grid */}
           {includeCaptions && (
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Caption style</label>
-              <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Caption style">
+              <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Caption style</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2" role="radiogroup" aria-label="Caption style">
                 {CAPTION_STYLES.map((cs) => (
                   <button
                     key={cs.id}
@@ -966,15 +966,15 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           {/* Caption position */}
           {includeCaptions && (
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Caption position</label>
-              <div className="flex gap-2" role="radiogroup" aria-label="Caption position">
+              <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Caption position</label>
+              <div className="flex gap-1.5 sm:gap-2" role="radiogroup" aria-label="Caption position">
                 {(['top', 'middle', 'bottom'] as const).map((pos) => (
                   <button
                     key={pos}
                     role="radio"
                     aria-checked={captionPosition === pos}
                     onClick={() => setCaptionPosition(pos)}
-                    className={`flex-1 py-2 rounded-lg text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
+                    className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
                       captionPosition === pos
                         ? 'bg-pink-500 border-pink-400 text-white'
                         : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
@@ -1041,8 +1041,8 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             {hookText.trim() && (
               <div className="mt-2 space-y-2">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Style</label>
-                  <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Hook style">
+                  <label className="block text-xs text-gray-500 mb-1.5">Style</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2" role="radiogroup" aria-label="Hook style">
                     {HOOK_STYLES.map((hs) => (
                       <button
                         key={hs.id}
@@ -1068,14 +1068,14 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     ))}
                   </div>
                 </div>
-                <div className="flex gap-2" role="radiogroup" aria-label="Hook position">
+                <div className="flex gap-1.5 sm:gap-2" role="radiogroup" aria-label="Hook position">
                   {(['top', 'center', 'bottom'] as const).map((pos) => (
                     <button
                       key={pos}
                       role="radio"
                       aria-checked={hookPosition === pos && hookYPct === null}
                       onClick={() => { setHookPosition(pos); setHookYPct(null) }}
-                      className={`flex-1 py-2 rounded-lg text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
+                      className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
                         hookPosition === pos && hookYPct === null
                           ? 'bg-pink-500 border-pink-400 text-white'
                           : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
