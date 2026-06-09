@@ -175,10 +175,34 @@ export default function BillingPage() {
 
     setActionLoading(true)
     setError(null)
+
+    const { openCheckout, loading: paying, error: razorpayError, setError: setRazorpayError } = useRazorpay()
+
     try {
-      await api.post('/api/subscriptions/create', { tier_id: selectedUpgradeTierId })
-      setSelectedUpgradeTierId(null)
-      fetchData()
+      // Create subscription in backend
+      const res = await api.post('/api/subscriptions/create', { tier_id: selectedUpgradeTierId })
+      const { razorpay_subscription_id, razorpay_key_id } = res.data
+
+      if (!razorpay_subscription_id) {
+        setError('Failed to create subscription')
+        return
+      }
+
+      // Open Razorpay checkout
+      const success = await openCheckout(
+        {
+          key: razorpay_key_id,
+          subscription_id: razorpay_subscription_id,
+        },
+        'subscription',
+      )
+
+      if (success) {
+        setSelectedUpgradeTierId(null)
+        await fetchData()
+      } else {
+        setError(razorpayError || 'Payment verification failed')
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to upgrade subscription')
     } finally {
