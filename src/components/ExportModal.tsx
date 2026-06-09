@@ -505,7 +505,7 @@ function PreviewPanel({
   }
 
   return (
-    <div className="shrink-0 w-full lg:w-[400px] flex flex-col items-center">
+    <div className="shrink-0 w-full lg:w-80 flex flex-col items-center">
       <div className={`relative w-full sm:w-72 ${aspectClass} max-h-[50vh] sm:max-h-[60vh] rounded-xl overflow-hidden border border-forge-border bg-gradient-to-br from-zinc-800 via-zinc-900 to-black`}>
         {/* Mock subject silhouette */}
         <div className="absolute inset-0 flex items-end justify-center pb-12 opacity-30 pointer-events-none">
@@ -771,7 +771,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
       aria-labelledby="export-modal-title"
       className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto py-3 sm:py-8"
     >
-      <div className="bg-forge-card border border-forge-border rounded-2xl p-3 sm:p-4 lg:p-6 w-full max-w-2xl md:max-w-3xl mx-2 sm:mx-4 my-auto shadow-2xl">
+      <div className="bg-forge-card border border-forge-border rounded-2xl p-3 sm:p-4 lg:p-6 w-full max-w-2xl md:max-w-4xl mx-2 sm:mx-4 my-auto shadow-2xl">
         <div className="flex items-center justify-between mb-3 sm:mb-5 gap-2">
           <div className="flex items-center gap-2">
             {total > 1 && (
