@@ -1,11 +1,13 @@
 import { useRef, useState, ChangeEvent, DragEvent } from 'react'
-import { Upload, X, FileVideo, CloudUpload, Link, Youtube } from 'lucide-react'
+import { Upload, X, FileVideo, CloudUpload, Link, Youtube, Crown, Lock } from 'lucide-react'
 
 interface URLInputProps {
   onFileSelect: (file: File | null) => void
   uploadedFile: File | null
   onYoutubeUrl?: (url: string) => void
   youtubeUrl?: string
+  quality?: '720p' | '1080p'
+  isSubscribed?: boolean
 }
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024
@@ -14,7 +16,7 @@ function isYoutubeUrl(s: string) {
   return /(?:youtube\.com\/watch|youtu\.be\/|youtube\.com\/shorts\/)/.test(s)
 }
 
-export default function URLInput({ onFileSelect, uploadedFile, onYoutubeUrl, youtubeUrl }: URLInputProps) {
+export default function URLInput({ onFileSelect, uploadedFile, onYoutubeUrl, youtubeUrl, quality = '720p', isSubscribed = false }: URLInputProps) {
   const [tab, setTab] = useState<'file' | 'url'>('url')
   const [dragOver, setDragOver] = useState(false)
   const [sizeError, setSizeError] = useState<string | null>(null)
@@ -108,6 +110,28 @@ export default function URLInput({ onFileSelect, uploadedFile, onYoutubeUrl, you
             )}
           </div>
           {urlError && <p className="text-xs text-red-400 px-1 mt-2">{urlError}</p>}
+
+          {/* Quality indicator */}
+          <div className="flex items-center justify-between mt-2.5 px-1">
+            {isSubscribed ? (
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-forge-accent">
+                <Crown size={11} />
+                1080p HD included with your plan
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-forge-muted">
+                <Lock size={11} />
+                720p · <span className="text-forge-accent font-semibold cursor-pointer hover:underline">upgrade for 1080p</span>
+              </span>
+            )}
+            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+              isSubscribed
+                ? 'text-forge-accent border-forge-accent/40 bg-forge-accent/10'
+                : 'text-forge-muted border-forge-border bg-forge-surface'
+            }`}>
+              {quality}
+            </span>
+          </div>
         </div>
       )}
 

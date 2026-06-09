@@ -489,6 +489,8 @@ export default function Home() {
                     uploadedFile={uploadedFile}
                     onYoutubeUrl={setYoutubeUrl}
                     youtubeUrl={youtubeUrl}
+                    isSubscribed={!!user?.subscription_tier_name}
+                    quality={user?.subscription_tier_name ? '1080p' : '720p'}
                   />
                 </div>
               </div>
