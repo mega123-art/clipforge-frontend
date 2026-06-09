@@ -875,7 +875,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                   role="radio"
                   aria-checked={aspectRatio === ar.id}
                   onClick={() => setAspectRatio(ar.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 whitespace-nowrap ${
+                  className={`flex-1 py-1.5 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                     aspectRatio === ar.id
                       ? 'bg-pink-500 border-pink-400 text-white'
                       : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
@@ -985,10 +985,10 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                         : 'border-forge-border hover:border-gray-500'
                     }`}
                   >
-                    <div className="aspect-video flex items-center justify-center" style={{ background: cs.bg }}>
+                    <div className="h-8 flex items-center justify-center" style={{ background: cs.bg }}>
                       <span style={cs.css} className="text-[11px] whitespace-nowrap leading-none">{cs.sample}</span>
                     </div>
-                    <div className="text-[9px] text-gray-200 py-1 px-1 truncate bg-forge-card">{cs.label}</div>
+                    <div className="text-[9px] text-gray-200 py-0.5 px-1 truncate bg-forge-card">{cs.label}</div>
                   </button>
                 ))}
               </div>
@@ -1006,7 +1006,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     role="radio"
                     aria-checked={captionPosition === pos}
                     onClick={() => setCaptionPosition(pos)}
-                    className={`px-4 py-1.5 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
+                    className={`flex-1 py-1.5 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
                       captionPosition === pos
                         ? 'bg-pink-500 border-pink-400 text-white'
                         : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
@@ -1093,10 +1093,10 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                             : 'border-forge-border hover:border-gray-500'
                         }`}
                       >
-                        <div className="aspect-video flex items-center justify-center bg-zinc-900">
+                        <div className="h-8 flex items-center justify-center bg-zinc-900">
                           <span style={{ ...hs.boxCss, ...hs.textCss, fontSize: '9px', padding: '4px 8px' }}>HOOK</span>
                         </div>
-                        <div className="text-[9px] text-gray-200 py-1 px-1 truncate bg-forge-card">{hs.label}</div>
+                        <div className="text-[9px] text-gray-200 py-0.5 px-1 truncate bg-forge-card">{hs.label}</div>
                       </button>
                     ))}
                   </div>
@@ -1108,7 +1108,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                       role="radio"
                       aria-checked={hookPosition === pos && hookYPct === null}
                       onClick={() => { setHookPosition(pos); setHookYPct(null) }}
-                      className={`px-4 py-1.5 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
+                      className={`flex-1 py-1.5 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
                         hookPosition === pos && hookYPct === null
                           ? 'bg-pink-500 border-pink-400 text-white'
                           : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
