@@ -505,15 +505,32 @@ function PreviewPanel({
   }
 
   return (
-    <div className="shrink-0 w-full lg:w-72 flex flex-col items-center">
-      <div className={`relative w-full sm:w-72 ${aspectClass} max-h-[50vh] sm:max-h-[60vh] rounded-xl overflow-hidden border border-forge-border bg-gradient-to-br from-zinc-800 via-zinc-900 to-black`}>
-        {/* Mock subject silhouette */}
-        <div className="absolute inset-0 flex items-end justify-center pb-12 opacity-30 pointer-events-none">
-          <div className="w-32 h-32 rounded-full bg-zinc-600" />
+    <div className="shrink-0 w-full lg:w-52 flex flex-col items-center">
+      <div
+        className={`relative w-full sm:w-52 ${aspectClass} max-h-[62vh] rounded-2xl overflow-hidden`}
+        style={{ border: '1.5px solid rgba(255,255,255,0.1)', boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 20px 48px rgba(0,0,0,0.7)' }}
+      >
+        {/* Cinematic background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-700 via-slate-900 to-black" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-violet-950/30 via-transparent to-rose-950/20" />
+        {/* Bottom scrim */}
+        <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+
+        {/* Person silhouette (head + shoulders) */}
+        <div className="absolute inset-0 flex flex-col items-center justify-end pb-[18%] pointer-events-none select-none">
+          <div className="flex flex-col items-center opacity-20">
+            <div className="w-8 h-8 rounded-full bg-zinc-300" />
+            <div className="w-[4.5rem] h-14 rounded-t-[50%] bg-zinc-300 -mt-0.5" />
+          </div>
         </div>
 
-        {/* square-in-vertical layout hint: solid black bars top/bottom,
-            1:1 square content centered (matches backend pad=black layout) */}
+        {/* Status bar */}
+        <div className="absolute top-0 inset-x-0 px-3 pt-2 flex items-center justify-between pointer-events-none">
+          <span className="text-[7px] font-semibold text-white/30">9:41</span>
+          <div className="w-8 h-1 rounded-full bg-white/10" />
+        </div>
+
+        {/* square-in-vertical black bars */}
         {showSquareInVertical && (
           <>
             <div className="absolute inset-x-0 top-0 h-[23.4%] bg-black pointer-events-none" />
@@ -527,16 +544,7 @@ function PreviewPanel({
             className={`absolute left-0 right-0 px-4 flex justify-center pointer-events-none ${hookPosClass}`}
             style={hookTopStyle}
           >
-            <div
-              className="text-center"
-              style={{
-                ...hs.boxCss,
-                ...hs.textCss,
-                fontSize: `${10 * hookFontScale}px`,
-                lineHeight: 1.25,
-                maxWidth: '90%',
-              }}
-            >
+            <div className="text-center" style={{ ...hs.boxCss, ...hs.textCss, fontSize: `${10 * hookFontScale}px`, lineHeight: 1.25, maxWidth: '90%' }}>
               {hookText}
             </div>
           </div>
@@ -545,13 +553,23 @@ function PreviewPanel({
         {/* Caption sample */}
         {includeCaptions && (
           <div className={`absolute left-0 right-0 px-3 flex flex-col items-center pointer-events-none ${captionPosClass}`}>
-            <span style={cs.css} className="text-xs whitespace-nowrap">
-              {cs.sample}
-            </span>
+            <span style={cs.css} className="text-xs whitespace-nowrap">{cs.sample}</span>
           </div>
         )}
+
+        {/* TikTok-style side actions */}
+        <div className="absolute right-2 bottom-16 flex flex-col items-center gap-3 pointer-events-none opacity-35">
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="w-6 h-6 rounded-full bg-white/25 border border-white/20" />
+            <span className="text-[5px] text-white/60">24K</span>
+          </div>
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="w-5 h-5 rounded-full bg-white/15 border border-white/15" />
+            <span className="text-[5px] text-white/60">Share</span>
+          </div>
+        </div>
       </div>
-      <p className="mt-2 text-xs text-gray-500">Live preview</p>
+      <p className="mt-2 text-[9px] uppercase tracking-widest text-forge-dim font-medium">Preview</p>
     </div>
   )
 }
@@ -812,23 +830,23 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
 
         {/* Tabs for mobile */}
         <div className="lg:hidden flex gap-2 mb-4 border-b border-forge-border pb-0">
-          {(['preview', 'settings', 'export'] as const).map((tab) => (
+          {(['preview', 'settings'] as const).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => setActiveTab(tab as 'preview' | 'settings' | 'export')}
               className={`py-2 px-3 text-sm font-semibold transition-colors border-b-2 ${
-                activeTab === tab
+                activeTab === tab || (tab === 'settings' && activeTab === 'export')
                   ? 'border-forge-accent text-forge-accent'
                   : 'border-transparent text-forge-muted hover:text-forge-text'
               }`}
             >
-              {tab === 'preview' ? 'Preview' : tab === 'settings' ? 'Settings' : 'Export'}
+              {tab === 'preview' ? 'Preview' : 'Settings'}
             </button>
           ))}
         </div>
 
         {/* Content: Tabs on mobile, side-by-side on desktop */}
-        <div className={`flex ${activeTab === 'preview' || activeTab === 'settings' ? 'flex-col' : 'flex-col'} lg:flex-row gap-3 sm:gap-4 lg:gap-6 max-h-[75vh]`}>
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:gap-6 lg:max-h-[75vh]">
           {/* Preview */}
           <div className={`${activeTab !== 'preview' ? 'hidden lg:block' : 'block'}`}>
             <PreviewPanel
@@ -844,8 +862,9 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             />
           </div>
 
-          {/* Settings */}
-          <div className={`flex-1 space-y-3 sm:space-y-4 lg:space-y-5 overflow-y-auto pr-0.5 sm:pr-1 ${activeTab !== 'settings' ? 'hidden lg:block' : 'block'} lg:max-h-[75vh]`}>
+          {/* Settings + Export (combined, scrollable with sticky button) */}
+          <div className={`flex-1 flex flex-col min-h-0 ${activeTab === 'preview' ? 'hidden lg:flex' : 'flex'} lg:max-h-[75vh]`}>
+          <div className="flex-1 space-y-3 sm:space-y-4 overflow-y-auto pr-0.5 sm:pr-1">
           {/* Aspect ratio */}
           <div>
             <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Aspect ratio</label>
@@ -872,7 +891,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           {aspectRatio === '9:16' && (
             <div>
               <label className="block text-sm text-gray-400 mb-2">Frame</label>
-              <div className="space-y-1.5" role="radiogroup" aria-label="Frame mode">
+              <div className="grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Frame mode">
                 {FOCUS_MODES.map((fm) => (
                   <button
                     key={fm.id}
@@ -881,26 +900,19 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     onClick={() => { if (!fm.comingSoon) setFocusMode(fm.id) }}
                     disabled={fm.comingSoon}
                     aria-disabled={fm.comingSoon}
-                    title={fm.comingSoon ? 'Coming soon' : undefined}
-                    className={`w-full flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-sm border text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 transition-colors duration-200 ${
+                    title={fm.comingSoon ? 'Coming soon' : fm.desc}
+                    className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs border text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 transition-colors duration-200 ${
                       fm.comingSoon
-                        ? 'border-forge-border text-gray-500 opacity-60 cursor-not-allowed'
+                        ? 'border-forge-border text-gray-500 opacity-50 cursor-not-allowed'
                         : focusMode === fm.id
                           ? 'bg-forge-card border-forge-accent text-pink-200 cursor-pointer'
-                          : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white cursor-pointer'
+                          : 'border-forge-border text-gray-400 hover:border-gray-500 hover:text-white cursor-pointer'
                     }`}
                   >
-                    <span className={`mt-1 w-3 h-3 rounded-full border-2 shrink-0 transition-colors duration-200 ${focusMode === fm.id && !fm.comingSoon ? 'bg-forge-accent border-forge-accent' : 'border-gray-600'}`} />
-                    <span className="flex-1">
-                      <span className="flex items-center gap-2">
-                        <span className="font-medium">{fm.label}</span>
-                        {fm.comingSoon && (
-                          <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300">
-                            Coming soon
-                          </span>
-                        )}
-                      </span>
-                      <span className="block text-xs text-gray-500 mt-0.5">{fm.desc}</span>
+                    <span className={`w-2.5 h-2.5 rounded-full border-2 shrink-0 transition-colors duration-200 ${focusMode === fm.id && !fm.comingSoon ? 'bg-forge-accent border-forge-accent' : 'border-gray-600'}`} />
+                    <span className="flex-1 leading-tight min-w-0">
+                      <span className="font-medium block truncate">{fm.label.replace(' (Pro)', '')}</span>
+                      {fm.comingSoon && <span className="text-[9px] text-amber-400/70">Soon</span>}
                     </span>
                   </button>
                 ))}
@@ -954,7 +966,12 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           {includeCaptions && (
             <div>
               <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Caption style</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2" role="radiogroup" aria-label="Caption style">
+              <div
+                className="flex gap-2 overflow-x-auto pb-1 -mx-0.5 px-0.5"
+                role="radiogroup"
+                aria-label="Caption style"
+                style={{ scrollbarWidth: 'none' }}
+              >
                 {CAPTION_STYLES.map((cs) => (
                   <button
                     key={cs.id}
@@ -962,23 +979,16 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     aria-checked={captionStyle === cs.id}
                     aria-label={cs.label}
                     onClick={() => setCaptionStyle(cs.id)}
-                    className={`relative rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
+                    className={`shrink-0 w-[4.5rem] rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                       captionStyle === cs.id
                         ? 'border-forge-accent ring-2 ring-forge-accent/30'
                         : 'border-forge-border hover:border-gray-500'
                     }`}
                   >
-                    <div
-                      className="aspect-video flex items-center justify-center"
-                      style={{ background: cs.bg }}
-                    >
-                      <span style={cs.css} className="text-sm whitespace-nowrap">
-                        {cs.sample}
-                      </span>
+                    <div className="aspect-video flex items-center justify-center" style={{ background: cs.bg }}>
+                      <span style={cs.css} className="text-[11px] whitespace-nowrap leading-none">{cs.sample}</span>
                     </div>
-                    <div className="text-[10px] text-gray-200 py-1 px-1 truncate bg-forge-card">
-                      {cs.label}
-                    </div>
+                    <div className="text-[9px] text-gray-200 py-1 px-1 truncate bg-forge-card">{cs.label}</div>
                   </button>
                 ))}
               </div>
@@ -1064,7 +1074,12 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               <div className="mt-2 space-y-2">
                 <div>
                   <label className="block text-xs text-gray-500 mb-1.5">Style</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2" role="radiogroup" aria-label="Hook style">
+                  <div
+                    className="flex gap-2 overflow-x-auto pb-1 -mx-0.5 px-0.5"
+                    role="radiogroup"
+                    aria-label="Hook style"
+                    style={{ scrollbarWidth: 'none' }}
+                  >
                     {HOOK_STYLES.map((hs) => (
                       <button
                         key={hs.id}
@@ -1072,20 +1087,16 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                         aria-checked={hookStyle === hs.id}
                         aria-label={hs.label}
                         onClick={() => setHookStyle(hs.id)}
-                        className={`relative rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
+                        className={`shrink-0 w-[4.5rem] rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                           hookStyle === hs.id
                             ? 'border-forge-accent ring-2 ring-forge-accent/30'
                             : 'border-forge-border hover:border-gray-500'
                         }`}
                       >
                         <div className="aspect-video flex items-center justify-center bg-zinc-900">
-                          <span style={{ ...hs.boxCss, ...hs.textCss, fontSize: '9px', padding: '4px 8px' }}>
-                            HOOK
-                          </span>
+                          <span style={{ ...hs.boxCss, ...hs.textCss, fontSize: '9px', padding: '4px 8px' }}>HOOK</span>
                         </div>
-                        <div className="text-[10px] text-gray-200 py-1 px-1 truncate bg-forge-card">
-                          {hs.label}
-                        </div>
+                        <div className="text-[9px] text-gray-200 py-1 px-1 truncate bg-forge-card">{hs.label}</div>
                       </button>
                     ))}
                   </div>
@@ -1290,42 +1301,40 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           </div>
           </div>
 
-          {/* Export Tab - mobile only or always visible with preview+settings on desktop */}
-          <div className={`flex-1 flex flex-col ${activeTab !== 'export' ? 'hidden lg:flex' : 'flex'}`}>
+          {/* Export button — sticky at bottom of settings column */}
+          <div className="pt-3 mt-1 border-t border-forge-border space-y-2">
             {error && (
-              <p role="alert" className="text-red-400 text-sm mb-4">{error}</p>
+              <p role="alert" className="text-red-400 text-xs">{error}</p>
             )}
-
-            <div className="flex-1 flex flex-col justify-end gap-3">
-              {downloadUrl ? (
-                <div className="space-y-2">
-                  <button
-                    key={clipId}
-                    onClick={handleDownload}
-                    disabled={downloading}
-                    className="flex items-center justify-center gap-2 w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-medium cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
-                  >
-                    {downloading ? <><Loader size={16} className="animate-spin" aria-hidden="true" /> Downloading...</> : <><Download size={16} aria-hidden="true" /> Download clip</>}
-                  </button>
-                  {total > 1 && safeIndex < total - 1 && (
-                    <button
-                      onClick={goNext}
-                      className="w-full py-2 text-sm text-gray-300 hover:text-white border border-forge-border hover:border-gray-500 rounded-xl cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
-                    >
-                      Next clip ({safeIndex + 2} of {total}) →
-                    </button>
-                  )}
-                </div>
-              ) : (
+            {downloadUrl ? (
+              <div className="space-y-2">
                 <button
-                  onClick={handleExport}
-                  disabled={loading}
-                  className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-semibold cursor-pointer transition-all duration-200 shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+                  key={clipId}
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-medium cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400"
                 >
-                  {loading ? <><Loader size={16} className="animate-spin" aria-hidden="true" /> Exporting...</> : <><Download size={16} aria-hidden="true" /> Export</>}
+                  {downloading ? <><Loader size={16} className="animate-spin" aria-hidden="true" /> Downloading...</> : <><Download size={16} aria-hidden="true" /> Download clip</>}
                 </button>
-              )}
-            </div>
+                {total > 1 && safeIndex < total - 1 && (
+                  <button
+                    onClick={goNext}
+                    className="w-full py-2 text-sm text-gray-300 hover:text-white border border-forge-border hover:border-gray-500 rounded-xl cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+                  >
+                    Next clip ({safeIndex + 2} of {total}) →
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={handleExport}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl text-white font-semibold cursor-pointer transition-all duration-200 shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+              >
+                {loading ? <><Loader size={16} className="animate-spin" aria-hidden="true" /> Exporting...</> : <><Download size={16} aria-hidden="true" /> Export</>}
+              </button>
+            )}
+          </div>
           </div>
         </div>
       </div>
