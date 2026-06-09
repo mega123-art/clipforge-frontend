@@ -505,9 +505,9 @@ function PreviewPanel({
   }
 
   return (
-    <div className="shrink-0 w-full lg:w-52 flex flex-col items-center">
+    <div className="shrink-0 w-full lg:w-64 flex flex-col items-center">
       <div
-        className={`relative w-full sm:w-52 ${aspectClass} max-h-[62vh] rounded-2xl overflow-hidden`}
+        className={`relative w-full sm:w-64 ${aspectClass} max-h-[62vh] rounded-2xl overflow-hidden`}
         style={{ border: '1.5px solid rgba(255,255,255,0.1)', boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 20px 48px rgba(0,0,0,0.7)' }}
       >
         {/* Cinematic background */}
@@ -868,14 +868,14 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           {/* Aspect ratio */}
           <div>
             <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Aspect ratio</label>
-            <div className="grid grid-cols-2 sm:flex gap-1.5 sm:gap-2" role="radiogroup" aria-label="Aspect ratio">
+            <div className="flex gap-1.5" role="radiogroup" aria-label="Aspect ratio">
               {ASPECT_RATIOS.map((ar) => (
                 <button
                   key={ar.id}
                   role="radio"
                   aria-checked={aspectRatio === ar.id}
                   onClick={() => setAspectRatio(ar.id)}
-                  className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 whitespace-nowrap ${
                     aspectRatio === ar.id
                       ? 'bg-pink-500 border-pink-400 text-white'
                       : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
@@ -999,14 +999,14 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           {includeCaptions && (
             <div>
               <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Caption position</label>
-              <div className="flex gap-1.5 sm:gap-2" role="radiogroup" aria-label="Caption position">
+              <div className="flex gap-1.5" role="radiogroup" aria-label="Caption position">
                 {(['top', 'middle', 'bottom'] as const).map((pos) => (
                   <button
                     key={pos}
                     role="radio"
                     aria-checked={captionPosition === pos}
                     onClick={() => setCaptionPosition(pos)}
-                    className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
+                    className={`px-4 py-1.5 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
                       captionPosition === pos
                         ? 'bg-pink-500 border-pink-400 text-white'
                         : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
@@ -1101,14 +1101,14 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     ))}
                   </div>
                 </div>
-                <div className="flex gap-1.5 sm:gap-2" role="radiogroup" aria-label="Hook position">
+                <div className="flex gap-1.5" role="radiogroup" aria-label="Hook position">
                   {(['top', 'center', 'bottom'] as const).map((pos) => (
                     <button
                       key={pos}
                       role="radio"
                       aria-checked={hookPosition === pos && hookYPct === null}
                       onClick={() => { setHookPosition(pos); setHookYPct(null) }}
-                      className={`flex-1 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-sm border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
+                      className={`px-4 py-1.5 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 capitalize ${
                         hookPosition === pos && hookYPct === null
                           ? 'bg-pink-500 border-pink-400 text-white'
                           : 'border-forge-border text-gray-300 hover:border-gray-500 hover:text-white'
