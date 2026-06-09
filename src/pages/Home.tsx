@@ -12,6 +12,7 @@ import type { AxiosError } from 'axios'
 import { uploadAndCreateJob } from '../lib/r2Upload'
 import useStore from '../store'
 import URLInput from '../components/URLInput'
+import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
 import ThemeToggle from '../components/ThemeToggle'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
@@ -305,6 +306,7 @@ const MobileReelStrip = memo(() => {
 export default function Home() {
   const navigate = useNavigate()
   const { getRecentJobs, addRecentJob, refreshUser, user } = useStore()
+  const { openSubscription } = useSubscriptionModal()
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [clipMode, setClipMode] = useState<ClipMode>('quick')
   const [customPrompt, setCustomPrompt] = useState('')
@@ -491,6 +493,7 @@ export default function Home() {
                     youtubeUrl={youtubeUrl}
                     isSubscribed={!!user?.subscription_tier_name}
                     quality={user?.subscription_tier_name ? '1080p' : '720p'}
+                    onUpgradeClick={openSubscription}
                   />
                 </div>
               </div>

@@ -277,7 +277,7 @@ export default function BillingPage() {
             <button
               onClick={handleUpgradeSubscription}
               disabled={!selectedUpgradeTierId || actionLoading}
-              className="px-6 py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/30 disabled:opacity-50 transition-colors font-medium text-amber-300"
+              className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-2 rounded-lg bg-amber-500/20 border border-amber-500/30 hover:bg-amber-500/30 disabled:opacity-50 transition-colors font-medium text-amber-300"
             >
               {actionLoading ? 'Upgrading...' : 'Upgrade Now'}
             </button>

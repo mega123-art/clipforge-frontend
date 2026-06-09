@@ -8,6 +8,7 @@ interface URLInputProps {
   youtubeUrl?: string
   quality?: '720p' | '1080p'
   isSubscribed?: boolean
+  onUpgradeClick?: () => void
 }
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024
@@ -16,7 +17,7 @@ function isYoutubeUrl(s: string) {
   return /(?:youtube\.com\/watch|youtu\.be\/|youtube\.com\/shorts\/)/.test(s)
 }
 
-export default function URLInput({ onFileSelect, uploadedFile, onYoutubeUrl, youtubeUrl, quality = '720p', isSubscribed = false }: URLInputProps) {
+export default function URLInput({ onFileSelect, uploadedFile, onYoutubeUrl, youtubeUrl, quality = '720p', isSubscribed = false, onUpgradeClick }: URLInputProps) {
   const [tab, setTab] = useState<'file' | 'url'>('url')
   const [dragOver, setDragOver] = useState(false)
   const [sizeError, setSizeError] = useState<string | null>(null)
@@ -121,7 +122,10 @@ export default function URLInput({ onFileSelect, uploadedFile, onYoutubeUrl, you
             ) : (
               <span className="inline-flex items-center gap-1.5 text-[11px] text-forge-muted">
                 <Lock size={11} />
-                720p · <span className="text-forge-accent font-semibold cursor-pointer hover:underline">upgrade for 1080p</span>
+                720p · <span
+                  className="text-forge-accent font-semibold cursor-pointer hover:underline"
+                  onClick={onUpgradeClick}
+                >upgrade for 1080p</span>
               </span>
             )}
             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
