@@ -863,8 +863,8 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           </div>
 
           {/* Settings + Export (combined, scrollable with sticky button) */}
-          <div className={`flex-1 flex flex-col min-h-0 ${activeTab === 'preview' ? 'hidden lg:flex' : 'flex'} lg:max-h-[75vh]`}>
-          <div className="flex-1 space-y-3 sm:space-y-4 overflow-y-auto pr-0.5 sm:pr-1">
+          <div className={`flex-1 min-w-0 flex flex-col min-h-0 ${activeTab === 'preview' ? 'hidden lg:flex' : 'flex'} lg:max-h-[75vh]`}>
+          <div className="flex-1 min-w-0 space-y-3 sm:space-y-4 overflow-y-auto pr-0.5 sm:pr-1">
           {/* Aspect ratio */}
           <div>
             <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Aspect ratio</label>
