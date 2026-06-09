@@ -967,10 +967,10 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
             <div>
               <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Caption style</label>
               <div
-                className="flex gap-2 overflow-x-auto pb-1 -mx-0.5 px-0.5"
+                className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5"
                 role="radiogroup"
                 aria-label="Caption style"
-                style={{ scrollbarWidth: 'none' }}
+                style={{ scrollbarWidth: 'thin' }}
               >
                 {CAPTION_STYLES.map((cs) => (
                   <button
@@ -979,7 +979,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     aria-checked={captionStyle === cs.id}
                     aria-label={cs.label}
                     onClick={() => setCaptionStyle(cs.id)}
-                    className={`shrink-0 w-[4.5rem] rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
+                    className={`rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                       captionStyle === cs.id
                         ? 'border-forge-accent ring-2 ring-forge-accent/30'
                         : 'border-forge-border hover:border-gray-500'
