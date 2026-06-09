@@ -771,7 +771,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
       aria-labelledby="export-modal-title"
       className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/70 backdrop-blur-sm overflow-y-auto py-3 sm:py-8"
     >
-      <div className="bg-forge-card border border-forge-border rounded-2xl p-3 sm:p-4 lg:p-6 w-full max-w-2xl md:max-w-4xl mx-2 sm:mx-4 my-auto shadow-2xl">
+      <div className="bg-forge-card border border-forge-border rounded-2xl p-3 sm:p-4 lg:p-6 w-full max-w-2xl md:max-w-3xl mx-2 sm:mx-4 my-auto shadow-2xl">
         <div className="flex items-center justify-between mb-3 sm:mb-5 gap-2">
           <div className="flex items-center gap-2">
             {total > 1 && (
