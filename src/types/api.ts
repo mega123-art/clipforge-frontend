@@ -190,3 +190,14 @@ export interface DebugHealth {
   redis_dns_ok: boolean
   celery_worker_ping: boolean
 }
+
+export interface CleanupOut {
+  task_id?: string | null
+  mode: 'async' | 'sync'
+  result?: { status: string; deleted_count?: number; purged_jobs?: number; error?: string } | null
+}
+
+export interface PreserveClipsOut {
+  user_email: string
+  clips_converted: number
+}

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Coins, Users, FileText, Search, Plus, ShieldCheck,
   ArrowLeft, AlertCircle, CheckCircle2, ServerCog, Lock,
-  Clapperboard, Download, Activity, XCircle,
+  Clapperboard, Download, Activity, XCircle, Trash2, Shield,
   LucideIcon,
 } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
@@ -19,6 +19,8 @@ import type {
   CreditTxn,
   User,
   GrantCreditsResponse,
+  CleanupOut,
+  PreserveClipsOut,
 } from '../types/api'
 
 interface AdminPasswordGateProps {
@@ -137,6 +139,11 @@ export default function Admin() {
   const [grantNote, setGrantNote] = useState('')
   const [flash, setFlash] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [cleanupResult, setCleanupResult] = useState<CleanupOut | null>(null)
+  const [cleanupError, setCleanupError] = useState<string | null>(null)
+  const [preserveEmail, setPreserveEmail] = useState('')
+  const [preserveResult, setPreserveResult] = useState<PreserveClipsOut | null>(null)
+  const [preserveError, setPreserveError] = useState<string | null>(null)
 
   // Hooks must always run in the same order — call them before any early returns,
   // but disable when not yet an admin so we don't hit the API.
@@ -187,6 +194,36 @@ export default function Admin() {
     onError: (err) => {
       setError(err.response?.data?.detail || 'Grant failed')
       setFlash(null)
+    },
+  })
+
+  const cleanupMutation = useMutation<CleanupOut, AxiosError<{ detail?: string }>, boolean>({
+    mutationFn: (sync) =>
+      api.post<CleanupOut>('/api/admin/cleanup-expired', null, { params: { sync } }).then((r) => r.data),
+    onSuccess: (data) => {
+      setCleanupResult(data)
+      setCleanupError(null)
+      qc.invalidateQueries({ queryKey: ['admin-logs'] })
+      qc.invalidateQueries({ queryKey: ['admin-stats'] })
+    },
+    onError: (err) => {
+      setCleanupError(err.response?.data?.detail || 'Cleanup request failed')
+      setCleanupResult(null)
+    },
+  })
+
+  const preserveMutation = useMutation<PreserveClipsOut, AxiosError<{ detail?: string }>, string>({
+    mutationFn: (email) =>
+      api.post<PreserveClipsOut>('/api/admin/preserve-clips', { user_email: email }).then((r) => r.data),
+    onSuccess: (data) => {
+      setPreserveResult(data)
+      setPreserveError(null)
+      setPreserveEmail('')
+      qc.invalidateQueries({ queryKey: ['admin-logs'] })
+    },
+    onError: (err) => {
+      setPreserveError(err.response?.data?.detail || 'Preserve request failed')
+      setPreserveResult(null)
     },
   })
 
@@ -450,6 +487,104 @@ export default function Admin() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Storage cleanup */}
+        <div className="glass-card rounded-2xl p-6 border border-forge-border">
+          <div className="flex items-center gap-2 mb-1">
+            <Trash2 size={16} className="text-rose-400" />
+            <h2 className="text-base font-black text-forge-text">Storage cleanup</h2>
+          </div>
+          <p className="text-xs text-forge-muted mb-4">
+            Delete expired free clips (&gt;3 days old) + purge R2 source videos for fully-expired jobs.
+            Paid users' clips are never touched.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => { setCleanupResult(null); setCleanupError(null); cleanupMutation.mutate(true) }}
+              disabled={cleanupMutation.isPending}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 hover:border-rose-500/60 text-sm font-bold text-rose-400 transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <Trash2 size={13} />
+              {cleanupMutation.isPending ? 'Running…' : 'Run now (sync)'}
+            </button>
+            <button
+              onClick={() => { setCleanupResult(null); setCleanupError(null); cleanupMutation.mutate(false) }}
+              disabled={cleanupMutation.isPending}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-forge-surface border border-forge-border hover:border-forge-accent/40 text-sm font-semibold text-forge-text transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <ServerCog size={13} className="text-forge-accent" />
+              Queue to worker (async)
+            </button>
+          </div>
+
+          {cleanupResult && (
+            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
+              <CheckCircle2 size={15} className="shrink-0 mt-0.5" />
+              {cleanupResult.mode === 'async' ? (
+                <span>Queued to worker — task ID: <span className="font-mono text-xs">{cleanupResult.task_id}</span>. Check worker logs for results.</span>
+              ) : (
+                <span>
+                  Done — <strong>{cleanupResult.result?.deleted_count ?? 0}</strong> clip{cleanupResult.result?.deleted_count !== 1 ? 's' : ''} deleted,{' '}
+                  <strong>{cleanupResult.result?.purged_jobs ?? 0}</strong> job{cleanupResult.result?.purged_jobs !== 1 ? 's' : ''} purged from R2.
+                </span>
+              )}
+            </div>
+          )}
+          {cleanupError && (
+            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+              <AlertCircle size={15} className="shrink-0 mt-0.5" />
+              <span>{cleanupError}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Preserve clips */}
+        <div className="glass-card rounded-2xl p-6 border border-forge-border">
+          <div className="flex items-center gap-2 mb-1">
+            <Shield size={16} className="text-emerald-400" />
+            <h2 className="text-base font-black text-forge-text">Preserve clips</h2>
+          </div>
+          <p className="text-xs text-forge-muted mb-4">
+            Convert a user's free clips to paid, exempting them from the 3-day expiry sweep.
+          </p>
+          <form
+            onSubmit={(e) => { e.preventDefault(); setPreserveResult(null); setPreserveError(null); preserveMutation.mutate(preserveEmail) }}
+            className="flex flex-col sm:flex-row gap-3"
+          >
+            <input
+              type="email"
+              required
+              value={preserveEmail}
+              onChange={(e) => setPreserveEmail(e.target.value)}
+              placeholder="user@example.com"
+              className="flex-1 bg-forge-surface border border-forge-border rounded-xl px-4 py-2.5 text-sm text-forge-text placeholder-forge-dim outline-none focus:border-emerald-500/50 transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={preserveMutation.isPending}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:border-emerald-500/60 text-sm font-bold text-emerald-400 transition-colors disabled:opacity-50 cursor-pointer shrink-0"
+            >
+              <Shield size={13} />
+              {preserveMutation.isPending ? 'Preserving…' : 'Preserve clips'}
+            </button>
+          </form>
+
+          {preserveResult && (
+            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
+              <CheckCircle2 size={15} className="shrink-0 mt-0.5" />
+              <span>
+                <strong>{preserveResult.clips_converted}</strong> clip{preserveResult.clips_converted !== 1 ? 's' : ''} for{' '}
+                <strong>{preserveResult.user_email}</strong> marked paid — exempt from expiry.
+              </span>
+            </div>
+          )}
+          {preserveError && (
+            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+              <AlertCircle size={15} className="shrink-0 mt-0.5" />
+              <span>{preserveError}</span>
+            </div>
+          )}
         </div>
 
         {/* Logs side-by-side */}
