@@ -5,7 +5,7 @@ import {
   Coins, Users, FileText, Search, Plus, ShieldCheck,
   ArrowLeft, AlertCircle, CheckCircle2, ServerCog, Lock,
   Clapperboard, Download, Activity, XCircle, Trash2, Shield,
-  LucideIcon,
+  LucideIcon, Power, RadioTower,
 } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
 import type { AxiosError } from 'axios'
@@ -21,6 +21,7 @@ import type {
   GrantCreditsResponse,
   CleanupOut,
   PreserveClipsOut,
+  AppSettings,
 } from '../types/api'
 
 interface AdminPasswordGateProps {
@@ -176,6 +177,12 @@ export default function Admin() {
     enabled: isAdmin,
   })
 
+  const { data: appSettings } = useQuery<AppSettings>({
+    queryKey: ['admin-settings'],
+    queryFn: () => api.get<AppSettings>('/api/admin/settings').then((r) => r.data),
+    enabled: isAdmin,
+  })
+
   const grantMutation = useMutation<GrantCreditsResponse, AxiosError<{ detail?: string }>, GrantPayload>({
     mutationFn: (body) =>
       api.post<GrantCreditsResponse>('/api/admin/credits/grant', body).then((r) => r.data),
@@ -224,6 +231,23 @@ export default function Admin() {
     onError: (err) => {
       setPreserveError(err.response?.data?.detail || 'Preserve request failed')
       setPreserveResult(null)
+    },
+  })
+
+  const settingsMutation = useMutation<AppSettings, AxiosError<{ detail?: string }>, boolean>({
+    mutationFn: (maintenanceMode) =>
+      api.patch<AppSettings>('/api/admin/settings', { maintenance_mode: maintenanceMode }).then((r) => r.data),
+    onSuccess: (data) => {
+      setFlash(data.maintenance_mode ? 'Maintenance mode is now ON.' : 'Maintenance mode is now OFF.')
+      setError(null)
+      qc.invalidateQueries({ queryKey: ['admin-settings'] })
+      qc.invalidateQueries({ queryKey: ['app-status'] })
+      qc.invalidateQueries({ queryKey: ['admin-logs'] })
+      setTimeout(() => setFlash(null), 4000)
+    },
+    onError: (err) => {
+      setError(err.response?.data?.detail || 'Could not update maintenance mode')
+      setFlash(null)
     },
   })
 
@@ -326,6 +350,50 @@ export default function Admin() {
             hint="All time consumed"
             accent="text-orange-400"
           />
+        </div>
+
+        {/* Maintenance mode */}
+        <div className={`glass-card rounded-2xl p-6 border ${appSettings?.maintenance_mode ? 'border-amber-500/45' : 'border-forge-border'}`}>
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${appSettings?.maintenance_mode ? 'border-amber-500/35 bg-amber-500/12' : 'border-emerald-500/30 bg-emerald-500/10'}`}>
+                {appSettings?.maintenance_mode ? (
+                  <Power size={20} className="text-amber-300" />
+                ) : (
+                  <RadioTower size={20} className="text-emerald-300" />
+                )}
+              </div>
+              <div>
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  <h2 className="text-base font-black text-forge-text">Site availability</h2>
+                  <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${appSettings?.maintenance_mode ? 'border-amber-500/35 bg-amber-500/10 text-amber-300' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'}`}>
+                    {appSettings?.maintenance_mode ? 'Down page active' : 'Live'}
+                  </span>
+                </div>
+                <p className="max-w-2xl text-sm leading-6 text-forge-muted">
+                  Toggle maintenance mode for normal users. Admin, sign in, sign up, and the downtime page stay reachable so you can turn the app back on.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={settingsMutation.isPending || !appSettings}
+              onClick={() => settingsMutation.mutate(!appSettings?.maintenance_mode)}
+              className={`flex shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-black transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                appSettings?.maintenance_mode
+                  ? 'bg-emerald-500/12 border border-emerald-500/35 text-emerald-300 hover:border-emerald-400/70'
+                  : 'bg-amber-500/12 border border-amber-500/35 text-amber-300 hover:border-amber-400/70'
+              }`}
+            >
+              <Power size={15} />
+              {settingsMutation.isPending
+                ? 'Updating...'
+                : appSettings?.maintenance_mode
+                  ? 'Bring site back'
+                  : 'Show down page'}
+            </button>
+          </div>
         </div>
 
         {/* Export CSV */}

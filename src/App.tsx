@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect, type ReactNode } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import { useQuery } from '@tanstack/react-query'
 import Home from './pages/Home'
 import Processing from './pages/Processing'
 import Review from './pages/Review'
@@ -10,11 +11,12 @@ import Admin from './pages/Admin'
 import MyClips from './pages/MyClips'
 import Billing from './pages/Billing'
 import VerifyEmail from './pages/VerifyEmail'
+import Down from './pages/Down'
 import ProtectedRoute from './components/ProtectedRoute'
-import AdminRoute from './components/AdminRoute'
 import SubscriptionModalProvider from './components/SubscriptionModalProvider'
 import useStore from './store'
-import type { AuthOut } from './types/api'
+import api from './api'
+import type { AppStatus, AuthOut } from './types/api'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
@@ -40,6 +42,29 @@ function AuthHydrator(): null {
   return null
 }
 
+function MaintenanceGate({ children }: { children: ReactNode }) {
+  const location = useLocation()
+  const user = useStore((s) => s.user)
+  const { data } = useQuery<AppStatus>({
+    queryKey: ['app-status'],
+    queryFn: () => api.get<AppStatus>('/api/system/status').then((r) => r.data),
+    refetchInterval: 30000,
+    retry: 1,
+  })
+
+  const allowedPath =
+    location.pathname === '/down' ||
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/signin') ||
+    location.pathname.startsWith('/signup')
+
+  if (data?.maintenance_mode && !user?.is_admin && !allowedPath) {
+    return <Navigate to="/down" replace />
+  }
+
+  return <>{children}</>
+}
+
 export default function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
@@ -47,18 +72,21 @@ export default function App() {
         <AuthHydrator />
         <SubscriptionModalProvider />
         <div className="min-h-screen bg-forge-bg text-forge-text">
-          <Routes>
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-            <Route path="/processing/:jobId" element={<ProtectedRoute><Processing /></ProtectedRoute>} />
-            <Route path="/review/:jobId" element={<ProtectedRoute><Review /></ProtectedRoute>} />
-            <Route path="/clips" element={<ProtectedRoute><MyClips /></ProtectedRoute>} />
-            <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
-            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <MaintenanceGate>
+            <Routes>
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/down" element={<Down />} />
+              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/processing/:jobId" element={<ProtectedRoute><Processing /></ProtectedRoute>} />
+              <Route path="/review/:jobId" element={<ProtectedRoute><Review /></ProtectedRoute>} />
+              <Route path="/clips" element={<ProtectedRoute><MyClips /></ProtectedRoute>} />
+              <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </MaintenanceGate>
         </div>
       </BrowserRouter>
     </GoogleOAuthProvider>

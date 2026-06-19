@@ -151,6 +151,14 @@ export interface AdminStats {
   dev_mode?: boolean
 }
 
+export interface AppSettings {
+  maintenance_mode: boolean
+}
+
+export interface AppStatus {
+  maintenance_mode: boolean
+}
+
 export interface AdminLog {
   id: string
   action: string
