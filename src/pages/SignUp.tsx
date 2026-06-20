@@ -1,7 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useGoogleLogin } from '@react-oauth/google'
-import { Mail, Lock, User as UserIcon, ArrowRight, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, User as UserIcon, ArrowRight, AlertCircle, Eye, EyeOff, Gift } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
 import type { AxiosError } from 'axios'
 import api from '../api'
@@ -22,10 +22,15 @@ function GoogleIcon() {
 
 export default function SignUp() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { setAuth, token } = useStore()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [referralCode, setReferralCode] = useState(() => {
+    const params = new URLSearchParams(location.search)
+    return (params.get('ref') || '').trim().toUpperCase()
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
@@ -50,7 +55,12 @@ export default function SignUp() {
     setLoading(true)
     setError(null)
     try {
-      const { data } = await api.post<AuthOut>('/api/auth/signup', { email, password, name: name || undefined })
+      const { data } = await api.post<AuthOut>('/api/auth/signup', {
+        email,
+        password,
+        name: name || undefined,
+        referral_code: referralCode.trim() || undefined,
+      })
       setAuth(data)
       navigate('/', { replace: true })
     } catch (err) {
@@ -70,7 +80,10 @@ export default function SignUp() {
       setLoading(true)
       setError(null)
       try {
-        const { data } = await api.post<AuthOut>('/api/auth/google', { access_token: tokenResponse.access_token })
+        const { data } = await api.post<AuthOut>('/api/auth/google', {
+          access_token: tokenResponse.access_token,
+          referral_code: referralCode.trim() || undefined,
+        })
         setAuth(data)
         navigate('/', { replace: true })
       } catch (err) {
@@ -81,11 +94,12 @@ export default function SignUp() {
       }
     },
     onError: (err) => {
-      if (err.error === 'popup_closed_by_user') return
-      if (err.error === 'popup_blocked_by_browser') {
+      const errorCode = err.error as string | undefined
+      if (errorCode === 'popup_closed_by_user') return
+      if (errorCode === 'popup_blocked_by_browser') {
         setError('Google sign-in popup was blocked. Please allow popups for this site and try again.')
       } else {
-        setError(err.error_description || err.error || 'Google sign up failed')
+        setError(err.error_description || errorCode || 'Google sign up failed')
       }
     },
   })
@@ -107,7 +121,7 @@ export default function SignUp() {
 
         <div className="glass-card rounded-2xl p-8 border border-forge-border">
           <h1 className="text-2xl font-black text-forge-text mb-1">Create account</h1>
-          <p className="text-sm text-forge-muted mb-6">Start turning videos into viral clips.</p>
+          <p className="text-sm text-forge-muted mb-6">Start turning videos into viral clips. New accounts get 3 credits.</p>
 
           <button
             type="button"
@@ -146,6 +160,17 @@ export default function SignUp() {
                 placeholder="you@example.com"
                 required
                 className="flex-1 bg-transparent outline-none text-forge-text placeholder-forge-dim text-sm"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 bg-forge-surface rounded-xl px-4 py-3 border border-forge-border focus-within:border-forge-accent/50 transition-colors">
+              <Gift size={15} className="text-forge-dim shrink-0" />
+              <input
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                placeholder="Referral code (optional)"
+                className="flex-1 bg-transparent outline-none text-forge-text placeholder-forge-dim text-sm uppercase tracking-wide"
               />
             </div>
 

@@ -125,6 +125,7 @@ export interface User {
   last_login_at?: string | null
   job_count?: number
   subscription_tier_name?: string | null
+  referral_code?: string | null
 }
 
 export interface AuthOut {
@@ -182,6 +183,12 @@ export interface GrantCreditsResponse {
   granted: number
   user_email: string
   new_balance: number
+}
+
+export interface ReferralInfo {
+  referral_code: string
+  successful_referrals: number
+  credits_earned: number
 }
 
 export interface MoreClipsOptions {
