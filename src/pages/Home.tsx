@@ -1,11 +1,11 @@
-import { useState, FormEvent, memo } from 'react'
+import { useState, useEffect, FormEvent, memo } from 'react'
 import type React from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronDown, ChevronUp, Clock, ArrowRight, Zap,
   Flame, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
-  LucideIcon, SlidersHorizontal, Wand2, Play, Crown,
+  LucideIcon, SlidersHorizontal, Wand2, Play, Crown, Gift, Copy, Check,
 } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
 import type { AxiosError } from 'axios'
@@ -19,7 +19,8 @@ import CreditsBadge from '../components/CreditsBadge'
 import TopupButton from '../components/TopupButton'
 import PlanButton from '../components/PlanButton'
 import TierBadge from '../components/TierBadge'
-import type { AspectRatio } from '../types/api'
+import api from '../api'
+import type { AspectRatio, ReferralInfo } from '../types/api'
 
 interface ClipTypeDef {
   id: string
@@ -322,6 +323,31 @@ export default function Home() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploadPct, setUploadPct] = useState<number>(0)
   const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [referral, setReferral] = useState<ReferralInfo | null>(null)
+  const [refCopied, setRefCopied] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    api.get<ReferralInfo>('/api/auth/referral')
+      .then((res) => setReferral(res.data))
+      .catch(() => {})
+  }, [user])
+
+  const referralCode = referral?.referral_code || user?.referral_code || ''
+  const referralLink = referralCode
+    ? `${window.location.origin}/signup?ref=${encodeURIComponent(referralCode)}`
+    : ''
+
+  const copyReferralLink = async () => {
+    if (!referralLink) return
+    try {
+      await navigator.clipboard.writeText(referralLink)
+      setRefCopied(true)
+      window.setTimeout(() => setRefCopied(false), 1600)
+    } catch {
+      setRefCopied(false)
+    }
+  }
 
   const toggleClipType = (id: string) => {
     setOptions((o) => ({
@@ -435,6 +461,38 @@ export default function Home() {
                 </motion.div>
               )}
             </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08, duration: 0.5 }}
+              className="mb-5 sm:mb-7 rounded-2xl border border-forge-accent/35 bg-forge-accent/10 px-4 py-3 shadow-glow-violet-sm"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-forge-accent/30 bg-forge-accent/15">
+                    <Gift size={16} className="text-forge-accent" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-forge-text">
+                      Refer friends, earn credits
+                    </p>
+                    <p className="mt-0.5 text-xs leading-5 text-forge-muted">
+                      They get 3 credits on signup. You get 2 credits for every successful referral.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={copyReferralLink}
+                  disabled={!referralLink}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-forge-accent/35 bg-forge-card px-3.5 py-2 text-xs font-bold text-forge-accent transition-colors hover:bg-forge-card-hover disabled:cursor-not-allowed disabled:opacity-45 cursor-pointer"
+                >
+                  {refCopied ? <Check size={13} /> : <Copy size={13} />}
+                  {refCopied ? 'Copied' : 'Copy referral link'}
+                </button>
+              </div>
+            </motion.div>
 
             {/* H1 */}
             <motion.h1
