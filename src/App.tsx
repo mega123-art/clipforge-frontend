@@ -14,6 +14,7 @@ import VerifyEmail from './pages/VerifyEmail'
 import Down from './pages/Down'
 import ProtectedRoute from './components/ProtectedRoute'
 import SubscriptionModalProvider from './components/SubscriptionModalProvider'
+import ActiveJobBanner from './components/ActiveJobBanner'
 import useStore from './store'
 import api from './api'
 import type { AppStatus, AuthOut } from './types/api'
@@ -73,6 +74,7 @@ export default function App() {
         <SubscriptionModalProvider />
         <div className="min-h-screen bg-forge-bg text-forge-text">
           <MaintenanceGate>
+            <ActiveJobBanner />
             <Routes>
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
