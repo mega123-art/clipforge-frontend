@@ -30,7 +30,7 @@ export default function MoreClipsModal({ onConfirm, onClose, loading }: MoreClip
   const [mode, setMode] = useState<Mode>('quick')
   const [customPrompt, setCustomPrompt] = useState('')
   const [options, setOptions] = useState<MoreClipsOptions>({
-    max_clips: 5,
+    max_clips: 3,
     clip_types: ['controversy', 'hook_intro', 'quotable', 'shocking_stat', 'myth_bust'],
     min_clip_duration: 20,
     max_clip_duration: 90,

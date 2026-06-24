@@ -314,7 +314,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [options, setOptions] = useState<HomeOptions>({
-    max_clips: 5,
+    max_clips: 3,
     clip_types: ['controversy', 'hook_intro', 'quotable', 'shocking_stat', 'myth_bust'],
     min_clip_duration: 20,
     max_clip_duration: 90,
