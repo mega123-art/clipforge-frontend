@@ -560,10 +560,22 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setShowAdvanced((s) => !s)}
-                className="flex items-center gap-1.5 text-sm text-forge-muted hover:text-forge-text transition-colors mt-4 ml-1 cursor-pointer"
+                className={`relative flex items-center gap-1.5 text-sm transition-colors mt-4 ml-1 cursor-pointer group
+                  ${showAdvanced ? 'text-forge-accent' : 'text-forge-muted hover:text-forge-text'}`}
               >
-                {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                <span>{showAdvanced ? 'Hide' : 'Show'} advanced options</span>
+                {!showAdvanced && (
+                  <span className="absolute -inset-1.5 rounded-lg bg-forge-accent/10 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                )}
+                {showAdvanced && (
+                  <span className="absolute -inset-1.5 rounded-lg bg-forge-accent/15 blur-sm animate-pulse" />
+                )}
+                <span className="relative flex items-center gap-1.5">
+                  {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  <span>{showAdvanced ? 'Hide' : 'Show'} advanced options</span>
+                  {!showAdvanced && (
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-forge-accent shadow-[0_0_6px_2px_rgba(6,182,212,0.6)] animate-pulse" />
+                  )}
+                </span>
               </button>
 
               {showAdvanced && (
