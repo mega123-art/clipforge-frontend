@@ -14,10 +14,11 @@ api.interceptors.response.use(
   (err) => {
     var _a;
     if (((_a = err.response) == null ? void 0 : _a.status) === 401) {
+      const hadToken = !!localStorage.getItem("auth_token");
       localStorage.removeItem("auth_token");
       localStorage.removeItem("auth_user");
       const path = window.location.pathname;
-      if (!path.startsWith("/signin") && !path.startsWith("/signup")) {
+      if (hadToken && !path.startsWith("/signin") && !path.startsWith("/signup")) {
         try {
           sessionStorage.setItem(
             "post_login_redirect",

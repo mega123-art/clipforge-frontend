@@ -16,10 +16,14 @@ api.interceptors.response.use(
   (r) => r,
   (err: AxiosError) => {
     if (err.response?.status === 401) {
+      // Only bounce to signin on a real session expiry (a token existed).
+      // Anonymous 401s from background calls on public pages (e.g. Landing)
+      // must NOT redirect, or the public homepage flashes then kicks to signin.
+      const hadToken = !!localStorage.getItem('auth_token')
       localStorage.removeItem('auth_token')
       localStorage.removeItem('auth_user')
       const path = window.location.pathname
-      if (!path.startsWith('/signin') && !path.startsWith('/signup')) {
+      if (hadToken && !path.startsWith('/signin') && !path.startsWith('/signup')) {
         // Preserve the page (and search) so we can bounce the user back
         // after re-login. Without this, a 2-hour job page becomes orphaned
         // the moment the JWT expires.
