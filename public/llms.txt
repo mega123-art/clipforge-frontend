@@ -1,0 +1,36 @@
+# VibeClip
+
+> VibeClip is an AI clip maker that turns long YouTube videos and other long-form content into viral-ready vertical short clips for TikTok, Instagram Reels, and YouTube Shorts. Paste a YouTube URL (or upload a file); the AI transcribes it, detects the most share-worthy moments, auto-crops to 9:16, and burns in word-level captions — export-ready in minutes.
+
+## What it does
+
+- AI viral moment detection from any YouTube URL or uploaded video (MP4/MOV up to 2GB)
+- Automatic 9:16 vertical reframing with subject tracking
+- Word-level animated captions in 15+ styles (word highlight, neon glow, karaoke pop, and more)
+- Viral hook text overlays
+- Export to TikTok, Instagram Reels, and YouTube Shorts in 9:16, plus 1:1 and 16:9
+- Most videos process in 2–5 minutes
+
+## Pricing
+
+- Free tier with credits included on signup
+- Paid plans add monthly credits for higher volume and 1080p downloads
+- Currency: INR
+
+## Key pages
+
+- [Homepage](https://www.vibeclip.in/): product overview, how it works, FAQ
+- [App](https://www.vibeclip.in/app): the clip generator (requires a free account)
+- [Sitemap](https://www.vibeclip.in/sitemap.xml)
+
+## FAQ
+
+- How do I turn a YouTube video into TikTok clips? Paste the YouTube URL into VibeClip; the AI transcribes, detects viral moments, crops to 9:16, adds captions, and exports clip-ready videos in minutes.
+- Does it add captions automatically? Yes — word-level captions burned into each clip, 15+ styles.
+- What formats are supported? YouTube URLs and direct uploads (MP4, MOV up to 2GB); exports MP4 in 9:16, 1:1, or 16:9.
+- Is it free? Yes, a free tier with signup credits; paid plans for higher volume.
+- How long does it take? Typically 2–5 minutes depending on video length.
+
+## Contact
+
+- Website: https://www.vibeclip.in/
