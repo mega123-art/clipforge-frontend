@@ -10,6 +10,6 @@ export default function AdminRoute({ children }: AdminRouteProps) {
   const { token, user } = useStore()
   const location = useLocation()
   if (!token) return <Navigate to="/signin" replace state={{ from: location }} />
-  if (!user?.is_admin) return <Navigate to="/" replace />
+  if (!user?.is_admin) return <Navigate to="/app" replace />
   return <>{children}</>
 }

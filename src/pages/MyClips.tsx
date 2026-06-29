@@ -56,7 +56,7 @@ export default function MyClips() {
       {/* Navbar */}
       <header className="sticky top-0 z-30 flex items-center justify-between px-5 py-3 border-b border-forge-border bg-forge-bg/80 backdrop-blur">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/app')}
           className="flex items-center gap-1.5 text-sm text-forge-subtext hover:text-forge-text transition-colors cursor-pointer"
         >
           <ArrowLeft size={15} />
@@ -90,7 +90,7 @@ export default function MyClips() {
             <Film size={40} className="mx-auto mb-3 opacity-30" />
             <p>No videos processed yet.</p>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/app')}
               className="mt-4 text-sm text-forge-accent hover:text-forge-accent transition-colors cursor-pointer"
             >
               Upload your first video →

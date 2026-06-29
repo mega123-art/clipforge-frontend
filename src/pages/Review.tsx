@@ -81,7 +81,7 @@ export default function Review() {
     return (
       <div className="min-h-screen flex flex-col">
         <header className="sticky top-0 z-10 glass border-b border-forge-border px-4 lg:px-6 py-3 flex items-center gap-4">
-          <button onClick={() => navigate('/')} className="flex items-center gap-2 text-forge-muted hover:text-forge-text transition-colors cursor-pointer shrink-0">
+          <button onClick={() => navigate('/app')} className="flex items-center gap-2 text-forge-muted hover:text-forge-text transition-colors cursor-pointer shrink-0">
             <VibeClipLogo size={28} className="rounded-lg" />
             <span className="font-bold text-sm gradient-text hidden sm:inline">VibeClip</span>
           </button>
@@ -113,7 +113,7 @@ export default function Review() {
         <div className="text-center max-w-md px-4">
           <p className="text-red-400">{msg}</p>
           {httpStatus ? <p className="text-zinc-500 text-xs mt-1">HTTP {httpStatus}</p> : null}
-          <button onClick={() => navigate('/')} className="mt-3 text-forge-accent hover:underline text-sm cursor-pointer">
+          <button onClick={() => navigate('/app')} className="mt-3 text-forge-accent hover:underline text-sm cursor-pointer">
             Go home
           </button>
         </div>
@@ -130,7 +130,7 @@ export default function Review() {
       <header className="sticky top-0 z-10 glass border-b border-forge-border px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 flex flex-col lg:flex-row items-start lg:items-center gap-3 sm:gap-4">
         <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto lg:flex-1 min-w-0">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/app')}
             className="flex items-center gap-2 text-forge-muted hover:text-forge-text transition-colors group cursor-pointer shrink-0"
           >
             <VibeClipLogo size={28} className="rounded-lg" />

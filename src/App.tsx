@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { useQuery } from '@tanstack/react-query'
 import Home from './pages/Home'
+import Landing from './pages/Landing'
 import Processing from './pages/Processing'
 import Review from './pages/Review'
 import SignIn from './pages/SignIn'
@@ -43,6 +44,13 @@ function AuthHydrator(): null {
   return null
 }
 
+// Logged-in users skip the marketing page and land in the app.
+function LandingRoute() {
+  const token = useStore((s) => s.token)
+  if (token) return <Navigate to="/app" replace />
+  return <Landing />
+}
+
 function MaintenanceGate({ children }: { children: ReactNode }) {
   const location = useLocation()
   const user = useStore((s) => s.user)
@@ -80,7 +88,8 @@ export default function App() {
               <Route path="/signup" element={<SignUp />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/down" element={<Down />} />
-              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/" element={<LandingRoute />} />
+              <Route path="/app" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/processing/:jobId" element={<ProtectedRoute><Processing /></ProtectedRoute>} />
               <Route path="/review/:jobId" element={<ProtectedRoute><Review /></ProtectedRoute>} />
               <Route path="/clips" element={<ProtectedRoute><MyClips /></ProtectedRoute>} />

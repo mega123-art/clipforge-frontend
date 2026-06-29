@@ -312,7 +312,7 @@ export default function Processing() {
         <div className="text-center max-w-md px-4">
           <p className="text-red-400 text-lg">{msg}</p>
           {httpStatus ? <p className="text-forge-dim text-xs mt-1">HTTP {httpStatus}</p> : null}
-          <button onClick={() => navigate('/')} className="mt-4 text-forge-accent hover:underline cursor-pointer">
+          <button onClick={() => navigate('/app')} className="mt-4 text-forge-accent hover:underline cursor-pointer">
             Go back
           </button>
         </div>
@@ -457,7 +457,7 @@ export default function Processing() {
               <div className="mt-6 p-5 bg-red-500/10 border border-red-500/30 rounded-2xl">
                 <p className="text-red-400 font-bold text-sm mb-1">Job failed</p>
                 <p className="text-xs text-red-300/70">{job?.error_message || 'Unknown error'}</p>
-                <button onClick={() => navigate('/')} className="mt-3 text-xs text-forge-accent hover:underline cursor-pointer">
+                <button onClick={() => navigate('/app')} className="mt-3 text-xs text-forge-accent hover:underline cursor-pointer">
                   Try again
                 </button>
               </div>
@@ -510,7 +510,7 @@ export default function Processing() {
                     Notify when done
                   </button>
                   <button
-                    onClick={() => navigate('/')}
+                    onClick={() => navigate('/app')}
                     className="px-4 py-2 text-xs text-forge-dim hover:text-forge-muted transition-colors cursor-pointer"
                   >
                     Cancel
