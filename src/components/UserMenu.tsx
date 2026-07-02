@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, User as UserIcon, ChevronDown, Coins, ShieldCheck, CreditCard, Gift, Copy, Check } from 'lucide-react'
+import { LogOut, User as UserIcon, Coins, ShieldCheck, CreditCard, Gift, Copy, Check } from 'lucide-react'
 import useStore from '../store'
 import api from '../api'
 import type { ReferralInfo } from '../types/api'
@@ -49,7 +49,10 @@ export default function UserMenu() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full border border-forge-border hover:border-forge-border-bright bg-forge-surface hover:bg-forge-card-hover transition-all cursor-pointer"
+        title={user.name || user.email}
+        className={`flex items-center justify-center w-9 h-9 rounded-full border transition-colors cursor-pointer ${
+          open ? 'border-forge-accent/60' : 'border-forge-border hover:border-forge-border-bright'
+        }`}
       >
         {user.avatar_url ? (
           <img src={user.avatar_url} alt="" className="w-7 h-7 rounded-full" />
@@ -58,10 +61,6 @@ export default function UserMenu() {
             {initial}
           </div>
         )}
-        <span className="text-xs font-semibold text-forge-text max-w-[120px] truncate">
-          {user.name || user.email.split('@')[0]}
-        </span>
-        <ChevronDown size={12} className="text-forge-muted" />
       </button>
 
       {open && (

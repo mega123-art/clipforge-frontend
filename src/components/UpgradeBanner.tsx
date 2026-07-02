@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Crown, X, TrendingUp, Zap, Star } from 'lucide-react'
 import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
+import useStore from '../store'
 import api from '../api'
 
 type Tier = 'none' | 'Starter' | 'Pro' | 'Professional' | 'Enterprise'
@@ -54,12 +56,26 @@ const CONFIGS: Record<Exclude<Tier, 'Enterprise'>, BannerConfig> = {
   },
 }
 
+// Marketing/auth pages: never show the upsell popup there.
+const HIDDEN_PATHS = ['/', '/signin', '/signup', '/verify-email', '/down']
+
+const DISMISS_KEY = 'upgrade-banner-dismissed'
+
 export default function UpgradeBanner() {
   const [tier, setTier] = useState<Tier | null>(null)  // null = loading
-  const [dismissed, setDismissed] = useState(false)
+  const [dismissed, setDismissed] = useState(() => sessionStorage.getItem(DISMISS_KEY) === '1')
+  const [settled, setSettled] = useState(false)  // don't pop over first paint
   const { openSubscription } = useSubscriptionModal()
+  const token = useStore((s) => s.token)
+  const { pathname } = useLocation()
 
   useEffect(() => {
+    const t = window.setTimeout(() => setSettled(true), 4000)
+    return () => window.clearTimeout(t)
+  }, [])
+
+  useEffect(() => {
+    if (!token) return
     const check = async () => {
       try {
         const res = await api.get('/api/subscriptions/current')
@@ -74,15 +90,15 @@ export default function UpgradeBanner() {
       }
     }
     check()
-  }, [])
+  }, [token])
 
-  // still loading or already on Enterprise or dismissed
-  if (tier === null || tier === 'Enterprise' || dismissed) return null
+  // logged out, marketing/auth page, still loading, Enterprise, dismissed, or too early
+  if (!token || HIDDEN_PATHS.includes(pathname) || tier === null || tier === 'Enterprise' || dismissed || !settled) return null
 
   const cfg = CONFIGS[tier]
 
   return (
-    <div className={`fixed bottom-6 right-6 z-40 max-w-sm glass-card rounded-xl border ${cfg.border} ${cfg.bg} p-5 shadow-lg`}>
+    <div className={`fixed bottom-4 inset-x-4 sm:inset-x-auto sm:bottom-6 sm:right-6 z-40 sm:max-w-sm glass-card rounded-xl border ${cfg.border} ${cfg.bg} p-5 shadow-lg`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3 flex-1">
           {cfg.icon}
@@ -98,7 +114,7 @@ export default function UpgradeBanner() {
           </div>
         </div>
         <button
-          onClick={() => setDismissed(true)}
+          onClick={() => { sessionStorage.setItem(DISMISS_KEY, '1'); setDismissed(true) }}
           className="text-forge-muted hover:text-forge-text flex-shrink-0"
         >
           <X size={16} />

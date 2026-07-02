@@ -9,6 +9,7 @@ interface SubscriptionInfo {
   subscription_tier: string | null
 }
 
+// Unsubscribed: the single solid-accent CTA in the nav. Subscribed: quiet ghost pill.
 export default function PlanButton() {
   const user = useStore((s) => s.user)
   const { openSubscription } = useSubscriptionModal()
@@ -31,18 +32,27 @@ export default function PlanButton() {
 
   const isActive = subInfo?.subscription_status === 'active'
 
+  if (isActive) {
+    return (
+      <button
+        onClick={() => openSubscription()}
+        title="Manage subscription"
+        className="flex items-center h-9 gap-1.5 px-3.5 rounded-full border border-forge-border bg-forge-surface/60 text-xs font-semibold text-forge-subtext hover:text-forge-text hover:border-forge-border-bright transition-colors cursor-pointer"
+      >
+        <Crown size={13} className="text-forge-accent" />
+        <span>{subInfo?.subscription_tier || 'Plan'}</span>
+      </button>
+    )
+  }
+
   return (
     <button
       onClick={() => openSubscription()}
-      title={isActive ? 'Manage subscription' : 'Get premium plan'}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-colors text-xs font-bold ${
-        isActive
-          ? 'border-forge-accent/45 bg-forge-accent/10 text-forge-accent hover:bg-forge-accent/20'
-          : 'border-amber-500/45 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
-      }`}
+      title="Get premium plan"
+      className="flex items-center h-9 gap-1.5 px-4 rounded-full bg-forge-accent text-white text-xs font-bold shadow-[0_0_16px_rgba(6,182,212,0.35)] hover:shadow-[0_0_24px_rgba(6,182,212,0.5)] hover:brightness-110 transition-all cursor-pointer"
     >
-      <Crown size={13} className={isActive ? 'text-forge-accent' : 'text-amber-400'} />
-      <span>{isActive ? 'Plan' : 'Upgrade'}</span>
+      <Crown size={13} />
+      <span>Upgrade</span>
     </button>
   )
 }

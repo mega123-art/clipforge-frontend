@@ -9,12 +9,6 @@ import ThemeToggle from '../components/ThemeToggle'
 // ponytail: public marketing page, zero auth/API deps so it prerenders to static HTML.
 // Real app dashboard lives at /app (protected). Crawlers + AI bots read this page.
 
-const STATS = [
-  { value: '10M+', label: 'Clips Generated' },
-  { value: '98.3%', label: 'Accuracy Rate' },
-  { value: '40×', label: 'Faster Than Manual' },
-]
-
 const CLIP_TYPES: { label: string; Icon: LucideIcon }[] = [
   { label: 'Controversy', Icon: Flame },
   { label: 'Hook Intro', Icon: Zap },
@@ -62,13 +56,13 @@ export default function Landing() {
       <main className="max-w-6xl mx-auto px-5 sm:px-10">
         {/* Hero */}
         <section className="pt-12 sm:pt-20 pb-10 text-center">
-          <h1 className="text-[2.5rem] sm:text-6xl xl:text-7xl font-black tracking-tighter leading-[0.93] mb-5">
-            AI Clip Maker — turn any video<br />
-            into <span className="gradient-text">viral clips.</span>
+          <h1 className="text-[2.6rem] sm:text-6xl xl:text-7xl font-black tracking-tighter leading-[0.98] mb-5">
+            Turn any video into{' '}
+            <span className="font-display italic font-normal gradient-text tracking-tight">viral clips</span>
           </h1>
-          <p className="text-forge-subtext text-base sm:text-xl leading-relaxed mb-8 max-w-[55ch] mx-auto">
-            Paste any YouTube URL. VibeClip's AI finds the moments worth posting, auto-crops to 9:16,
-            and burns in word-level captions — export-ready for TikTok, Instagram Reels, and YouTube Shorts in minutes.
+          <p className="text-forge-subtext text-base sm:text-xl leading-relaxed mb-8 max-w-[50ch] mx-auto">
+            Paste a YouTube URL. AI finds the moments worth posting, crops to 9:16, and burns in
+            word-level captions — ready for TikTok, Reels, and Shorts in minutes.
           </p>
           <Link
             to="/app"
@@ -76,16 +70,6 @@ export default function Landing() {
           >
             Make a clip free <ArrowRight size={18} />
           </Link>
-
-          {/* Stats */}
-          <div className="flex w-fit mx-auto mt-12 divide-x divide-forge-border border border-forge-border rounded-2xl overflow-hidden">
-            {STATS.map((s, i) => (
-              <div key={s.label} className="px-5 sm:px-8 py-4">
-                <span className={`text-xl sm:text-2xl font-black leading-none ${i === 2 ? 'gradient-text' : 'text-forge-text'}`}>{s.value}</span>
-                <p className="text-[11px] text-forge-muted mt-1 whitespace-nowrap">{s.label}</p>
-              </div>
-            ))}
-          </div>
         </section>
 
         {/* How it works */}
@@ -134,7 +118,8 @@ export default function Landing() {
         {/* CTA */}
         <section className="py-20 text-center">
           <h2 className="text-3xl sm:text-5xl font-black tracking-tighter mb-5">
-            Start turning videos into <span className="gradient-text">clips.</span>
+            Start turning videos into{' '}
+            <span className="font-display italic font-normal gradient-text tracking-tight">clips</span>
           </h2>
           <Link
             to="/app"

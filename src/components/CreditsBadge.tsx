@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Coins, Crown } from 'lucide-react'
+import { Coins, Plus } from 'lucide-react'
+import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
 import useStore from '../store'
 import api from '../api'
 
@@ -12,9 +13,16 @@ interface CreditBreakdown {
   next_billing_date: string | null
 }
 
-export default function CreditsBadge() {
+interface CreditsBadgeProps {
+  /** Called after a successful top-up payment (e.g. to refetch a job). */
+  onTopupSuccess?: () => void
+}
+
+// Credits pill doubles as the top-up entry point — one control instead of two.
+export default function CreditsBadge({ onTopupSuccess }: CreditsBadgeProps) {
   const user = useStore((s) => s.user)
   const [breakdown, setBreakdown] = useState<CreditBreakdown | null>(null)
+  const { openTopup } = useSubscriptionModal((s) => ({ openTopup: s.openTopup }))
 
   useEffect(() => {
     if (!user) return
@@ -27,26 +35,23 @@ export default function CreditsBadge() {
 
   const total = breakdown?.total ?? user.credits ?? 0
   const low = total <= 2
-  const tier = breakdown?.subscription_tier
-  const hasSub = breakdown?.subscription_status === 'active'
+
+  const handleClick = () => {
+    useSubscriptionModal.setState({ onPaymentSuccess: onTopupSuccess })
+    openTopup()
+  }
 
   return (
-    <div
-      title={low ? 'Low balance — buy credits' : `${total} credits available${tier ? ` (${tier})` : ''}`}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold cursor-default transition-colors ${
-        hasSub
-          ? 'border-forge-accent/45 bg-forge-accent/10 text-forge-accent'
-          : low
-            ? 'border-amber-500/45 bg-amber-500/10 text-amber-400'
-            : 'border-forge-accent/30 bg-forge-accent/10 text-forge-accent'
-      }`}
+    <button
+      onClick={handleClick}
+      title={low ? 'Low balance — buy credits' : `${total} credits · buy more`}
+      className="group flex items-center h-9 gap-1.5 pl-3 pr-2 rounded-full border border-forge-border bg-forge-surface/60 text-xs font-semibold text-forge-subtext hover:text-forge-text hover:border-forge-border-bright transition-colors cursor-pointer"
     >
-      {hasSub ? (
-        <Crown size={13} className="text-forge-accent" />
-      ) : (
-        <Coins size={13} className={low ? 'text-amber-400' : 'text-forge-accent'} />
-      )}
-      <span className="tabular-nums">{total}</span>
-    </div>
+      <Coins size={13} className={low ? 'text-amber-400' : 'text-forge-muted group-hover:text-forge-accent transition-colors'} />
+      <span className={`tabular-nums ${low ? 'text-amber-400' : ''}`}>{total}</span>
+      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-forge-card border border-forge-border text-forge-muted group-hover:text-forge-accent group-hover:border-forge-accent/40 transition-colors">
+        <Plus size={11} />
+      </span>
+    </button>
   )
 }

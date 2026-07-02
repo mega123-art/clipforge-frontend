@@ -7,7 +7,6 @@ import VibeClipLogo from '../components/VibeClipLogo'
 import ThemeToggle from '../components/ThemeToggle'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
-import TopupButton from '../components/TopupButton'
 import PlanButton from '../components/PlanButton'
 import ClipCard from '../components/ClipCard'
 import ClipCardSkeleton from '../components/ClipCardSkeleton'
@@ -206,10 +205,11 @@ export default function Review() {
 
           <div className="flex items-center gap-1.5 sm:gap-2 ml-auto lg:ml-0">
             <div className="hidden sm:block">
-              <CreditsBadge />
+              <CreditsBadge onTopupSuccess={() => queryClient.invalidateQueries({ queryKey: ['job', jobId] })} />
             </div>
-            <PlanButton />
-            <TopupButton onSuccess={() => queryClient.invalidateQueries({ queryKey: ['job', jobId] })} />
+            <div className="hidden sm:block">
+              <PlanButton />
+            </div>
             <ThemeToggle />
             <UserMenu />
           </div>

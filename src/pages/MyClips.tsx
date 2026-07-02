@@ -4,7 +4,6 @@ import { ArrowLeft, Clock, Film, CheckCircle, XCircle, Loader2, ArrowRight } fro
 import api from '../api'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
-import TopupButton from '../components/TopupButton'
 import PlanButton from '../components/PlanButton'
 import type { JobOut } from '../types/api'
 
@@ -62,11 +61,10 @@ export default function MyClips() {
           <ArrowLeft size={15} />
           New video
         </button>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <CreditsBadge />
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden sm:block">
             <PlanButton />
-            <TopupButton />
           </div>
           <UserMenu />
         </div>

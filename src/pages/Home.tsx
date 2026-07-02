@@ -1,11 +1,10 @@
 import { useState, useEffect, FormEvent, memo } from 'react'
-import type React from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronDown, ChevronUp, Clock, ArrowRight, Zap,
   Flame, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
-  LucideIcon, SlidersHorizontal, Wand2, Play, Crown, Gift, Copy, Check,
+  LucideIcon, SlidersHorizontal, Wand2, Crown, Gift, Copy, Check,
 } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
 import type { AxiosError } from 'axios'
@@ -16,7 +15,6 @@ import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
 import ThemeToggle from '../components/ThemeToggle'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
-import TopupButton from '../components/TopupButton'
 import PlanButton from '../components/PlanButton'
 import TierBadge from '../components/TierBadge'
 import api from '../api'
@@ -37,14 +35,6 @@ const CLIP_TYPES: ClipTypeDef[] = [
   { id: 'emotional_peak', label: 'Emotional Peak', Icon: Heart },
   { id: 'debate_moment',  label: 'Debate Moment',  Icon: MessageCircle },
   { id: 'story_arc',      label: 'Story Arc',      Icon: BookOpen },
-]
-
-interface StatDef { value: string; label: string }
-
-const STATS: StatDef[] = [
-  { value: '10M+',  label: 'Clips Generated' },
-  { value: '98.3%', label: 'Accuracy Rate' },
-  { value: '40×',   label: 'Faster Than Manual' },
 ]
 
 type ClipMode = 'quick' | 'custom'
@@ -70,82 +60,6 @@ const DURATION_SLIDERS: DurationSliderDef[] = [
   { key: 'min_clip_duration', label: 'Min duration', min: 10, max: 60 },
   { key: 'max_clip_duration', label: 'Max duration', min: 30, max: 180 },
 ]
-
-// ── Scrolling reel panel ───────────────────────────────────────
-
-interface ReelClip {
-  title: string
-  views: string
-  dur: string
-  platform: string
-  gradient: string
-  tag: string
-  tagColor: string
-}
-
-const LEFT_REELS: ReelClip[] = [
-  { title: 'The moment they realized they were wrong', views: '2.3M', dur: '0:47', platform: 'TikTok', gradient: 'from-cyan-500/25 to-teal-600/15', tag: 'Debate', tagColor: 'text-cyan-300 border-cyan-500/25' },
-  { title: 'Nobody ever explains this part', views: '847K', dur: '1:12', platform: 'Reels', gradient: 'from-rose-500/25 to-pink-600/15', tag: 'Hook', tagColor: 'text-rose-300 border-rose-500/25' },
-  { title: 'The stat that ends the argument', views: '1.1M', dur: '0:33', platform: 'Shorts', gradient: 'from-amber-500/25 to-yellow-600/15', tag: 'Stat', tagColor: 'text-amber-300 border-amber-500/25' },
-  { title: 'Three seconds. That was all it took.', views: '4.7M', dur: '0:18', platform: 'TikTok', gradient: 'from-teal-500/25 to-emerald-600/15', tag: 'Peak', tagColor: 'text-emerald-300 border-emerald-500/25' },
-  { title: 'They cut this from the official edit', views: '612K', dur: '0:55', platform: 'Reels', gradient: 'from-sky-500/25 to-blue-600/15', tag: 'Story', tagColor: 'text-sky-300 border-sky-500/25' },
-]
-
-const RIGHT_REELS: ReelClip[] = [
-  { title: 'Here\'s what they don\'t teach you', views: '3.1M', dur: '1:04', platform: 'Shorts', gradient: 'from-orange-500/25 to-amber-600/15', tag: 'Quotable', tagColor: 'text-orange-300 border-orange-500/25' },
-  { title: 'The pushback nobody saw coming', views: '928K', dur: '0:41', platform: 'TikTok', gradient: 'from-rose-500/25 to-red-600/15', tag: 'Debate', tagColor: 'text-rose-300 border-rose-500/25' },
-  { title: 'You can\'t look away from this moment', views: '1.8M', dur: '0:29', platform: 'Reels', gradient: 'from-cyan-500/25 to-sky-600/15', tag: 'Hook', tagColor: 'text-cyan-300 border-cyan-500/25' },
-  { title: 'Wait — they actually said that on camera', views: '5.2M', dur: '0:22', platform: 'TikTok', gradient: 'from-fuchsia-500/20 to-pink-600/10', tag: 'Viral', tagColor: 'text-fuchsia-300 border-fuchsia-500/25' },
-  { title: 'The clip that started everything', views: '2.6M', dur: '0:38', platform: 'Shorts', gradient: 'from-green-500/25 to-teal-600/15', tag: 'Arc', tagColor: 'text-green-300 border-green-500/25' },
-]
-
-const ReelCard = memo(({ clip }: { clip: ReelClip }) => (
-  <div className="w-[158px] shrink-0 mb-3 glass-card rounded-xl overflow-hidden border border-forge-border/70 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)]">
-    {/* Portrait thumbnail */}
-    <div className={`relative h-[198px] bg-gradient-to-b ${clip.gradient} bg-forge-surface/60 flex items-center justify-center`}>
-      <div className="absolute inset-0 bg-forge-bg/30" />
-      <div className="relative w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-        <Play size={14} className="text-white ml-0.5" fill="white" />
-      </div>
-      <span className="absolute bottom-2 right-2 text-[10px] font-bold text-white/80 bg-black/55 px-1.5 py-0.5 rounded-md font-mono">
-        {clip.dur}
-      </span>
-      <span className="absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-black/55 text-white/90">
-        {clip.platform}
-      </span>
-    </div>
-    {/* Info */}
-    <div className="px-3 py-2.5">
-      <span className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded border mb-1.5 ${clip.tagColor}`}>
-        {clip.tag}
-      </span>
-      <p className="text-[11px] font-semibold text-forge-text leading-snug line-clamp-2">{clip.title}</p>
-      <p className="text-[10px] text-forge-dim mt-1">{clip.views} views</p>
-    </div>
-  </div>
-))
-
-const ScrollingReelColumn = memo(({ clips, direction, rotateDeg, duration }: {
-  clips: ReelClip[]
-  direction: 'up' | 'down'
-  rotateDeg: number
-  duration: number
-}) => {
-  const doubled = [...clips, ...clips]
-  return (
-    <div style={{ transform: `rotate(${rotateDeg}deg)` }} className="flex flex-col">
-      <motion.div
-        className="flex flex-col"
-        animate={{ y: direction === 'up' ? ['0%', '-50%'] : ['-50%', '0%'] }}
-        transition={{ duration, repeat: Infinity, ease: 'linear' }}
-      >
-        {doubled.map((clip, i) => (
-          <ReelCard key={`${clip.title}-${i}`} clip={clip} />
-        ))}
-      </motion.div>
-    </div>
-  )
-})
 
 // ── Hero background ───────────────────────────────────────────
 
@@ -245,62 +159,6 @@ const HeroBg = memo(() => (
     />
   </div>
 ))
-
-const AnimatedClipPanel = memo(() => (
-  <div className="absolute inset-0 overflow-hidden flex items-start justify-center gap-3 pt-4">
-    {/* Top fade */}
-    <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-forge-surface/90 to-transparent z-10 pointer-events-none" />
-    {/* Bottom fade */}
-    <div className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-forge-surface/90 to-transparent z-10 pointer-events-none" />
-
-    <ScrollingReelColumn clips={LEFT_REELS}  direction="up"   rotateDeg={-5}  duration={18} />
-    <ScrollingReelColumn clips={RIGHT_REELS} direction="down" rotateDeg={4}   duration={22} />
-  </div>
-))
-
-// ── Mobile horizontal reel strip (shown below form on < lg) ───
-const MobileReelStrip = memo(() => {
-  const allClips = [...LEFT_REELS, ...RIGHT_REELS]
-  const doubled = [...allClips, ...allClips]
-  return (
-    <div className="relative overflow-hidden border-t border-forge-border/30 bg-forge-surface/10 py-5">
-      <div className="absolute left-0 top-0 bottom-0 w-14 bg-gradient-to-r from-forge-bg to-transparent z-10 pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-forge-bg to-transparent z-10 pointer-events-none" />
-      <motion.div
-        className="flex gap-2.5"
-        animate={{ x: ['0%', '-50%'] }}
-        transition={{ duration: 32, repeat: Infinity, ease: 'linear' }}
-      >
-        {doubled.map((clip, i) => (
-          <div
-            key={`ms-${i}`}
-            className="w-[126px] shrink-0 glass-card rounded-xl overflow-hidden border border-forge-border/70"
-          >
-            <div className={`relative h-[158px] bg-gradient-to-b ${clip.gradient} flex items-center justify-center`}>
-              <div className="absolute inset-0 bg-forge-bg/30" />
-              <div className="relative w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-                <Play size={12} className="text-white ml-0.5" fill="white" />
-              </div>
-              <span className="absolute bottom-1.5 right-1.5 text-[9px] font-bold text-white/80 bg-black/55 px-1 py-0.5 rounded font-mono">
-                {clip.dur}
-              </span>
-              <span className="absolute top-1.5 left-1.5 text-[8px] font-bold px-1 py-0.5 rounded bg-black/55 text-white/90">
-                {clip.platform}
-              </span>
-            </div>
-            <div className="px-2.5 py-2">
-              <span className={`inline-block text-[8px] font-bold px-1 py-0.5 rounded border mb-1 ${clip.tagColor}`}>
-                {clip.tag}
-              </span>
-              <p className="text-[10px] font-semibold text-forge-text leading-snug line-clamp-2">{clip.title}</p>
-              <p className="text-[9px] text-forge-dim mt-0.5">{clip.views} views</p>
-            </div>
-          </div>
-        ))}
-      </motion.div>
-    </div>
-  )
-})
 
 // ── Main component ─────────────────────────────────────────────
 
@@ -413,134 +271,79 @@ export default function Home() {
     <div className="min-h-[100dvh] bg-forge-bg">
 
       {/* ── Nav ─────────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-10 h-16 bg-forge-bg/85 backdrop-blur-xl border-b border-forge-border/50">
-        <div className="flex items-center gap-2.5">
-          <VibeClipLogo size={32} className="rounded-xl" />
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-2 px-4 sm:px-6 lg:px-10 h-16 bg-forge-bg/85 backdrop-blur-xl border-b border-forge-border/50">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <VibeClipLogo size={30} className="rounded-xl" />
           <span className="text-lg font-black tracking-tight text-forge-text">VibeClip</span>
         </div>
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <CreditsBadge />
-          <div className="hidden sm:flex items-center gap-2">
+          <div className="hidden sm:block">
             <PlanButton />
-            <TopupButton />
           </div>
-          <UserMenu />
           <ThemeToggle />
+          <UserMenu />
         </div>
       </nav>
 
-      {/* ── Main grid ───────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px] min-h-[100dvh]">
+      {/* ── Hero + form ─────────────────────────────────────── */}
+      <main className="relative overflow-hidden min-h-[100dvh] pt-24 sm:pt-32 pb-16 px-5 sm:px-8 page-enter">
+        <HeroBg />
+        <div className="relative z-10 w-full max-w-2xl mx-auto text-center">
 
-        {/* Left — hero + form */}
-        <section className="relative flex flex-col justify-center pt-20 sm:pt-28 pb-0 sm:pb-16 px-6 sm:px-10 lg:px-14 xl:px-20 page-enter overflow-hidden">
-          <HeroBg />
-          <div className="relative z-10 w-full max-w-xl">
-
-            {/* Badges container */}
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mb-5 sm:mb-8">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full glass border border-forge-border text-xs text-forge-muted cursor-default"
-              >
-                <span className="pulse-dot" />
-                <span className="font-medium">Claude AI · Whisper large-v3 · Real-time</span>
-              </motion.div>
-
-              {user?.subscription_tier_name && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.05 }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-forge-accent/15 border border-forge-accent/35 text-xs text-forge-accent font-bold cursor-default shadow-glow-violet-sm"
-                >
-                  <Crown size={12} className="text-forge-accent animate-pulse" />
-                  <span>{user.subscription_tier_name} Plan</span>
-                </motion.div>
-              )}
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.08, duration: 0.5 }}
-              className="mb-5 sm:mb-7 rounded-2xl border border-forge-accent/35 bg-forge-accent/10 px-4 py-3 shadow-glow-violet-sm"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-forge-accent/30 bg-forge-accent/15">
-                    <Gift size={16} className="text-forge-accent" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-black text-forge-text">
-                      Refer friends, earn credits
-                    </p>
-                    <p className="mt-0.5 text-xs leading-5 text-forge-muted">
-                      They get 3 credits on signup. You get 2 credits for every successful referral.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={copyReferralLink}
-                  disabled={!referralLink}
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-forge-accent/35 bg-forge-card px-3.5 py-2 text-xs font-bold text-forge-accent transition-colors hover:bg-forge-card-hover disabled:cursor-not-allowed disabled:opacity-45 cursor-pointer"
-                >
-                  {refCopied ? <Check size={13} /> : <Copy size={13} />}
-                  {refCopied ? 'Copied' : 'Copy referral link'}
-                </button>
-              </div>
-            </motion.div>
-
-            {/* H1 */}
-            <motion.h1
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-              className="text-[2.35rem] sm:text-6xl xl:text-7xl font-black tracking-tighter leading-[0.93] mb-4 sm:mb-5"
-            >
-              Turn any video<br />
-              into <span className="gradient-text">viral clips.</span>
-            </motion.h1>
-
-            {/* Tagline */}
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.18, duration: 0.6 }}
-              className="text-forge-subtext text-[0.9rem] sm:text-lg leading-relaxed mb-6 sm:mb-8 max-w-[50ch]"
-            >
-              AI finds the moments worth posting. Captions burned in, ready for TikTok, Reels, and Shorts.
-            </motion.p>
-
-            {/* Stats strip */}
+          {/* Badges */}
+          <div className="flex flex-wrap items-center justify-center gap-2.5 mb-6 sm:mb-8">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25, duration: 0.55 }}
-              className="overflow-x-auto mb-6 sm:mb-10"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
+              transition={{ duration: 0.5 }}
+              className="hidden sm:inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full glass border border-forge-border text-xs text-forge-muted cursor-default"
             >
-              <div className="flex w-fit divide-x divide-forge-border border border-forge-border rounded-2xl overflow-hidden">
-                {STATS.map((s, i) => (
-                  <div key={s.label} className="px-3.5 sm:px-5 py-2.5 sm:py-3.5">
-                    <span className={`text-lg sm:text-xl font-black leading-none ${i === 2 ? 'gradient-text' : 'text-forge-text'}`}>
-                      {s.value}
-                    </span>
-                    <p className="text-[10px] sm:text-[11px] text-forge-muted mt-0.5 whitespace-nowrap">{s.label}</p>
-                  </div>
-                ))}
-              </div>
+              <span className="pulse-dot" />
+              <span className="font-medium">Claude AI · Whisper large-v3 · Real-time</span>
             </motion.div>
+
+            {user?.subscription_tier_name && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.05 }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-forge-accent/15 border border-forge-accent/35 text-xs text-forge-accent font-bold cursor-default"
+              >
+                <Crown size={12} className="text-forge-accent" />
+                <span>{user.subscription_tier_name} Plan</span>
+              </motion.div>
+            )}
+          </div>
+
+          {/* H1 */}
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="text-[2.6rem] sm:text-6xl xl:text-7xl font-black tracking-tighter leading-[0.98] mb-4 sm:mb-5"
+          >
+            Turn any video into{' '}
+            <span className="font-display italic font-normal gradient-text tracking-tight">viral clips</span>
+          </motion.h1>
+
+          {/* Tagline */}
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18, duration: 0.6 }}
+            className="text-forge-subtext text-base sm:text-lg leading-relaxed mb-8 sm:mb-10 max-w-[46ch] mx-auto"
+          >
+            AI finds the moments worth posting. Captions burned in, ready for TikTok, Reels, and Shorts.
+          </motion.p>
 
             {/* ── Form ─────────────────────────────────────── */}
             <motion.form
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.32, duration: 0.6 }}
+              transition={{ delay: 0.28, duration: 0.6 }}
               onSubmit={handleSubmit}
+              className="text-left"
             >
               <div className="gradient-ring rounded-2xl">
                 <div className="glass-card rounded-2xl p-1 input-glow border border-forge-border transition-all duration-300">
@@ -732,6 +535,37 @@ export default function Home() {
               </button>
             </motion.form>
 
+            {/* ── Referral ─────────────────────────────────── */}
+            {user && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="hidden sm:block mt-8 rounded-2xl border border-forge-border bg-forge-card/60 px-4 py-3 text-left"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-forge-accent/30 bg-forge-accent/10">
+                      <Gift size={15} className="text-forge-accent" />
+                    </div>
+                    <p className="min-w-0 text-xs leading-5 text-forge-muted">
+                      <span className="font-bold text-forge-text">Refer friends, earn credits.</span>{' '}
+                      They get 3, you get 2 per signup.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={copyReferralLink}
+                    disabled={!referralLink}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-forge-accent/35 bg-forge-card px-3.5 py-2 text-xs font-bold text-forge-accent transition-colors hover:bg-forge-card-hover disabled:cursor-not-allowed disabled:opacity-45 cursor-pointer"
+                  >
+                    {refCopied ? <Check size={13} /> : <Copy size={13} />}
+                    {refCopied ? 'Copied' : 'Copy link'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* ── Recent jobs ──────────────────────────────── */}
             {recentJobs.length > 0 && (
               <motion.div
@@ -764,20 +598,8 @@ export default function Home() {
                 </div>
               </motion.div>
             )}
-          </div>
-
-          {/* Mobile reel preview — shown below form, hidden on lg where sidebar shows */}
-          <div className="lg:hidden relative z-10 -mx-6 sm:-mx-10 mt-8 sm:mt-10">
-            <MobileReelStrip />
-          </div>
-        </section>
-
-        {/* Right — scrolling reel columns */}
-        <aside className="hidden lg:block relative bg-forge-surface/20 border-l border-forge-border/40 overflow-hidden">
-          <AnimatedClipPanel />
-        </aside>
-
-      </div>
+        </div>
+      </main>
     </div>
   )
 }
