@@ -59,18 +59,25 @@ const CONFIGS: Record<Exclude<Tier, 'Enterprise'>, BannerConfig> = {
 // Marketing/auth pages: never show the upsell popup there.
 const HIDDEN_PATHS = ['/', '/signin', '/signup', '/verify-email', '/down']
 
-const DISMISS_KEY = 'upgrade-banner-dismissed'
+const DISMISS_KEY = 'upgrade-banner-dismissed-at'
+const DISMISS_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000  // dismissed = quiet for 3 days
+const SHOW_DELAY_MS = 15000  // let the user actually use the app first
+
+const isSnoozed = () => {
+  const at = Number(localStorage.getItem(DISMISS_KEY) || 0)
+  return at > 0 && Date.now() - at < DISMISS_COOLDOWN_MS
+}
 
 export default function UpgradeBanner() {
   const [tier, setTier] = useState<Tier | null>(null)  // null = loading
-  const [dismissed, setDismissed] = useState(() => sessionStorage.getItem(DISMISS_KEY) === '1')
+  const [dismissed, setDismissed] = useState(isSnoozed)
   const [settled, setSettled] = useState(false)  // don't pop over first paint
   const { openSubscription } = useSubscriptionModal()
   const token = useStore((s) => s.token)
   const { pathname } = useLocation()
 
   useEffect(() => {
-    const t = window.setTimeout(() => setSettled(true), 4000)
+    const t = window.setTimeout(() => setSettled(true), SHOW_DELAY_MS)
     return () => window.clearTimeout(t)
   }, [])
 
@@ -114,7 +121,7 @@ export default function UpgradeBanner() {
           </div>
         </div>
         <button
-          onClick={() => { sessionStorage.setItem(DISMISS_KEY, '1'); setDismissed(true) }}
+          onClick={() => { localStorage.setItem(DISMISS_KEY, String(Date.now())); setDismissed(true) }}
           className="text-forge-muted hover:text-forge-text flex-shrink-0"
         >
           <X size={16} />
