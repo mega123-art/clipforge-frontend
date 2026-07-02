@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
 import ThemeToggle from '../components/ThemeToggle'
+import HeroBg from '../components/HeroBg'
 
 // ponytail: public marketing page, zero auth/API deps so it prerenders to static HTML.
 // Real app dashboard lives at /app (protected). Crawlers + AI bots read this page.
@@ -37,9 +38,17 @@ const FAQ = [
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-forge-bg text-forge-text">
+    <div className="relative min-h-screen bg-forge-bg text-forge-text overflow-hidden">
+      {/* Aurora backdrop scoped to the first viewport, fading out below the hero */}
+      <div
+        className="absolute inset-x-0 top-0 h-screen"
+        style={{ maskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, black 60%, transparent 100%)' }}
+      >
+        <HeroBg />
+      </div>
+
       {/* Nav */}
-      <header className="flex items-center justify-between px-5 sm:px-10 py-4 max-w-6xl mx-auto">
+      <header className="relative z-10 flex items-center justify-between px-5 sm:px-10 py-4 max-w-6xl mx-auto">
         <div className="flex items-center gap-2">
           <VibeClipLogo size={32} />
           <span className="font-black text-lg tracking-tight">VibeClip</span>
@@ -53,7 +62,7 @@ export default function Landing() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-5 sm:px-10">
+      <main className="relative z-10 max-w-6xl mx-auto px-5 sm:px-10">
         {/* Hero */}
         <section className="pt-12 sm:pt-20 pb-10 text-center">
           <h1 className="text-[2.6rem] sm:text-6xl xl:text-7xl font-black tracking-tighter leading-[0.98] mb-5">
@@ -66,10 +75,13 @@ export default function Landing() {
           </p>
           <Link
             to="/app"
-            className="inline-flex items-center gap-2 text-base font-semibold px-7 py-3.5 rounded-2xl bg-forge-accent text-white hover:opacity-90 transition-opacity"
+            className="btn-primary inline-flex items-center gap-2 text-base font-bold px-8 py-4 rounded-2xl text-white"
           >
             Make a clip free <ArrowRight size={18} />
           </Link>
+          <p className="mt-4 text-xs text-forge-muted">
+            Free credits on signup · No credit card needed
+          </p>
         </section>
 
         {/* How it works */}
@@ -123,14 +135,17 @@ export default function Landing() {
           </h2>
           <Link
             to="/app"
-            className="inline-flex items-center gap-2 text-base font-semibold px-7 py-3.5 rounded-2xl bg-forge-accent text-white hover:opacity-90 transition-opacity"
+            className="btn-primary inline-flex items-center gap-2 text-base font-bold px-8 py-4 rounded-2xl text-white"
           >
             Make a clip free <ArrowRight size={18} />
           </Link>
+          <p className="mt-4 text-xs text-forge-muted">
+            Free credits on signup · No credit card needed
+          </p>
         </section>
       </main>
 
-      <footer className="border-t border-forge-border py-8 text-center text-sm text-forge-muted">
+      <footer className="relative z-10 border-t border-forge-border py-8 text-center text-sm text-forge-muted">
         <div className="flex items-center justify-center gap-2 mb-2">
           <VibeClipLogo size={20} />
           <span className="font-bold">VibeClip</span>
