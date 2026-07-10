@@ -71,6 +71,7 @@ export default function Home() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [clipMode, setClipMode] = useState<ClipMode>('quick')
   const [customPrompt, setCustomPrompt] = useState('')
+  const [skipTimestamps, setSkipTimestamps] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [options, setOptions] = useState<HomeOptions>({
@@ -129,6 +130,7 @@ export default function Home() {
     setUploadPct(0)
     try {
       const prompt = clipMode === 'custom' ? customPrompt.trim() : ''
+      const skip = skipTimestamps.trim()
       const jobOptions = {
         max_clips: options.max_clips,
         clip_types: prompt ? [] : options.clip_types,
@@ -136,6 +138,7 @@ export default function Home() {
         max_clip_duration: options.max_clip_duration,
         target_aspect_ratio: options.target_aspect_ratio,
         ...(prompt ? { custom_prompt: prompt } : {}),
+        ...(skip ? { skip_timestamps: skip } : {}),
       }
 
       let res: { job_id: string }
@@ -379,11 +382,25 @@ export default function Home() {
                       <textarea
                         value={customPrompt}
                         onChange={(e) => setCustomPrompt(e.target.value)}
-                        placeholder={`Describe what you're looking for, e.g.:\n• Clips that make John look credible and likeable\n• Most engaging scroll-stopping moments\n• Heated debate moments and strong pushbacks`}
+                        placeholder={`Describe what you're looking for, e.g.:\n• Clips that make John look credible and likeable\n• Most engaging scroll-stopping moments\n• Heated debate moments and strong pushbacks\n\nAlready know what to clip? Paste the timestamps directly, e.g. "12:05-13:40, 28:10-29:00" — those exact ranges are used as-is, no AI guessing.`}
                         rows={4}
                         className="w-full bg-forge-surface border border-forge-border rounded-xl px-3.5 py-3 text-sm text-forge-text placeholder:text-forge-dim resize-none focus:outline-none focus:border-forge-accent/60 focus:ring-1 focus:ring-forge-accent/20 transition-colors"
                       />
                     )}
+                  </div>
+
+                  {/* Skip timestamps */}
+                  <div>
+                    <label className="block text-sm font-semibold text-forge-text mb-2">
+                      Skip timestamps <span className="text-forge-muted font-normal">(optional)</span>
+                    </label>
+                    <textarea
+                      value={skipTimestamps}
+                      onChange={(e) => setSkipTimestamps(e.target.value)}
+                      placeholder={`Ranges the AI should never clip from, e.g. "0:00-1:30, 45:00-47:20" (sponsor reads, intros, etc.)`}
+                      rows={2}
+                      className="w-full bg-forge-surface border border-forge-border rounded-xl px-3.5 py-3 text-sm text-forge-text placeholder:text-forge-dim resize-none focus:outline-none focus:border-forge-accent/60 focus:ring-1 focus:ring-forge-accent/20 transition-colors"
+                    />
                   </div>
 
                   {/* Aspect ratio */}
