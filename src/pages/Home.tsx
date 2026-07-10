@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import {
   ChevronDown, ChevronUp, Clock, ArrowRight, Zap,
   Flame, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
-  LucideIcon, SlidersHorizontal, Wand2, Crown, Gift, Copy, Check,
+  LucideIcon, SlidersHorizontal, Wand2, Crown, Gift, Copy, Check, Ban, Plus, X,
 } from 'lucide-react'
+import SkipTimestampsModal, { type SkipRange } from '../components/SkipTimestampsModal'
 import VibeClipLogo from '../components/VibeClipLogo'
 import HeroBg from '../components/HeroBg'
 import type { AxiosError } from 'axios'
@@ -71,7 +72,8 @@ export default function Home() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [clipMode, setClipMode] = useState<ClipMode>('quick')
   const [customPrompt, setCustomPrompt] = useState('')
-  const [skipTimestamps, setSkipTimestamps] = useState('')
+  const [skipRanges, setSkipRanges] = useState<SkipRange[]>([])
+  const [showSkipModal, setShowSkipModal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [options, setOptions] = useState<HomeOptions>({
@@ -130,7 +132,9 @@ export default function Home() {
     setUploadPct(0)
     try {
       const prompt = clipMode === 'custom' ? customPrompt.trim() : ''
-      const skip = skipTimestamps.trim()
+      const skip = skipRanges
+        .map((r) => `${r.startMin}:${String(r.startSec).padStart(2, '0')}-${r.endMin}:${String(r.endSec).padStart(2, '0')}`)
+        .join(', ')
       const jobOptions = {
         max_clips: options.max_clips,
         clip_types: prompt ? [] : options.clip_types,
@@ -391,16 +395,45 @@ export default function Home() {
 
                   {/* Skip timestamps */}
                   <div>
-                    <label className="block text-sm font-semibold text-forge-text mb-2">
-                      Skip timestamps <span className="text-forge-muted font-normal">(optional)</span>
-                    </label>
-                    <textarea
-                      value={skipTimestamps}
-                      onChange={(e) => setSkipTimestamps(e.target.value)}
-                      placeholder={`Ranges the AI should never clip from, e.g. "0:00-1:30, 45:00-47:20" (sponsor reads, intros, etc.)`}
-                      rows={2}
-                      className="w-full bg-forge-surface border border-forge-border rounded-xl px-3.5 py-3 text-sm text-forge-text placeholder:text-forge-dim resize-none focus:outline-none focus:border-forge-accent/60 focus:ring-1 focus:ring-forge-accent/20 transition-colors"
-                    />
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-semibold text-forge-text">
+                        Skip timestamps <span className="text-forge-muted font-normal">(optional)</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowSkipModal(true)}
+                        className="flex items-center gap-1 text-xs font-medium text-forge-accent hover:text-forge-accent/80 transition-colors cursor-pointer"
+                      >
+                        <Plus size={12} />
+                        {skipRanges.length > 0 ? 'Edit ranges' : 'Add skip range'}
+                      </button>
+                    </div>
+
+                    {skipRanges.length === 0 ? (
+                      <p className="text-xs text-forge-dim">
+                        Ranges the AI should never clip from — sponsor reads, intros, dead air.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {skipRanges.map((r) => (
+                          <span
+                            key={r.id}
+                            className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-forge-surface border border-forge-border text-forge-muted"
+                          >
+                            <Ban size={10} className="text-forge-accent" />
+                            {r.startMin}:{String(r.startSec).padStart(2, '0')}–{r.endMin}:{String(r.endSec).padStart(2, '0')}
+                            <button
+                              type="button"
+                              onClick={() => setSkipRanges((rs) => rs.filter((x) => x.id !== r.id))}
+                              className="hover:text-red-400 transition-colors"
+                              aria-label="Remove range"
+                            >
+                              <X size={11} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Aspect ratio */}
@@ -519,6 +552,17 @@ export default function Home() {
             )}
         </div>
       </main>
+
+      {showSkipModal && (
+        <SkipTimestampsModal
+          initialRanges={skipRanges}
+          onConfirm={(ranges) => {
+            setSkipRanges(ranges)
+            setShowSkipModal(false)
+          }}
+          onClose={() => setShowSkipModal(false)}
+        />
+      )}
     </div>
   )
 }
