@@ -90,11 +90,10 @@ interface LocationState { moreClips?: boolean }
 
 // ── Stage visual — orbital rings loader ───────────────────────
 
-const StageVisual = memo(({ icon: Icon, status, active, thumbnailUrl }: {
+const StageVisual = memo(({ icon: Icon, status, active }: {
   icon: LucideIcon
   status: string
   active: boolean
-  thumbnailUrl?: string | null
 }) => {
   const isDone = status === 'ready'
   const isFailed = status === 'failed'
@@ -188,22 +187,14 @@ const StageVisual = memo(({ icon: Icon, status, active, thumbnailUrl }: {
             exit={{ scale: 0, opacity: 0, rotate: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 22 }}
           >
-            {thumbnailUrl && !isDone && !isFailed ? (
-              <img
-                src={`${API_BASE_URL}${thumbnailUrl}`}
-                alt=""
-                className="w-[76px] h-[76px] rounded-full object-cover"
-              />
-            ) : (
-              <Icon
-                size={30}
-                className={
-                  isDone ? 'text-emerald-400'
-                  : isFailed ? 'text-red-400'
-                  : 'text-forge-accent'
-                }
-              />
-            )}
+            <Icon
+              size={30}
+              className={
+                isDone ? 'text-emerald-400'
+                : isFailed ? 'text-red-400'
+                : 'text-forge-accent'
+              }
+            />
           </motion.div>
         </AnimatePresence>
       </div>
@@ -368,8 +359,20 @@ export default function Processing() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <StageVisual icon={StageIcon} status={status} active={isRunning} thumbnailUrl={job?.thumbnail_url} />
+            <StageVisual icon={StageIcon} status={status} active={isRunning} />
           </motion.div>
+
+          {/* Source thumbnail */}
+          {job?.thumbnail_url && (
+            <motion.img
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              src={job.thumbnail_url.startsWith('http') ? job.thumbnail_url : `${API_BASE_URL}${job.thumbnail_url}`}
+              alt=""
+              className="mt-6 w-40 aspect-video object-cover rounded-xl border border-forge-border shadow-lg"
+            />
+          )}
 
           {/* Stage name */}
           <motion.div
