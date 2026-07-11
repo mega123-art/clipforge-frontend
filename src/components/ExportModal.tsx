@@ -1189,7 +1189,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                 <div>
                   <label className="block text-xs text-gray-500 mb-1.5">Style</label>
                   <div
-                    className="flex gap-2 overflow-x-auto pb-1 -mx-0.5 px-0.5"
+                    className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-0.5"
                     role="radiogroup"
                     aria-label="Hook style"
                     style={{ scrollbarWidth: 'thin' }}
@@ -1200,7 +1200,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                       aria-checked={false}
                       aria-label="None"
                       onClick={() => { setHookText(''); setHookSuggestions([]) }}
-                      className="shrink-0 w-[4.5rem] rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 border-forge-border hover:border-gray-500"
+                      className="rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 border-forge-border hover:border-gray-500"
                     >
                       <div className="h-8 flex items-center justify-center bg-zinc-900">
                         <span className="text-[9px] text-gray-500">None</span>
@@ -1214,7 +1214,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                         aria-checked={hookStyle === hs.id}
                         aria-label={hs.label}
                         onClick={() => setHookStyle(hs.id)}
-                        className={`shrink-0 w-[4.5rem] rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
+                        className={`rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                           hookStyle === hs.id
                             ? 'border-forge-accent ring-2 ring-forge-accent/30'
                             : 'border-forge-border hover:border-gray-500'

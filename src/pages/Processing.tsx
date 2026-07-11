@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, memo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, Query } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import api from '../api'
+import api, { API_BASE_URL } from '../api'
 import {
   Scissors, CheckCircle2, Wand2, Zap,
   Download, Mic, Users, Brain, AlertCircle, Clock, LucideIcon,
@@ -90,10 +90,11 @@ interface LocationState { moreClips?: boolean }
 
 // ── Stage visual — orbital rings loader ───────────────────────
 
-const StageVisual = memo(({ icon: Icon, status, active }: {
+const StageVisual = memo(({ icon: Icon, status, active, thumbnailUrl }: {
   icon: LucideIcon
   status: string
   active: boolean
+  thumbnailUrl?: string | null
 }) => {
   const isDone = status === 'ready'
   const isFailed = status === 'failed'
@@ -187,14 +188,22 @@ const StageVisual = memo(({ icon: Icon, status, active }: {
             exit={{ scale: 0, opacity: 0, rotate: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 22 }}
           >
-            <Icon
-              size={30}
-              className={
-                isDone ? 'text-emerald-400'
-                : isFailed ? 'text-red-400'
-                : 'text-forge-accent'
-              }
-            />
+            {thumbnailUrl && !isDone && !isFailed ? (
+              <img
+                src={`${API_BASE_URL}${thumbnailUrl}`}
+                alt=""
+                className="w-[76px] h-[76px] rounded-full object-cover"
+              />
+            ) : (
+              <Icon
+                size={30}
+                className={
+                  isDone ? 'text-emerald-400'
+                  : isFailed ? 'text-red-400'
+                  : 'text-forge-accent'
+                }
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -334,10 +343,13 @@ export default function Processing() {
 
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-10 h-16 bg-forge-bg/80 backdrop-blur-xl border-b border-forge-border/50">
-        <div className="flex items-center gap-2.5">
+        <button
+          onClick={() => navigate('/app')}
+          className="flex items-center gap-2.5 cursor-pointer"
+        >
           <VibeClipLogo size={32} className="rounded-xl" />
           <span className="text-lg font-black tracking-tight text-forge-text">VibeClip</span>
-        </div>
+        </button>
         {isRunning && (
           <div className="flex items-center gap-1.5 text-xs font-mono text-forge-dim">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
@@ -356,7 +368,7 @@ export default function Processing() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <StageVisual icon={StageIcon} status={status} active={isRunning} />
+            <StageVisual icon={StageIcon} status={status} active={isRunning} thumbnailUrl={job?.thumbnail_url} />
           </motion.div>
 
           {/* Stage name */}

@@ -1,7 +1,9 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from 'axios'
 
+export const API_BASE_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000'
+
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_APP_API_URL || 'http://localhost:8000',
+  baseURL: API_BASE_URL,
 })
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {

@@ -62,6 +62,7 @@ export interface JobOut {
   detected_topic?: string | null
   video_duration_seconds?: number | null
   video_title?: string | null
+  thumbnail_url?: string | null
   error_message?: string | null
   clips: ClipOut[]
   created_at: string
