@@ -472,6 +472,7 @@ interface PreviewPanelProps {
   hookFontScale: number
   hookStyle: string
   hookYPct: number | null
+  sceneTemplate: SceneTemplate | null
 }
 
 function PreviewPanel({
@@ -484,14 +485,20 @@ function PreviewPanel({
   hookFontScale,
   hookStyle,
   hookYPct,
+  sceneTemplate,
 }: PreviewPanelProps) {
   const cs = CAPTION_STYLES.find((s) => s.id === captionStyle) ?? CAPTION_STYLES[0]
   const hs = HOOK_STYLES.find((s) => s.id === hookStyle) ?? HOOK_STYLES[0]
   const aspectClass =
+    sceneTemplate ? '' :
     aspectRatio === '1:1' ? 'aspect-square' :
     aspectRatio === '16:9' ? 'aspect-video' :
     'aspect-[9/16]'
-  const showSquareInVertical = aspectRatio === 'square_in_vertical'
+  const frameStyle: CSSProperties = sceneTemplate
+    ? { aspectRatio: `${sceneTemplate.canvas[0]} / ${sceneTemplate.canvas[1]}`,
+        border: '1.5px solid rgba(255,255,255,0.1)', boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 20px 48px rgba(0,0,0,0.7)' }
+    : { border: '1.5px solid rgba(255,255,255,0.1)', boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 20px 48px rgba(0,0,0,0.7)' }
+  const showSquareInVertical = aspectRatio === 'square_in_vertical' && !sceneTemplate
 
   const captionPosClass =
     captionPosition === 'top' ? 'top-6 justify-start' :
@@ -518,21 +525,47 @@ function PreviewPanel({
     <div className="shrink-0 w-full lg:w-64 flex flex-col items-center">
       <div
         className={`relative w-full sm:w-64 ${aspectClass} max-h-[62vh] rounded-2xl overflow-hidden`}
-        style={{ border: '1.5px solid rgba(255,255,255,0.1)', boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 20px 48px rgba(0,0,0,0.7)' }}
+        style={frameStyle}
       >
-        {/* Cinematic background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-700 via-slate-900 to-black" />
-        <div className="absolute inset-0 bg-gradient-to-tr from-violet-950/30 via-transparent to-rose-950/20" />
-        {/* Bottom scrim */}
-        <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+        {sceneTemplate ? (
+          <>
+            {/* Video slot placeholder — sits exactly where the real clip will
+                be composited, positioned via the template's own video_rect */}
+            <div
+              className="absolute bg-zinc-800 flex items-center justify-center"
+              style={{
+                left: `${sceneTemplate.video_rect[0] * 100}%`,
+                top: `${sceneTemplate.video_rect[1] * 100}%`,
+                width: `${sceneTemplate.video_rect[2] * 100}%`,
+                height: `${sceneTemplate.video_rect[3] * 100}%`,
+              }}
+            >
+              <span className="text-[8px] text-zinc-500">Your clip</span>
+            </div>
+            {/* Template background/bezel — punched hole reveals the slot above */}
+            <img
+              src={`${API_BASE}${sceneTemplate.overlay_url}`}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+            />
+          </>
+        ) : (
+          <>
+            {/* Cinematic background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-700 via-slate-900 to-black" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-violet-950/30 via-transparent to-rose-950/20" />
+            {/* Bottom scrim */}
+            <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
 
-        {/* Person silhouette (head + shoulders) */}
-        <div className="absolute inset-0 flex flex-col items-center justify-end pb-[18%] pointer-events-none select-none">
-          <div className="flex flex-col items-center opacity-20">
-            <div className="w-8 h-8 rounded-full bg-zinc-300" />
-            <div className="w-[4.5rem] h-14 rounded-t-[50%] bg-zinc-300 -mt-0.5" />
-          </div>
-        </div>
+            {/* Person silhouette (head + shoulders) */}
+            <div className="absolute inset-0 flex flex-col items-center justify-end pb-[18%] pointer-events-none select-none">
+              <div className="flex flex-col items-center opacity-20">
+                <div className="w-8 h-8 rounded-full bg-zinc-300" />
+                <div className="w-[4.5rem] h-14 rounded-t-[50%] bg-zinc-300 -mt-0.5" />
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Status bar */}
         <div className="absolute top-0 inset-x-0 px-3 pt-2 flex items-center justify-between pointer-events-none">
@@ -568,16 +601,18 @@ function PreviewPanel({
         )}
 
         {/* TikTok-style side actions */}
-        <div className="absolute right-2 bottom-16 flex flex-col items-center gap-3 pointer-events-none opacity-35">
-          <div className="flex flex-col items-center gap-0.5">
-            <div className="w-6 h-6 rounded-full bg-white/25 border border-white/20" />
-            <span className="text-[5px] text-white/60">24K</span>
+        {!sceneTemplate && (
+          <div className="absolute right-2 bottom-16 flex flex-col items-center gap-3 pointer-events-none opacity-35">
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="w-6 h-6 rounded-full bg-white/25 border border-white/20" />
+              <span className="text-[5px] text-white/60">24K</span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="w-5 h-5 rounded-full bg-white/15 border border-white/15" />
+              <span className="text-[5px] text-white/60">Share</span>
+            </div>
           </div>
-          <div className="flex flex-col items-center gap-0.5">
-            <div className="w-5 h-5 rounded-full bg-white/15 border border-white/15" />
-            <span className="text-[5px] text-white/60">Share</span>
-          </div>
-        </div>
+        )}
       </div>
       <p className="mt-2 text-[9px] uppercase tracking-widest text-forge-dim font-medium">Preview</p>
     </div>
@@ -886,6 +921,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               hookFontScale={hookFontScale}
               hookStyle={hookStyle}
               hookYPct={hookYPct}
+              sceneTemplate={sceneTemplates.find((t) => t.id === sceneTemplateId) ?? null}
             />
           </div>
 
@@ -1158,6 +1194,19 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     aria-label="Hook style"
                     style={{ scrollbarWidth: 'none' }}
                   >
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={false}
+                      aria-label="None"
+                      onClick={() => { setHookText(''); setHookSuggestions([]) }}
+                      className="shrink-0 w-[4.5rem] rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 border-forge-border hover:border-gray-500"
+                    >
+                      <div className="h-8 flex items-center justify-center bg-zinc-900">
+                        <span className="text-[9px] text-gray-500">None</span>
+                      </div>
+                      <div className="text-[9px] text-gray-200 py-0.5 px-1 truncate bg-forge-card">Remove hook</div>
+                    </button>
                     {HOOK_STYLES.map((hs) => (
                       <button
                         key={hs.id}
