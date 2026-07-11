@@ -362,18 +362,6 @@ export default function Processing() {
             <StageVisual icon={StageIcon} status={status} active={isRunning} />
           </motion.div>
 
-          {/* Source thumbnail */}
-          {job?.thumbnail_url && (
-            <motion.img
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.5 }}
-              src={job.thumbnail_url.startsWith('http') ? job.thumbnail_url : `${API_BASE_URL}${job.thumbnail_url}`}
-              alt=""
-              className="mt-6 w-40 aspect-video object-cover rounded-xl border border-forge-border shadow-lg"
-            />
-          )}
-
           {/* Stage name */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -415,6 +403,18 @@ export default function Processing() {
             transition={{ delay: 0.15, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="w-full max-w-sm mx-auto lg:mx-0"
           >
+
+            {/* Source thumbnail */}
+            {job?.thumbnail_url && (
+              <motion.img
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                src={job.thumbnail_url.startsWith('http') ? job.thumbnail_url : `${API_BASE_URL}${job.thumbnail_url}`}
+                alt=""
+                className="w-full aspect-video object-cover rounded-2xl border border-forge-border shadow-lg mb-8"
+              />
+            )}
 
             {/* Video title */}
             {job?.video_title && (
