@@ -4,6 +4,16 @@ import { X, Download, Loader, Info, ChevronLeft, ChevronRight, Sparkles } from '
 import type { AxiosError } from 'axios'
 import type { ExportResponse } from '../types/api'
 
+const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000'
+
+interface SceneTemplate {
+  id: string
+  name: string
+  canvas: [number, number]
+  video_rect: [number, number, number, number]
+  overlay_url: string
+}
+
 interface AspectOption { id: string; label: string }
 const ASPECT_RATIOS: AspectOption[] = [
   { id: '9:16', label: '9:16' },
@@ -612,6 +622,16 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [musicTracks, setMusicTracks] = useState<Array<{id: string, filename: string, duration: number}>>([])
   const [loadingTracks, setLoadingTracks] = useState(false)
   const [activeTab, setActiveTab] = useState<'preview' | 'settings' | 'export'>('preview')
+  const [sceneTemplateId, setSceneTemplateId] = useState<string | null>(null)
+  const [sceneTemplates, setSceneTemplates] = useState<SceneTemplate[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    api.get<SceneTemplate[]>('/api/hook-templates').then(({ data }) => {
+      if (!cancelled) setSceneTemplates(data)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   const handleGenerateHook = async () => {
     if (!clipId) return
@@ -647,7 +667,13 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     setError(null)
   }, [aspectRatio, captionStyle, captionPosition, includeCaptions, focusMode,
       hookText, hookPosition, hookFontScale, hookStyle, hookYPct,
-      musicEnabled, musicTrackId, musicVolume, musicFadeIn, musicFadeOut, musicTrimStart, musicTrimEnd])
+      musicEnabled, musicTrackId, musicVolume, musicFadeIn, musicFadeOut, musicTrimStart, musicTrimEnd,
+      sceneTemplateId])
+
+  const selectSceneTemplate = (id: string | null) => {
+    setSceneTemplateId(id)
+    if (id) setAspectRatio('16:9') // template's screen slot is 16:9 — avoid double-cropping a vertical reframe into it
+  }
 
   const goPrev = () => {
     if (safeIndex > 0 && onIndexChange) onIndexChange(safeIndex - 1)
@@ -693,6 +719,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           music_fade_out: musicFadeOut,
           music_trim_start: musicTrimStart,
           music_trim_end: musicTrimEnd,
+          scene_template_id: sceneTemplateId,
         },
       )
       if (targetId !== clipId) return
@@ -874,7 +901,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                   key={ar.id}
                   role="radio"
                   aria-checked={aspectRatio === ar.id}
-                  onClick={() => setAspectRatio(ar.id)}
+                  onClick={() => { setAspectRatio(ar.id); if (ar.id !== '16:9') setSceneTemplateId(null) }}
                   className={`flex-1 py-1.5 rounded-lg text-xs border cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
                     aspectRatio === ar.id
                       ? 'bg-pink-500 border-pink-400 text-white'
@@ -886,6 +913,57 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               ))}
             </div>
           </div>
+
+          {/* Scene templates — places the clip inside a TV/tablet screen cutout */}
+          {sceneTemplates.length > 0 && (
+            <div>
+              <label className="block text-xs sm:text-sm text-gray-400 mb-1.5 sm:mb-2">Scene template</label>
+              <div
+                className="flex gap-2 overflow-x-auto pb-1 -mx-0.5 px-0.5"
+                role="radiogroup"
+                aria-label="Scene template"
+                style={{ scrollbarWidth: 'none' }}
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={sceneTemplateId === null}
+                  onClick={() => selectSceneTemplate(null)}
+                  className={`shrink-0 w-16 h-28 rounded-lg border-2 flex items-center justify-center text-[10px] text-gray-400 cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
+                    sceneTemplateId === null
+                      ? 'border-forge-accent ring-2 ring-forge-accent/30'
+                      : 'border-forge-border hover:border-gray-500'
+                  }`}
+                >
+                  None
+                </button>
+                {sceneTemplates.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={sceneTemplateId === t.id}
+                    aria-label={t.name}
+                    onClick={() => selectSceneTemplate(t.id)}
+                    className={`shrink-0 w-16 rounded-lg border-2 overflow-hidden cursor-pointer transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 ${
+                      sceneTemplateId === t.id
+                        ? 'border-forge-accent ring-2 ring-forge-accent/30'
+                        : 'border-forge-border hover:border-gray-500'
+                    }`}
+                  >
+                    <img
+                      src={`${API_BASE}${t.overlay_url}`}
+                      alt={t.name}
+                      className="w-16 h-28 object-cover bg-zinc-900"
+                    />
+                  </button>
+                ))}
+              </div>
+              {sceneTemplateId && (
+                <p className="text-[10px] text-gray-500 mt-1">Aspect locked to 16:9 to fit the template's screen.</p>
+              )}
+            </div>
+          )}
 
           {/* Frame mode */}
           {aspectRatio === '9:16' && (
