@@ -958,7 +958,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                 className="flex gap-2 overflow-x-auto pb-1 -mx-0.5 px-0.5"
                 role="radiogroup"
                 aria-label="Scene template"
-                style={{ scrollbarWidth: 'none' }}
+                style={{ scrollbarWidth: 'thin' }}
               >
                 <button
                   type="button"
@@ -1192,7 +1192,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                     className="flex gap-2 overflow-x-auto pb-1 -mx-0.5 px-0.5"
                     role="radiogroup"
                     aria-label="Hook style"
-                    style={{ scrollbarWidth: 'none' }}
+                    style={{ scrollbarWidth: 'thin' }}
                   >
                     <button
                       type="button"
