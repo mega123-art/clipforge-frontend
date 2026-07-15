@@ -221,6 +221,7 @@ export interface PreserveClipsOut {
 export interface TemplateItem {
   id: string
   name: string
+  slug: string
   image_url: string
   is_active: boolean
   created_at: string
