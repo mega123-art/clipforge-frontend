@@ -218,6 +218,17 @@ export interface PreserveClipsOut {
   clips_converted: number
 }
 
+export interface FailedJob {
+  id: string
+  user_email?: string | null
+  source_type: string
+  source_url?: string | null
+  source_filename?: string | null
+  stage_progress: number
+  error_message?: string | null
+  created_at: string
+}
+
 export interface TemplateItem {
   id: string
   name: string

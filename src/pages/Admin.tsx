@@ -6,6 +6,7 @@ import {
   ArrowLeft, AlertCircle, CheckCircle2, ServerCog, Lock,
   Clapperboard, Download, Activity, XCircle, Trash2, Shield,
   LucideIcon, Power, RadioTower, Image as ImageIcon, Upload,
+  LayoutGrid, AlertTriangle, Wallet, Database, ScrollText,
 } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
 import type { AxiosError } from 'axios'
@@ -23,7 +24,20 @@ import type {
   PreserveClipsOut,
   AppSettings,
   TemplateItem,
+  FailedJob,
 } from '../types/api'
+
+type AdminTab = 'overview' | 'users' | 'credits' | 'jobs' | 'templates' | 'storage' | 'logs'
+
+const ADMIN_TABS: { id: AdminTab; label: string; icon: LucideIcon }[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutGrid },
+  { id: 'users', label: 'Users', icon: Users },
+  { id: 'credits', label: 'Credits', icon: Wallet },
+  { id: 'jobs', label: 'Failed jobs', icon: AlertTriangle },
+  { id: 'templates', label: 'Templates', icon: ImageIcon },
+  { id: 'storage', label: 'Storage', icon: Database },
+  { id: 'logs', label: 'Logs', icon: ScrollText },
+]
 
 interface AdminPasswordGateProps {
   onUnlock: (data: AuthOut) => void
@@ -135,6 +149,7 @@ export default function Admin() {
   const { user, setAuth } = useStore()
   const navigate = useNavigate()
   const qc = useQueryClient()
+  const [activeTab, setActiveTab] = useState<AdminTab>('overview')
   const [search, setSearch] = useState('')
   const [grantEmail, setGrantEmail] = useState('')
   const [grantAmount, setGrantAmount] = useState<number | string>(10)
@@ -191,6 +206,12 @@ export default function Admin() {
     queryKey: ['admin-templates'],
     queryFn: () => api.get<TemplateItem[]>('/api/admin/templates').then((r) => r.data),
     enabled: isAdmin,
+  })
+
+  const { data: failedJobs = [] } = useQuery<FailedJob[]>({
+    queryKey: ['admin-failed-jobs'],
+    queryFn: () => api.get<FailedJob[]>('/api/admin/failed-jobs').then((r) => r.data),
+    enabled: isAdmin && activeTab === 'jobs',
   })
 
   const grantMutation = useMutation<GrantCreditsResponse, AxiosError<{ detail?: string }>, GrantPayload>({
@@ -344,6 +365,31 @@ export default function Admin() {
       </header>
 
       <main className="flex-1 px-6 py-6 max-w-6xl mx-auto w-full space-y-6">
+        {/* Tab nav */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          {ADMIN_TABS.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id)}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
+                activeTab === id
+                  ? 'bg-forge-accent/15 border border-forge-accent/40 text-forge-accent'
+                  : 'border border-transparent text-forge-muted hover:text-forge-text hover:bg-forge-card-hover'
+              }`}
+            >
+              <Icon size={13} />
+              {label}
+              {id === 'jobs' && (stats?.failed_jobs ?? 0) > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500/15 text-rose-400">
+                  {stats?.failed_jobs}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'overview' && (
+        <>
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <StatTile icon={Users} label="Total users" value={stats?.total_users ?? '—'} />
@@ -434,7 +480,11 @@ export default function Admin() {
             </button>
           </div>
         </div>
+        </>
+        )}
 
+        {activeTab === 'credits' && (
+        <>
         {/* Export CSV */}
         <div className="glass-card rounded-2xl p-5 border border-forge-border">
           <div className="flex items-center gap-2 mb-4">
@@ -458,7 +508,11 @@ export default function Admin() {
             ))}
           </div>
         </div>
+        </>
+        )}
 
+        {activeTab === 'users' && (
+        <>
         {/* Grant credits */}
         <div className="glass-card rounded-2xl p-6 border border-forge-border">
           <div className="flex items-center gap-2 mb-4">
@@ -595,7 +649,48 @@ export default function Admin() {
             </table>
           </div>
         </div>
+        </>
+        )}
 
+        {activeTab === 'jobs' && (
+        <>
+        {/* Failed jobs */}
+        <div className="glass-card rounded-2xl border border-forge-border overflow-hidden">
+          <div className="flex items-center gap-2 px-6 py-4 border-b border-forge-border">
+            <AlertTriangle size={16} className="text-rose-400" />
+            <h2 className="text-base font-black text-forge-text">Failed jobs</h2>
+            <span className="ml-auto text-xs text-forge-dim">last {failedJobs.length}</span>
+          </div>
+          <div className="max-h-[600px] overflow-y-auto divide-y divide-forge-border/60">
+            {failedJobs.length === 0 && (
+              <p className="text-center text-forge-muted text-xs py-8">No failed jobs. 🎉</p>
+            )}
+            {failedJobs.map((j) => (
+              <div key={j.id} className="px-6 py-4 hover:bg-forge-card-hover transition-colors">
+                <div className="flex flex-wrap items-center gap-2 text-xs mb-1.5">
+                  <span className="font-mono text-forge-dim">{j.id.slice(0, 8)}</span>
+                  <span className="text-forge-text font-semibold">{j.user_email || 'unknown user'}</span>
+                  <span className="px-1.5 py-0.5 rounded-md bg-forge-surface text-[10px] uppercase tracking-wider text-forge-muted">
+                    {j.source_type}
+                  </span>
+                  <span className="text-forge-dim">stage {j.stage_progress}%</span>
+                  <span className="ml-auto text-forge-dim">{fmtDate(j.created_at)}</span>
+                </div>
+                {(j.source_url || j.source_filename) && (
+                  <div className="text-[11px] text-forge-muted truncate mb-1">{j.source_url || j.source_filename}</div>
+                )}
+                <pre className="text-[11px] text-rose-400 bg-rose-500/5 border border-rose-500/20 rounded-lg px-3 py-2 whitespace-pre-wrap font-mono">
+                  {j.error_message || 'No error message recorded'}
+                </pre>
+              </div>
+            ))}
+          </div>
+        </div>
+        </>
+        )}
+
+        {activeTab === 'storage' && (
+        <>
         {/* Storage cleanup */}
         <div className="glass-card rounded-2xl p-6 border border-forge-border">
           <div className="flex items-center gap-2 mb-1">
@@ -693,7 +788,11 @@ export default function Admin() {
             </div>
           )}
         </div>
+        </>
+        )}
 
+        {activeTab === 'templates' && (
+        <>
         {/* Templates */}
         <div className="glass-card rounded-2xl p-6 border border-forge-border">
           <div className="flex items-center gap-2 mb-1">
@@ -770,7 +869,11 @@ export default function Admin() {
             <p className="mt-4 text-center text-forge-muted text-xs py-4">No templates uploaded yet.</p>
           )}
         </div>
+        </>
+        )}
 
+        {activeTab === 'logs' && (
+        <>
         {/* Logs side-by-side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Admin actions */}
@@ -841,6 +944,8 @@ export default function Admin() {
             </div>
           </div>
         </div>
+        </>
+        )}
       </main>
     </div>
   )
