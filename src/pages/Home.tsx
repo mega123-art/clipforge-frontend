@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ChevronDown, ChevronUp, Clock, ArrowRight, Zap,
   Flame, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
@@ -58,6 +58,11 @@ interface DurationSliderDef {
   max: number
 }
 
+interface HomeLocationState {
+  preferredInput?: 'file' | 'url'
+  downloadServiceDown?: boolean
+}
+
 const DURATION_SLIDERS: DurationSliderDef[] = [
   { key: 'min_clip_duration', label: 'Min duration', min: 10, max: 60 },
   { key: 'max_clip_duration', label: 'Max duration', min: 30, max: 180 },
@@ -67,8 +72,10 @@ const DURATION_SLIDERS: DurationSliderDef[] = [
 
 export default function Home() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { getRecentJobs, addRecentJob, refreshUser, user } = useStore()
   const { openSubscription } = useSubscriptionModal()
+  const locationState = (location.state as HomeLocationState | null) ?? null
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [clipMode, setClipMode] = useState<ClipMode>('quick')
   const [customPrompt, setCustomPrompt] = useState('')
@@ -86,8 +93,17 @@ export default function Home() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploadPct, setUploadPct] = useState<number>(0)
   const [youtubeUrl, setYoutubeUrl] = useState('')
+  const [preferredInput, setPreferredInput] = useState<'file' | 'url'>(locationState?.preferredInput ?? 'url')
+  const [showUploadFallbackNotice, setShowUploadFallbackNotice] = useState(Boolean(locationState?.downloadServiceDown))
   const [referral, setReferral] = useState<ReferralInfo | null>(null)
   const [refCopied, setRefCopied] = useState(false)
+
+  useEffect(() => {
+    if (!locationState) return
+    if (locationState.preferredInput) setPreferredInput(locationState.preferredInput)
+    if (locationState.downloadServiceDown) setShowUploadFallbackNotice(true)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, locationState, navigate])
 
   useEffect(() => {
     if (!user) return
@@ -256,11 +272,32 @@ export default function Home() {
             >
               <div className="gradient-ring rounded-2xl">
                 <div className="glass-card rounded-2xl p-1 input-glow border border-forge-border transition-all duration-300">
+                  {showUploadFallbackNotice && (
+                    <div className="mx-4 mt-4 rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-bold text-amber-200">Download service is temporarily down</p>
+                          <p className="mt-1 text-xs leading-relaxed text-amber-100/75">
+                            Download the video yourself, then upload the file here to continue processing.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowUploadFallbackNotice(false)}
+                          className="text-amber-200/70 hover:text-amber-100 transition-colors"
+                          aria-label="Dismiss notice"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <URLInput
                     onFileSelect={setUploadedFile}
                     uploadedFile={uploadedFile}
                     onYoutubeUrl={setYoutubeUrl}
                     youtubeUrl={youtubeUrl}
+                    defaultTab={preferredInput}
                     isSubscribed={!!user?.subscription_tier_name}
                     quality={user?.subscription_tier_name ? '1080p' : '720p'}
                     onUpgradeClick={openSubscription}

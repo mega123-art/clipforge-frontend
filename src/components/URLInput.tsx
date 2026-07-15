@@ -1,4 +1,4 @@
-import { useRef, useState, ChangeEvent, DragEvent } from 'react'
+import { useEffect, useRef, useState, ChangeEvent, DragEvent } from 'react'
 import { Upload, X, FileVideo, CloudUpload, Link, Youtube, Crown, Lock } from 'lucide-react'
 
 interface URLInputProps {
@@ -6,6 +6,7 @@ interface URLInputProps {
   uploadedFile: File | null
   onYoutubeUrl?: (url: string) => void
   youtubeUrl?: string
+  defaultTab?: 'file' | 'url'
   quality?: '720p' | '1080p'
   isSubscribed?: boolean
   onUpgradeClick?: () => void
@@ -17,13 +18,17 @@ function isYoutubeUrl(s: string) {
   return /(?:youtube\.com\/watch|youtu\.be\/|youtube\.com\/shorts\/)/.test(s)
 }
 
-export default function URLInput({ onFileSelect, uploadedFile, onYoutubeUrl, youtubeUrl, quality = '720p', isSubscribed = false, onUpgradeClick }: URLInputProps) {
-  const [tab, setTab] = useState<'file' | 'url'>('url')
+export default function URLInput({ onFileSelect, uploadedFile, onYoutubeUrl, youtubeUrl, defaultTab = 'url', quality = '720p', isSubscribed = false, onUpgradeClick }: URLInputProps) {
+  const [tab, setTab] = useState<'file' | 'url'>(defaultTab)
   const [dragOver, setDragOver] = useState(false)
   const [sizeError, setSizeError] = useState<string | null>(null)
   const [urlInput, setUrlInput] = useState(youtubeUrl ?? '')
   const [urlError, setUrlError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    setTab(defaultTab)
+  }, [defaultTab])
 
   const tryAccept = (file: File | undefined | null) => {
     if (!file) return

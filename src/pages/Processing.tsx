@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import api, { API_BASE_URL } from '../api'
 import {
   Scissors, CheckCircle2, Wand2, Zap,
-  Download, Mic, Users, Brain, AlertCircle, Clock, LucideIcon,
+  Download, Mic, Users, Brain, AlertCircle, Clock, LucideIcon, Upload,
 } from 'lucide-react'
 import ProgressStepper from '../components/ProgressStepper'
 import VibeClipLogo from '../components/VibeClipLogo'
@@ -87,6 +87,36 @@ const MORE_CLIPS_MESSAGES: string[] = [
 ]
 
 interface LocationState { moreClips?: boolean }
+
+function isDownloadServiceOutage(errorMessage?: string | null): boolean {
+  const msg = (errorMessage || '').toLowerCase()
+  return (
+    msg.includes('download service is temporarily unavailable') ||
+    msg.includes('download service error 530') ||
+    msg.includes('download service failed') ||
+    (msg.includes('download service') && msg.includes('html'))
+  )
+}
+
+function getFailureCopy(job?: JobOut) {
+  const raw = job?.error_message || 'Unknown error'
+  if (job?.source_type === 'url' && isDownloadServiceOutage(raw)) {
+    return {
+      title: 'Download service is temporarily down',
+      description: 'Please download the video yourself, then upload the file directly to continue.',
+      detail: raw,
+      ctaLabel: 'Upload file instead',
+      ctaAction: 'upload-fallback' as const,
+    }
+  }
+  return {
+    title: 'Job failed',
+    description: raw,
+    detail: null,
+    ctaLabel: 'Try again',
+    ctaAction: 'go-home' as const,
+  }
+}
 
 // ── Stage visual — orbital rings loader ───────────────────────
 
@@ -326,6 +356,7 @@ export default function Processing() {
   const currentQuip = quips[quipIdx % Math.max(1, quips.length)] || ''
   const isRunning = status !== 'failed' && status !== 'ready'
   const StageIcon = isMoreClips ? Wand2 : (STAGE_ICONS[status] || Zap)
+  const failureCopy = getFailureCopy(job)
 
   return (
     <div className="processing-bg min-h-[100dvh] flex flex-col relative overflow-hidden page-enter">
@@ -470,10 +501,23 @@ export default function Processing() {
             {/* Failed */}
             {status === 'failed' && (
               <div className="mt-6 p-5 bg-red-500/10 border border-red-500/30 rounded-2xl">
-                <p className="text-red-400 font-bold text-sm mb-1">Job failed</p>
-                <p className="text-xs text-red-300/70">{job?.error_message || 'Unknown error'}</p>
-                <button onClick={() => navigate('/app')} className="mt-3 text-xs text-forge-accent hover:underline cursor-pointer">
-                  Try again
+                <p className="text-red-400 font-bold text-sm mb-1">{failureCopy.title}</p>
+                <p className="text-xs text-red-200/80 leading-relaxed">{failureCopy.description}</p>
+                {failureCopy.detail && (
+                  <p className="mt-2 text-[11px] text-red-300/55 break-words">{failureCopy.detail}</p>
+                )}
+                <button
+                  onClick={() => {
+                    if (failureCopy.ctaAction === 'upload-fallback') {
+                      navigate('/app', { state: { preferredInput: 'file', downloadServiceDown: true } })
+                      return
+                    }
+                    navigate('/app')
+                  }}
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs text-forge-accent hover:underline cursor-pointer"
+                >
+                  {failureCopy.ctaAction === 'upload-fallback' && <Upload size={12} />}
+                  {failureCopy.ctaLabel}
                 </button>
               </div>
             )}
