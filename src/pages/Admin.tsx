@@ -5,7 +5,7 @@ import {
   Coins, Users, FileText, Search, Plus, ShieldCheck,
   ArrowLeft, AlertCircle, CheckCircle2, ServerCog, Lock,
   Clapperboard, Download, Activity, XCircle, Trash2, Shield,
-  LucideIcon, Power, RadioTower,
+  LucideIcon, Power, RadioTower, Image as ImageIcon, Upload,
 } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
 import type { AxiosError } from 'axios'
@@ -22,6 +22,7 @@ import type {
   CleanupOut,
   PreserveClipsOut,
   AppSettings,
+  TemplateItem,
 } from '../types/api'
 
 interface AdminPasswordGateProps {
@@ -145,6 +146,9 @@ export default function Admin() {
   const [preserveEmail, setPreserveEmail] = useState('')
   const [preserveResult, setPreserveResult] = useState<PreserveClipsOut | null>(null)
   const [preserveError, setPreserveError] = useState<string | null>(null)
+  const [templateName, setTemplateName] = useState('')
+  const [templateFile, setTemplateFile] = useState<File | null>(null)
+  const [templateError, setTemplateError] = useState<string | null>(null)
 
   // Hooks must always run in the same order — call them before any early returns,
   // but disable when not yet an admin so we don't hit the API.
@@ -180,6 +184,12 @@ export default function Admin() {
   const { data: appSettings } = useQuery<AppSettings>({
     queryKey: ['admin-settings'],
     queryFn: () => api.get<AppSettings>('/api/admin/settings').then((r) => r.data),
+    enabled: isAdmin,
+  })
+
+  const { data: templates = [] } = useQuery<TemplateItem[]>({
+    queryKey: ['admin-templates'],
+    queryFn: () => api.get<TemplateItem[]>('/api/admin/templates').then((r) => r.data),
     enabled: isAdmin,
   })
 
@@ -231,6 +241,35 @@ export default function Admin() {
     onError: (err) => {
       setPreserveError(err.response?.data?.detail || 'Preserve request failed')
       setPreserveResult(null)
+    },
+  })
+
+  const uploadTemplateMutation = useMutation<TemplateItem, AxiosError<{ detail?: string }>, { name: string; file: File }>({
+    mutationFn: ({ name, file }) => {
+      const form = new FormData()
+      form.append('name', name)
+      form.append('file', file)
+      return api.post<TemplateItem>('/api/admin/templates', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }).then((r) => r.data)
+    },
+    onSuccess: () => {
+      setTemplateError(null)
+      setTemplateName('')
+      setTemplateFile(null)
+      qc.invalidateQueries({ queryKey: ['admin-templates'] })
+      qc.invalidateQueries({ queryKey: ['admin-logs'] })
+    },
+    onError: (err) => {
+      setTemplateError(err.response?.data?.detail || 'Upload failed')
+    },
+  })
+
+  const deleteTemplateMutation = useMutation<{ deleted: string }, AxiosError<{ detail?: string }>, string>({
+    mutationFn: (id) => api.delete(`/api/admin/templates/${id}`).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-templates'] })
+      qc.invalidateQueries({ queryKey: ['admin-logs'] })
     },
   })
 
@@ -652,6 +691,83 @@ export default function Admin() {
               <AlertCircle size={15} className="shrink-0 mt-0.5" />
               <span>{preserveError}</span>
             </div>
+          )}
+        </div>
+
+        {/* Templates */}
+        <div className="glass-card rounded-2xl p-6 border border-forge-border">
+          <div className="flex items-center gap-2 mb-1">
+            <ImageIcon size={16} className="text-forge-accent" />
+            <h2 className="text-base font-black text-forge-text">Templates (green-screen images)</h2>
+          </div>
+          <p className="text-xs text-forge-muted mb-4">
+            Upload PNG/JPEG/WEBP images (max 20MB) used as green-screen templates.
+          </p>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!templateFile) { setTemplateError('Choose an image file'); return }
+              setTemplateError(null)
+              uploadTemplateMutation.mutate({ name: templateName, file: templateFile })
+            }}
+            className="flex flex-col sm:flex-row gap-3"
+          >
+            <input
+              type="text"
+              required
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              placeholder="Template name"
+              className="flex-1 bg-forge-surface border border-forge-border rounded-xl px-4 py-2.5 text-sm text-forge-text placeholder-forge-dim outline-none focus:border-forge-accent/50 transition-colors"
+            />
+            <input
+              type="file"
+              required
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(e) => setTemplateFile(e.target.files?.[0] || null)}
+              className="flex-1 bg-forge-surface border border-forge-border rounded-xl px-4 py-2.5 text-sm text-forge-text file:mr-3 file:py-1 file:px-2 file:rounded-lg file:border-0 file:bg-forge-accent/20 file:text-forge-accent file:text-xs file:font-bold outline-none focus:border-forge-accent/50 transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={uploadTemplateMutation.isPending}
+              className="btn-primary rounded-xl px-5 py-2.5 text-sm font-bold text-white flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shrink-0"
+            >
+              <Upload size={14} />
+              {uploadTemplateMutation.isPending ? 'Uploading...' : 'Upload'}
+            </button>
+          </form>
+
+          {templateError && (
+            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+              <AlertCircle size={15} className="shrink-0 mt-0.5" />
+              <span>{templateError}</span>
+            </div>
+          )}
+
+          {templates.length > 0 && (
+            <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {templates.map((t) => (
+                <div key={t.id} className="relative group rounded-xl overflow-hidden border border-forge-border bg-forge-surface">
+                  <img src={t.image_url} alt={t.name} className="w-full aspect-video object-cover" />
+                  <div className="p-2">
+                    <div className="text-xs font-bold text-forge-text truncate">{t.name}</div>
+                    <div className="text-[10px] text-forge-dim">{fmtDate(t.created_at)}</div>
+                  </div>
+                  <button
+                    onClick={() => deleteTemplateMutation.mutate(t.id)}
+                    disabled={deleteTemplateMutation.isPending}
+                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:opacity-50"
+                    title="Delete template"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {templates.length === 0 && (
+            <p className="mt-4 text-center text-forge-muted text-xs py-4">No templates uploaded yet.</p>
           )}
         </div>
 

@@ -217,3 +217,11 @@ export interface PreserveClipsOut {
   user_email: string
   clips_converted: number
 }
+
+export interface TemplateItem {
+  id: string
+  name: string
+  image_url: string
+  is_active: boolean
+  created_at: string
+}
