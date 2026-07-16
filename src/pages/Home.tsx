@@ -6,7 +6,7 @@ import {
   Flame, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen,
   LucideIcon, SlidersHorizontal, Wand2, Crown, Gift, Copy, Check, Ban, Plus, X,
 } from 'lucide-react'
-import SkipTimestampsModal, { type SkipRange } from '../components/SkipTimestampsModal'
+import SkipTimestampsModal, { formatStamp, type SkipRange } from '../components/SkipTimestampsModal'
 import VibeClipLogo from '../components/VibeClipLogo'
 import HeroBg from '../components/HeroBg'
 import type { AxiosError } from 'axios'
@@ -149,7 +149,7 @@ export default function Home() {
     try {
       const prompt = clipMode === 'custom' ? customPrompt.trim() : ''
       const skip = skipRanges
-        .map((r) => `${r.startMin}:${String(r.startSec).padStart(2, '0')}-${r.endMin}:${String(r.endSec).padStart(2, '0')}`)
+        .map((r) => `${formatStamp(r.startMin, r.startSec)}-${formatStamp(r.endMin, r.endSec)}`)
         .join(', ')
       const jobOptions = {
         max_clips: options.max_clips,
@@ -458,7 +458,7 @@ export default function Home() {
                             className="flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-medium bg-forge-surface border border-forge-border text-forge-muted"
                           >
                             <Ban size={10} className="text-forge-accent" />
-                            {r.startMin}:{String(r.startSec).padStart(2, '0')}–{r.endMin}:{String(r.endSec).padStart(2, '0')}
+                            {formatStamp(r.startMin, r.startSec)}–{formatStamp(r.endMin, r.endSec)}
                             <button
                               type="button"
                               onClick={() => setSkipRanges((rs) => rs.filter((x) => x.id !== r.id))}

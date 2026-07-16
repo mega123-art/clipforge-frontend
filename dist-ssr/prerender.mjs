@@ -4,6 +4,8 @@ import { StaticRouter } from "react-router-dom/server.mjs";
 import { Link } from "react-router-dom";
 import { Moon, Sun, ArrowRight, Flame, Zap, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen } from "lucide-react";
 import { create } from "zustand";
+import { memo } from "react";
+import { motion } from "framer-motion";
 function VibeClipLogo({ size = 32, className = "" }) {
   return /* @__PURE__ */ jsxs(
     "svg",
@@ -85,7 +87,7 @@ const useStore = create((set, get) => ({
     const token = get().token;
     if (!token) return;
     try {
-      const api = (await import("./assets/api-BheD6Cod.mjs")).default;
+      const api = (await import("./assets/api-FDYIXwpc.mjs")).default;
       const { data } = await api.get("/api/auth/me");
       localStorage.setItem("auth_user", JSON.stringify(data));
       set({ user: data });
@@ -125,16 +127,113 @@ function ThemeToggle({ className = "" }) {
     {
       onClick: toggleTheme,
       title: isLight ? "Switch to dark mode" : "Switch to light mode",
-      className: `relative w-9 h-9 rounded-xl border border-forge-border flex items-center justify-center transition-all hover:border-forge-border-bright hover:bg-forge-surface hover:shadow-glow-cyan group cursor-pointer ${className}`,
-      children: isLight ? /* @__PURE__ */ jsx(Moon, { size: 14, className: "text-forge-muted group-hover:text-forge-accent transition-colors" }) : /* @__PURE__ */ jsx(Sun, { size: 14, className: "text-forge-muted group-hover:text-amber-400 transition-colors" })
+      className: `relative w-9 h-9 rounded-full border border-forge-border bg-forge-surface/60 flex items-center justify-center transition-colors hover:border-forge-border-bright group cursor-pointer ${className}`,
+      children: isLight ? /* @__PURE__ */ jsx(Moon, { size: 14, className: "text-forge-muted group-hover:text-forge-text transition-colors" }) : /* @__PURE__ */ jsx(Sun, { size: 14, className: "text-forge-muted group-hover:text-forge-text transition-colors" })
     }
   );
 }
-const STATS = [
-  { value: "10M+", label: "Clips Generated" },
-  { value: "98.3%", label: "Accuracy Rate" },
-  { value: "40×", label: "Faster Than Manual" }
-];
+const HeroBg = memo(() => /* @__PURE__ */ jsxs("div", { className: "absolute inset-0 overflow-hidden pointer-events-none select-none", "aria-hidden": "true", children: [
+  /* @__PURE__ */ jsx(
+    motion.div,
+    {
+      className: "absolute inset-0 origin-center",
+      style: {
+        background: [
+          "conic-gradient(from 0deg at 25% 55%,",
+          "  transparent 0deg,",
+          "  rgba(6,182,212,0.09) 45deg,",
+          "  rgba(20,184,166,0.07) 90deg,",
+          "  transparent 140deg,",
+          "  rgba(34,211,238,0.06) 210deg,",
+          "  rgba(6,182,212,0.08) 255deg,",
+          "  transparent 310deg,",
+          "  rgba(16,185,129,0.05) 340deg,",
+          "  transparent 360deg",
+          ")"
+        ].join("")
+      },
+      animate: { rotate: 360 },
+      transition: { duration: 28, repeat: Infinity, ease: "linear" }
+    }
+  ),
+  /* @__PURE__ */ jsx(
+    motion.div,
+    {
+      className: "absolute inset-0 origin-[70%_40%]",
+      style: {
+        background: [
+          "conic-gradient(from 180deg at 70% 40%,",
+          "  transparent 0deg,",
+          "  rgba(20,184,166,0.06) 50deg,",
+          "  transparent 110deg,",
+          "  rgba(6,182,212,0.07) 190deg,",
+          "  rgba(34,211,238,0.05) 230deg,",
+          "  transparent 290deg,",
+          "  rgba(16,185,129,0.04) 340deg,",
+          "  transparent 360deg",
+          ")"
+        ].join("")
+      },
+      animate: { rotate: -360 },
+      transition: { duration: 38, repeat: Infinity, ease: "linear" }
+    }
+  ),
+  /* @__PURE__ */ jsx(
+    motion.div,
+    {
+      className: "absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full",
+      style: { background: "radial-gradient(circle, rgba(6,182,212,0.16) 0%, transparent 68%)", filter: "blur(55px)" },
+      animate: { x: [0, 35, -15, 25, 0], y: [0, -25, 35, -15, 0] },
+      transition: { duration: 20, repeat: Infinity, ease: "easeInOut" }
+    }
+  ),
+  /* @__PURE__ */ jsx(
+    motion.div,
+    {
+      className: "absolute bottom-[-15%] right-[-5%] w-[50%] h-[55%] rounded-full",
+      style: { background: "radial-gradient(circle, rgba(20,184,166,0.13) 0%, transparent 65%)", filter: "blur(50px)" },
+      animate: { x: [0, -30, 20, -10, 0], y: [0, 20, -30, 15, 0] },
+      transition: { duration: 24, repeat: Infinity, ease: "easeInOut", delay: 3 }
+    }
+  ),
+  /* @__PURE__ */ jsx(
+    motion.div,
+    {
+      className: "absolute top-[35%] left-[45%] w-[35%] h-[35%] rounded-full",
+      style: { background: "radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 65%)", filter: "blur(45px)" },
+      animate: { x: [0, -20, 30, -10, 20, 0], y: [0, 25, -15, 30, -10, 0], scale: [1, 1.15, 0.9, 1.08, 1] },
+      transition: { duration: 18, repeat: Infinity, ease: "easeInOut", delay: 6 }
+    }
+  ),
+  /* @__PURE__ */ jsx(
+    motion.div,
+    {
+      className: "absolute top-[5%] right-[15%] w-[28%] h-[28%] rounded-full",
+      style: { background: "radial-gradient(circle, rgba(34,211,238,0.11) 0%, transparent 65%)", filter: "blur(35px)" },
+      animate: { x: [0, 20, -25, 10, 0], y: [0, 30, -10, 25, 0] },
+      transition: { duration: 15, repeat: Infinity, ease: "easeInOut", delay: 1.5 }
+    }
+  ),
+  /* @__PURE__ */ jsx(
+    "div",
+    {
+      className: "absolute inset-0 opacity-[0.028]",
+      style: {
+        backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.85) 1px, transparent 1px)",
+        backgroundSize: "30px 30px"
+      }
+    }
+  ),
+  /* @__PURE__ */ jsx(
+    "div",
+    {
+      className: "absolute inset-0 opacity-[0.018]",
+      style: {
+        backgroundImage: "repeating-linear-gradient(135deg, rgba(255,255,255,0.6) 0px, rgba(255,255,255,0.6) 1px, transparent 1px, transparent 40px)"
+      }
+    }
+  )
+] }));
 const CLIP_TYPES = [
   { label: "Controversy", Icon: Flame },
   { label: "Hook Intro", Icon: Zap },
@@ -159,8 +258,16 @@ const FAQ = [
   { q: "How long does it take to generate clips?", a: "Most videos process in 2–5 minutes depending on length. Transcription, AI analysis, and clip extraction run in parallel on the backend." }
 ];
 function Landing() {
-  return /* @__PURE__ */ jsxs("div", { className: "min-h-screen bg-forge-bg text-forge-text", children: [
-    /* @__PURE__ */ jsxs("header", { className: "flex items-center justify-between px-5 sm:px-10 py-4 max-w-6xl mx-auto", children: [
+  return /* @__PURE__ */ jsxs("div", { className: "relative min-h-screen bg-forge-bg text-forge-text overflow-hidden", children: [
+    /* @__PURE__ */ jsx(
+      "div",
+      {
+        className: "absolute inset-x-0 top-0 h-screen",
+        style: { maskImage: "linear-gradient(to bottom, black 60%, transparent 100%)", WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent 100%)" },
+        children: /* @__PURE__ */ jsx(HeroBg, {})
+      }
+    ),
+    /* @__PURE__ */ jsxs("header", { className: "relative z-10 flex items-center justify-between px-5 sm:px-10 py-4 max-w-6xl mx-auto", children: [
       /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
         /* @__PURE__ */ jsx(VibeClipLogo, { size: 32 }),
         /* @__PURE__ */ jsx("span", { className: "font-black text-lg tracking-tight", children: "VibeClip" })
@@ -171,30 +278,26 @@ function Landing() {
         /* @__PURE__ */ jsx(Link, { to: "/app", className: "text-sm font-semibold px-4 py-2 rounded-xl bg-forge-accent text-white hover:opacity-90 transition-opacity", children: "Start free" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs("main", { className: "max-w-6xl mx-auto px-5 sm:px-10", children: [
+    /* @__PURE__ */ jsxs("main", { className: "relative z-10 max-w-6xl mx-auto px-5 sm:px-10", children: [
       /* @__PURE__ */ jsxs("section", { className: "pt-12 sm:pt-20 pb-10 text-center", children: [
-        /* @__PURE__ */ jsxs("h1", { className: "text-[2.5rem] sm:text-6xl xl:text-7xl font-black tracking-tighter leading-[0.93] mb-5", children: [
-          "AI Clip Maker — turn any video",
-          /* @__PURE__ */ jsx("br", {}),
-          "into ",
-          /* @__PURE__ */ jsx("span", { className: "gradient-text", children: "viral clips." })
+        /* @__PURE__ */ jsxs("h1", { className: "text-[2.6rem] sm:text-6xl xl:text-7xl font-black tracking-tighter leading-[0.98] mb-5", children: [
+          "Turn any video into",
+          " ",
+          /* @__PURE__ */ jsx("span", { className: "font-display italic font-normal gradient-text tracking-tight", children: "viral clips" })
         ] }),
-        /* @__PURE__ */ jsx("p", { className: "text-forge-subtext text-base sm:text-xl leading-relaxed mb-8 max-w-[55ch] mx-auto", children: "Paste any YouTube URL. VibeClip's AI finds the moments worth posting, auto-crops to 9:16, and burns in word-level captions — export-ready for TikTok, Instagram Reels, and YouTube Shorts in minutes." }),
+        /* @__PURE__ */ jsx("p", { className: "text-forge-subtext text-base sm:text-xl leading-relaxed mb-8 max-w-[50ch] mx-auto", children: "Paste a YouTube URL. AI finds the moments worth posting, crops to 9:16, and burns in word-level captions — ready for TikTok, Reels, and Shorts in minutes." }),
         /* @__PURE__ */ jsxs(
           Link,
           {
             to: "/app",
-            className: "inline-flex items-center gap-2 text-base font-semibold px-7 py-3.5 rounded-2xl bg-forge-accent text-white hover:opacity-90 transition-opacity",
+            className: "btn-primary inline-flex items-center gap-2 text-base font-bold px-8 py-4 rounded-2xl text-white",
             children: [
               "Make a clip free ",
               /* @__PURE__ */ jsx(ArrowRight, { size: 18 })
             ]
           }
         ),
-        /* @__PURE__ */ jsx("div", { className: "flex w-fit mx-auto mt-12 divide-x divide-forge-border border border-forge-border rounded-2xl overflow-hidden", children: STATS.map((s, i) => /* @__PURE__ */ jsxs("div", { className: "px-5 sm:px-8 py-4", children: [
-          /* @__PURE__ */ jsx("span", { className: `text-xl sm:text-2xl font-black leading-none ${i === 2 ? "gradient-text" : "text-forge-text"}`, children: s.value }),
-          /* @__PURE__ */ jsx("p", { className: "text-[11px] text-forge-muted mt-1 whitespace-nowrap", children: s.label })
-        ] }, s.label)) })
+        /* @__PURE__ */ jsx("p", { className: "mt-4 text-xs text-forge-muted", children: "Free credits on signup · No credit card needed" })
       ] }),
       /* @__PURE__ */ jsxs("section", { className: "py-16", children: [
         /* @__PURE__ */ jsx("h2", { className: "text-3xl sm:text-4xl font-black tracking-tight text-center mb-12", children: "How VibeClip works" }),
@@ -221,23 +324,25 @@ function Landing() {
       ] }),
       /* @__PURE__ */ jsxs("section", { className: "py-20 text-center", children: [
         /* @__PURE__ */ jsxs("h2", { className: "text-3xl sm:text-5xl font-black tracking-tighter mb-5", children: [
-          "Start turning videos into ",
-          /* @__PURE__ */ jsx("span", { className: "gradient-text", children: "clips." })
+          "Start turning videos into",
+          " ",
+          /* @__PURE__ */ jsx("span", { className: "font-display italic font-normal gradient-text tracking-tight", children: "clips" })
         ] }),
         /* @__PURE__ */ jsxs(
           Link,
           {
             to: "/app",
-            className: "inline-flex items-center gap-2 text-base font-semibold px-7 py-3.5 rounded-2xl bg-forge-accent text-white hover:opacity-90 transition-opacity",
+            className: "btn-primary inline-flex items-center gap-2 text-base font-bold px-8 py-4 rounded-2xl text-white",
             children: [
               "Make a clip free ",
               /* @__PURE__ */ jsx(ArrowRight, { size: 18 })
             ]
           }
-        )
+        ),
+        /* @__PURE__ */ jsx("p", { className: "mt-4 text-xs text-forge-muted", children: "Free credits on signup · No credit card needed" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs("footer", { className: "border-t border-forge-border py-8 text-center text-sm text-forge-muted", children: [
+    /* @__PURE__ */ jsxs("footer", { className: "relative z-10 border-t border-forge-border py-8 text-center text-sm text-forge-muted", children: [
       /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-center gap-2 mb-2", children: [
         /* @__PURE__ */ jsx(VibeClipLogo, { size: 20 }),
         /* @__PURE__ */ jsx("span", { className: "font-bold", children: "VibeClip" })

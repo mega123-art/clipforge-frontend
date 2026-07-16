@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { X, Plus, Trash2, Ban } from 'lucide-react'
+import { X, Plus, Trash2, Ban, Sparkles, AlertTriangle, Loader2 } from 'lucide-react'
+import api from '../api'
 
 export interface SkipRange {
   id: string
@@ -7,6 +8,17 @@ export interface SkipRange {
   startSec: number
   endMin: number
   endSec: number
+  label?: string | null
+  note?: string | null
+  needsReview?: boolean
+}
+
+interface ParsedRange {
+  start_seconds: number
+  end_seconds: number
+  label?: string | null
+  note?: string | null
+  needs_review?: boolean
 }
 
 interface SkipTimestampsModalProps {
@@ -19,15 +31,61 @@ const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(mi
 
 const toSeconds = (min: number, sec: number) => min * 60 + sec
 
+const pad = (n: number) => String(n).padStart(2, '0')
+
+/** "M:SS", or "H:MM:SS" past the hour — the backend's range regex allows at
+ *  most two digits per part, so "105:00" would be silently ignored. */
+export const formatStamp = (min: number, sec: number) =>
+  min >= 60 ? `${Math.floor(min / 60)}:${pad(min % 60)}:${pad(sec)}` : `${min}:${pad(sec)}`
+
 const newRow = (): SkipRange => ({
   id: Math.random().toString(36).slice(2),
   startMin: 0, startSec: 0, endMin: 0, endSec: 30,
+})
+
+const fromSeconds = (r: ParsedRange): SkipRange => ({
+  id: Math.random().toString(36).slice(2),
+  startMin: Math.floor(r.start_seconds / 60),
+  startSec: Math.round(r.start_seconds % 60),
+  endMin: Math.floor(r.end_seconds / 60),
+  endSec: Math.round(r.end_seconds % 60),
+  label: r.label ?? null,
+  note: r.note ?? null,
+  needsReview: !!r.needs_review,
 })
 
 export default function SkipTimestampsModal({ initialRanges, onConfirm, onClose }: SkipTimestampsModalProps) {
   const [rows, setRows] = useState<SkipRange[]>(
     initialRanges.length > 0 ? initialRanges : [newRow()]
   )
+  const [pasted, setPasted] = useState('')
+  const [parsing, setParsing] = useState(false)
+  const [warnings, setWarnings] = useState<string[]>([])
+  const [parseError, setParseError] = useState<string | null>(null)
+
+  const handleParse = async () => {
+    const text = pasted.trim()
+    if (!text || parsing) return
+    setParsing(true)
+    setParseError(null)
+    setWarnings([])
+    try {
+      const { data } = await api.post<{ ranges: ParsedRange[]; warnings: string[] }>(
+        '/api/jobs/parse-skips',
+        { text: text.slice(0, 4000) },
+      )
+      const parsed = (data.ranges || []).map(fromSeconds)
+      if (parsed.length > 0) {
+        setRows(parsed)
+        setPasted('')
+      }
+      setWarnings(data.warnings || [])
+    } catch {
+      setParseError("Couldn't read those timestamps. Try again or add ranges by hand.")
+    } finally {
+      setParsing(false)
+    }
+  }
 
   const updateRow = (id: string, patch: Partial<SkipRange>) => {
     setRows((rs) => rs.map((r) => (r.id === id ? { ...r, ...patch } : r)))
@@ -81,16 +139,51 @@ export default function SkipTimestampsModal({ initialRanges, onConfirm, onClose 
           Ranges here are never used for clips — sponsor reads, intros, dead air, whatever you want the AI to ignore.
         </p>
 
+        <div className="space-y-2">
+          <textarea
+            value={pasted}
+            onChange={(e) => setPasted(e.target.value)}
+            rows={3}
+            placeholder={'Paste timestamps — any format:\n1:20-2:45 sponsor\nskip first 2 min\n12:30 ad read'}
+            className="w-full bg-forge-surface border border-forge-border rounded-xl px-3 py-2 text-sm text-forge-text placeholder:text-forge-dim resize-y focus:outline-none focus:border-forge-accent/60 focus:ring-1 focus:ring-forge-accent/20"
+          />
+          <button
+            type="button"
+            onClick={handleParse}
+            disabled={!pasted.trim() || parsing}
+            className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-forge-surface border border-forge-border text-sm font-medium text-forge-text hover:border-forge-accent/60 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {parsing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} className="text-forge-accent" />}
+            {parsing ? 'Reading…' : 'Read with AI'}
+          </button>
+          {(warnings.length > 0 || parseError) && (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 px-3 py-2 space-y-1">
+              {parseError && <p className="text-xs text-amber-300">{parseError}</p>}
+              {warnings.map((w, i) => (
+                <p key={i} className="text-xs text-amber-300 flex items-start gap-1.5">
+                  <AlertTriangle size={11} className="mt-0.5 shrink-0" />
+                  {w}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
           {rows.map((r) => {
             const invalid = isInvalid(r)
             return (
               <div
                 key={r.id}
-                className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 ${
-                  invalid ? 'border-red-500/40 bg-red-500/5' : 'border-forge-border bg-forge-surface/50'
+                className={`rounded-xl border px-3 py-2.5 ${
+                  invalid
+                    ? 'border-red-500/40 bg-red-500/5'
+                    : r.needsReview
+                      ? 'border-amber-500/40 bg-amber-500/5'
+                      : 'border-forge-border bg-forge-surface/50'
                 }`}
               >
+              <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   {numInput(r.startMin, (v) => updateRow(r.id, { startMin: v }), 999, 'Start minutes')}
                   <span className="text-forge-muted">:</span>
@@ -110,6 +203,12 @@ export default function SkipTimestampsModal({ initialRanges, onConfirm, onClose 
                 >
                   <Trash2 size={15} />
                 </button>
+              </div>
+              {(r.label || r.note) && (
+                <p className={`text-xs mt-1.5 ${r.needsReview ? 'text-amber-300' : 'text-forge-dim'}`}>
+                  {r.label}{r.label && r.note ? ' — ' : ''}{r.note}
+                </p>
+              )}
               </div>
             )
           })}
