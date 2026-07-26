@@ -1,8 +1,15 @@
-import { useState, useEffect, CSSProperties } from 'react'
+import { useState, useEffect, useRef, CSSProperties } from 'react'
 import api from '../api'
 import { X, Download, Loader, Info, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import type { AxiosError } from 'axios'
 import type { ExportResponse } from '../types/api'
+import {
+  HOOK_STYLES, HOOK_BOX_WIDTH_FRAC, HOOK_LINE_HEIGHT, GLITCH_SCANLINES, hookFontSize,
+} from '../hookStyles.generated'
+import {
+  CAPTION_STYLES, CAPTION_RES, CAPTION_MARGIN_LR, CAPTION_MAX_WORDS,
+  CAPTION_TOP_MARGIN_V,
+} from '../captionStyles.generated'
 
 const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000'
 
@@ -22,431 +29,101 @@ const ASPECT_RATIOS: AspectOption[] = [
   { id: '16:9', label: '16:9' },
 ]
 
-interface CaptionStyleOption {
-  id: string
-  label: string
-  sample: string
-  css: CSSProperties
-  bg: string
+// Captions are laid out in ASS script space (1080x1920), same as hooks, then
+// scaled to the frame. A displayed caption is at most CAPTION_MAX_WORDS words.
+const CAPTION_SAMPLE = ['this', 'changed', 'everything', 'for']
+
+interface CaptionBoxProps {
+  styleId: string
+  /** Fewer words for the picker chips, which have far less room than the frame. */
+  maxWords?: number
 }
 
-const CAPTION_STYLES: CaptionStyleOption[] = [
-  {
-    id: 'word_highlight',
-    label: 'Word highlight',
-    sample: 'BIG IDEA',
-    css: { color: '#FFFF00', fontWeight: 800, textShadow: '2px 2px 0 #000' },
-    bg: '#000',
-  },
-  {
-    id: 'karaoke_pop',
-    label: 'Karaoke pop',
-    sample: 'POP!',
-    css: { color: '#FFFF00', fontWeight: 900, transform: 'scale(1.15)', textShadow: '2px 2px 0 #000' },
-    bg: '#111',
-  },
-  {
-    id: 'neon_glow',
-    label: 'Neon glow',
-    sample: 'NEON',
-    css: {
-      color: '#fff',
-      fontWeight: 800,
-      textShadow: '0 0 6px #ff00ff, 0 0 12px #00ffff',
-    },
-    bg: '#0a0a18',
-  },
-  {
-    id: 'bold_yellow',
-    label: 'MrBeast bold',
-    sample: 'HUGE',
-    css: { color: '#FFD400', fontWeight: 900, fontSize: '1.3rem', textShadow: '3px 3px 0 #000, -2px -2px 0 #000' },
-    bg: '#000',
-  },
-  {
-    id: 'bubble',
-    label: 'Bubble',
-    sample: 'hello',
-    css: {
-      color: '#fff',
-      background: 'rgba(30,30,30,0.85)',
-      padding: '4px 10px',
-      borderRadius: '999px',
-      fontWeight: 600,
-    },
-    bg: '#1a1a1a',
-  },
-  {
-    id: 'typewriter',
-    label: 'Typewriter',
-    sample: 'typing|',
-    css: { color: '#fff', fontFamily: 'monospace', background: 'rgba(0,0,0,0.6)', padding: '2px 6px' },
-    bg: '#000',
-  },
-  {
-    id: 'gradient_pop',
-    label: 'Gradient pop',
-    sample: 'WOW',
-    css: {
-      background: 'linear-gradient(90deg,#ff0080,#ff8c00,#ffd400)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      fontWeight: 900,
-    },
-    bg: '#000',
-  },
-  {
-    id: 'subtitle_clean',
-    label: 'Clean',
-    sample: 'subtitle',
-    css: { color: '#fff', fontSize: '0.7rem', background: 'rgba(0,0,0,0.5)', padding: '1px 4px' },
-    bg: '#000',
-  },
-  {
-    id: 'full_sentence',
-    label: 'Full sentence',
-    sample: 'sentence',
-    css: { color: '#fff', fontWeight: 700, background: 'rgba(0,0,0,0.4)', padding: '2px 6px' },
-    bg: '#000',
-  },
-  {
-    id: 'tiktok_native',
-    label: 'TikTok',
-    sample: 'native',
-    css: { color: '#fff', fontWeight: 800, textShadow: '0 0 4px #000, 2px 2px 0 #000' },
-    bg: '#111',
-  },
-  {
-    id: 'magenta_pop',
-    label: 'Magenta pop',
-    sample: 'POP',
-    css: { color: '#fff', fontWeight: 900, background: 'rgba(200,0,140,0.8)', padding: '2px 6px', borderRadius: 4 },
-    bg: '#000',
-  },
-  {
-    id: 'cyan_neon',
-    label: 'Cyan neon',
-    sample: 'NEON',
-    css: { color: '#fff', fontWeight: 900, textShadow: '0 0 6px #00ffff, 0 0 12px #00ffff' },
-    bg: '#0a0a18',
-  },
-  {
-    id: 'fire_gradient',
-    label: 'Fire gradient',
-    sample: 'FIRE',
-    css: {
-      background: 'linear-gradient(90deg, #ff2200, #ff8c00, #ffd400)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      fontWeight: 900,
-    },
-    bg: '#000',
-  },
-  {
-    id: 'spotify_green',
-    label: 'Spotify',
-    sample: 'spotify',
-    css: { color: '#1ed760', fontWeight: 800, background: 'rgba(0,0,0,0.7)', padding: '2px 6px', borderRadius: 4 },
-    bg: '#000',
-  },
-  {
-    id: 'shadow_3d',
-    label: '3D shadow',
-    sample: 'BOLD',
-    css: { color: '#ffff00', fontWeight: 900, textShadow: '4px 4px 0 #d65500, 8px 8px 0 rgba(0,0,0,0.6)' },
-    bg: '#111',
-  },
-]
-
-interface HookStyleOption {
-  id: string
-  label: string
-  boxCss: CSSProperties
-  textCss: CSSProperties
+/** One static caption frame at export scale, mid-word like the real animation. */
+function CaptionBox({ styleId, maxWords = CAPTION_MAX_WORDS }: CaptionBoxProps) {
+  const cs = CAPTION_STYLES.find((s) => s.id === styleId) ?? CAPTION_STYLES[0]
+  const words = CAPTION_SAMPLE.slice(0, maxWords)
+  return (
+    <div
+      style={{
+        ...cs.boxCss,
+        ...cs.textCss,
+        maxWidth: CAPTION_RES[0] - 2 * CAPTION_MARGIN_LR,
+        textAlign: 'center',
+        lineHeight: 1.15,
+        // ASS WrapStyle 0 balances lines rather than filling greedily.
+        textWrap: 'balance',
+      }}
+    >
+      {words.map((w, i) => (
+        // Second word stands in for the spoken one — per-word, karaoke and
+        // gradient animations all reduce to "one word lit, rest dim".
+        <span key={w} style={{ color: i === 1 ? cs.highlight : cs.dim }}>
+          {i ? ' ' : ''}{w}
+        </span>
+      ))}
+    </div>
+  )
 }
 
-const HOOK_STYLES: HookStyleOption[] = [
-  {
-    id: 'serif_card',
-    label: 'Serif card',
-    boxCss: {
-      background: 'rgba(255,255,255,0.96)',
-      borderRadius: 14,
-      padding: '8px 14px',
-      boxShadow: '0 10px 24px rgba(0,0,0,0.45)',
-      transform: 'rotate(-1.5deg)',
-    },
-    textCss: { color: '#0f0f0f', fontFamily: 'Georgia, "Times New Roman", serif', fontWeight: 700 },
-  },
-  {
-    id: 'mrbeast_yellow',
-    label: 'MrBeast',
-    boxCss: { padding: '4px 8px' },
-    textCss: {
-      color: '#ffdc00',
-      fontFamily: 'Inter, "Helvetica Neue", system-ui, sans-serif',
-      fontWeight: 900,
-      WebkitTextStroke: '2px #000',
-      textShadow: '3px 3px 0 rgba(0,0,0,0.95)',
-      textTransform: 'uppercase',
-    },
-  },
-  {
-    id: 'sticker_pop',
-    label: 'Sticker pop',
-    boxCss: {
-      background: '#ffde00',
-      borderRadius: 10,
-      padding: '6px 12px',
-      border: '3px solid #000',
-      boxShadow: '6px 8px 0 rgba(0,0,0,0.85)',
-      transform: 'rotate(-4deg)',
-    },
-    textCss: {
-      color: '#000',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 900,
-      textTransform: 'uppercase',
-    },
-  },
-  {
-    id: 'neon_glow',
-    label: 'Neon glow',
-    boxCss: {
-      background: 'rgba(10,10,20,0.92)',
-      borderRadius: 10,
-      padding: '6px 12px',
-    },
-    textCss: {
-      color: '#fff',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 900,
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      textShadow: '0 0 6px #ff00c8, 0 0 12px #ff00c8, 0 0 18px #00dcff',
-    },
-  },
-  {
-    id: 'hot_pink',
-    label: 'Hot pink',
-    boxCss: {
-      background: '#ff1e82',
-      borderRadius: 14,
-      padding: '6px 12px',
-      boxShadow: '6px 8px 0 rgba(0,0,0,0.55)',
-      border: '3px solid #c2006e',
-    },
-    textCss: {
-      color: '#fff',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 900,
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-    },
-  },
-  {
-    id: 'breaking_news',
-    label: 'Breaking news',
-    boxCss: {
-      background: '#d21919',
-      borderRadius: 4,
-      padding: '6px 14px',
-      border: '2px solid #fff',
-      boxShadow: '4px 6px 0 rgba(0,0,0,0.6)',
-    },
-    textCss: {
-      color: '#fff',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 900,
-      textTransform: 'uppercase',
-      letterSpacing: '1px',
-    },
-  },
-  {
-    id: 'headline_anton',
-    label: 'Headline',
-    boxCss: { padding: '4px 8px' },
-    textCss: {
-      color: '#fff',
-      fontFamily: '"Oswald", "Bebas Neue", Impact, system-ui, sans-serif',
-      fontWeight: 900,
-      WebkitTextStroke: '2px #000',
-      textShadow: '3px 3px 0 rgba(0,0,0,0.95)',
-      textTransform: 'uppercase',
-      letterSpacing: '1.5px',
-    },
-  },
-  {
-    id: 'glass_dark',
-    label: 'Glass',
-    boxCss: {
-      background: 'rgba(30,30,35,0.65)',
-      borderRadius: 18,
-      padding: '6px 12px',
-      border: '1px solid rgba(255,255,255,0.25)',
-      boxShadow: '0 8px 22px rgba(0,0,0,0.5)',
-      backdropFilter: 'blur(8px)',
-    },
-    textCss: {
-      color: '#fff',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 800,
-    },
-  },
-  {
-    id: 'sunset_gradient',
-    label: 'Sunset',
-    boxCss: {
-      background: 'linear-gradient(90deg, #ff6e3c, #ff3c96)',
-      borderRadius: 16,
-      padding: '6px 12px',
-      boxShadow: '6px 8px 0 rgba(0,0,0,0.5)',
-    },
-    textCss: {
-      color: '#fff',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 900,
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-    },
-  },
-  {
-    id: 'ocean_gradient',
-    label: 'Ocean',
-    boxCss: {
-      background: 'linear-gradient(90deg, #00c8ff, #7850ff)',
-      borderRadius: 16,
-      padding: '6px 12px',
-      boxShadow: '6px 8px 0 rgba(0,0,0,0.5)',
-    },
-    textCss: {
-      color: '#fff',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 900,
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-    },
-  },
-  {
-    id: 'gold_luxe',
-    label: 'Gold luxe',
-    boxCss: {
-      background: '#0f0f0f',
-      border: '2px solid #d4af37',
-      padding: '6px 14px',
-      boxShadow: '4px 6px 0 rgba(0,0,0,0.6)',
-    },
-    textCss: {
-      color: '#d4af37',
-      fontFamily: 'Georgia, serif',
-      fontWeight: 700,
-      textTransform: 'uppercase',
-      letterSpacing: '2px',
-    },
-  },
-  {
-    id: 'pastel_card',
-    label: 'Pastel',
-    boxCss: {
-      background: '#ffdcec',
-      borderRadius: 18,
-      padding: '6px 14px',
-      boxShadow: '4px 6px 10px rgba(0,0,0,0.3)',
-      transform: 'rotate(1.5deg)',
-    },
-    textCss: {
-      color: '#6e1e50',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 800,
-    },
-  },
-  {
-    id: 'matrix_green',
-    label: 'Matrix',
-    boxCss: {
-      background: '#000',
-      borderRadius: 4,
-      padding: '6px 12px',
-    },
-    textCss: {
-      color: '#00ff5a',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 900,
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      textShadow: '0 0 6px #00ff5a, 0 0 12px #00ff5a',
-    },
-  },
-  {
-    id: 'claymorphism',
-    label: 'Clay',
-    boxCss: {
-      background: '#a7c6ff',
-      borderRadius: 22,
-      padding: '8px 14px',
-      boxShadow: '6px 8px 0 rgba(50,60,120,0.45)',
-    },
-    textCss: {
-      color: '#1c1e3c',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 800,
-    },
-  },
-  {
-    id: 'brutalism_red',
-    label: 'Brutalist',
-    boxCss: {
-      background: '#ff0000',
-      borderRadius: 0,
-      padding: '6px 14px',
-      border: '4px solid #000',
-      boxShadow: '10px 10px 0 #000',
-    },
-    textCss: {
-      color: '#fff',
-      fontFamily: '"Oswald", "Bebas Neue", Impact, system-ui, sans-serif',
-      fontWeight: 900,
-      textTransform: 'uppercase',
-      letterSpacing: '2px',
-    },
-  },
-  {
-    id: 'glitch_rgb',
-    label: 'Glitch',
-    boxCss: {
-      background: '#000',
-      borderRadius: 4,
-      padding: '6px 12px',
-    },
-    textCss: {
-      color: '#fff',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 900,
-      textTransform: 'uppercase',
-      letterSpacing: '1.5px',
-      textShadow: '-2px 0 #ff003c, 2px 0 #00dcff',
-    },
-  },
-  {
-    id: 'memphis_pop',
-    label: 'Memphis',
-    boxCss: {
-      background: '#ff71ce',
-      borderRadius: 14,
-      padding: '6px 12px',
-      border: '3px solid #86ccca',
-      boxShadow: '6px 8px 0 rgba(0,0,0,0.55)',
-      transform: 'rotate(-3deg)',
-    },
-    textCss: {
-      color: '#1c1e3c',
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: 900,
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-    },
-  },
-]
+// Hook geometry lives in export pixels (a 1080-wide 9:16 canvas). The preview
+// renders that same space and scales it down to the modal frame, so a hook wraps
+// and sits exactly where the exported clip will put it.
+function hookDesignSize(aspectRatio: string, tpl: SceneTemplate | null): [number, number] {
+  if (tpl) return tpl.canvas
+  if (aspectRatio === '1:1') return [1080, 1080]
+  if (aspectRatio === '16:9') return [1920, 1080]
+  return [1080, 1920] // 9:16 and square_in_vertical
+}
+
+// PIL has no per-glyph fallback, so the backend swaps the whole font when the
+// hook contains Devanagari. Preview must swap too or it measures the wrong face.
+const DEVANAGARI = /[\u0900-\u097F]/
+
+// Shrinks an export-space hook box down to fit a style-picker chip.
+const SWATCH_SCALE = 0.2
+// Captions render larger than hooks in script space, so they shrink further.
+const CAPTION_SWATCH_SCALE = 0.09
+
+interface HookBoxProps {
+  styleId: string
+  text: string
+  designWidth: number
+  fontScale: number
+}
+
+/** The hook box at export scale — wrap it in a scaling parent to display it. */
+function HookBox({ styleId, text, designWidth, fontScale }: HookBoxProps) {
+  const hs = HOOK_STYLES.find((s) => s.id === styleId) ?? HOOK_STYLES[0]
+  const devanagari = DEVANAGARI.test(text)
+  const fontFamily = devanagari ? "'HookDevanagari'" : hs.textCss.fontFamily
+  return (
+    <div
+      style={{
+        ...hs.boxCss,
+        ...hs.textCss,
+        fontFamily,
+        // The renderer can't track Devanagari without breaking conjuncts, so it
+        // drops letter-spacing for the whole hook. Match, or wrapping diverges.
+        ...(devanagari ? { letterSpacing: 'normal' } : null),
+        fontSize: `${hookFontSize(designWidth, fontScale)}px`,
+        lineHeight: HOOK_LINE_HEIGHT,
+        maxWidth: Math.floor(designWidth * HOOK_BOX_WIDTH_FRAC) + 2 * hs.innerPad,
+        textAlign: 'center',
+        ...(hs.glitch ? { position: 'relative' } : null),
+      }}
+    >
+      {text}
+      {hs.glitch && (
+        <span
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: GLITCH_SCANLINES, borderRadius: 'inherit' }}
+        />
+      )}
+    </div>
+  )
+}
 
 interface FocusModeOption {
   id: 'none' | 'speaker' | 'center' | 'face'
@@ -487,8 +164,16 @@ function PreviewPanel({
   hookYPct,
   sceneTemplate,
 }: PreviewPanelProps) {
-  const cs = CAPTION_STYLES.find((s) => s.id === captionStyle) ?? CAPTION_STYLES[0]
-  const hs = HOOK_STYLES.find((s) => s.id === hookStyle) ?? HOOK_STYLES[0]
+  // Frame width drives the export-space → preview scale factor.
+  const frameRef = useRef<HTMLDivElement>(null)
+  const [frameW, setFrameW] = useState(0)
+  useEffect(() => {
+    const el = frameRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => setFrameW(entry.contentRect.width))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   const aspectClass =
     sceneTemplate ? '' :
     aspectRatio === '1:1' ? 'aspect-square' :
@@ -500,30 +185,36 @@ function PreviewPanel({
     : { border: '1.5px solid rgba(255,255,255,0.1)', boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 20px 48px rgba(0,0,0,0.7)' }
   const showSquareInVertical = aspectRatio === 'square_in_vertical' && !sceneTemplate
 
-  const captionPosClass =
-    captionPosition === 'top' ? 'top-6 justify-start' :
-    captionPosition === 'middle' ? 'top-0 bottom-0 justify-center' :
-    'bottom-10 justify-end'
+  // Caption placement mirrors _generate_ass: bottom keeps the style's own
+  // margin_v, top forces CAPTION_TOP_MARGIN_V, middle centres with margin 0.
+  const captionCs = CAPTION_STYLES.find((s) => s.id === captionStyle) ?? CAPTION_STYLES[0]
+  const captionPosStyle: CSSProperties =
+    captionPosition === 'top' ? { top: `${CAPTION_TOP_MARGIN_V}px` } :
+    captionPosition === 'middle' ? { top: '50%', transform: 'translateY(-50%)' } :
+    { bottom: `${captionCs.marginV}px` }
 
-  // Hook position: slider wins when set, else preset.
-  let hookTopStyle: CSSProperties | undefined
-  let hookPosClass: string
+  // Hook placement mirrors hook_overlay.hook_box_top, in export pixels.
+  const [designW, designH] = hookDesignSize(aspectRatio, sceneTemplate)
+  const squareTop = Math.max(0, Math.floor((designH - designW) / 2))
+  let hookPosStyle: CSSProperties
   if (hookYPct !== null) {
-    hookTopStyle = { top: `${hookYPct}%` }
-    hookPosClass = ''
+    // ponytail: no clamp — the backend keeps the box in frame, the preview just
+    // shows it hanging off. Only reachable at the slider's extremes.
+    hookPosStyle = { top: `${hookYPct}%` }
+  } else if (hookPosition === 'center') {
+    hookPosStyle = { top: '50%', transform: 'translateY(-50%)' }
+  } else if (showSquareInVertical) {
+    hookPosStyle = hookPosition === 'bottom'
+      ? { bottom: `${designH - (squareTop + designW) + 30}px` }
+      : { top: `${squareTop + 30}px` }
   } else {
-    hookTopStyle = undefined
-    hookPosClass =
-      hookPosition === 'top'
-        ? (showSquareInVertical ? 'top-[25%]' : 'top-6')
-        : hookPosition === 'center'
-        ? 'top-1/2 -translate-y-1/2'
-        : (showSquareInVertical ? 'bottom-[25%]' : 'bottom-24')
+    hookPosStyle = { top: hookPosition === 'bottom' ? '70%' : '10%' }
   }
 
   return (
     <div className="shrink-0 w-full lg:w-64 flex flex-col items-center">
       <div
+        ref={frameRef}
         className={`relative w-full sm:w-64 ${aspectClass} max-h-[62vh] rounded-2xl overflow-hidden`}
         style={frameStyle}
       >
@@ -581,22 +272,42 @@ function PreviewPanel({
           </>
         )}
 
-        {/* Hook overlay */}
-        {hookText.trim() && (
+        {/* Hook overlay — laid out at export resolution, then scaled to the
+            frame, so wrapping and placement match the rendered clip exactly. */}
+        {hookText.trim() && frameW > 0 && (
           <div
-            className={`absolute left-0 right-0 px-4 flex justify-center pointer-events-none ${hookPosClass}`}
-            style={hookTopStyle}
+            className="absolute top-0 left-0 origin-top-left pointer-events-none"
+            style={{
+              width: designW,
+              height: designH,
+              transform: `scale(${frameW / designW})`,
+            }}
           >
-            <div className="text-center" style={{ ...hs.boxCss, ...hs.textCss, fontSize: `${10 * hookFontScale}px`, lineHeight: 1.25, maxWidth: '90%' }}>
-              {hookText}
+            <div className="absolute left-0 right-0 flex justify-center" style={hookPosStyle}>
+              <HookBox
+                styleId={hookStyle}
+                text={hookText}
+                designWidth={designW}
+                fontScale={hookFontScale}
+              />
             </div>
           </div>
         )}
 
-        {/* Caption sample */}
-        {includeCaptions && (
-          <div className={`absolute left-0 right-0 px-3 flex flex-col items-center pointer-events-none ${captionPosClass}`}>
-            <span style={cs.css} className="text-xs whitespace-nowrap">{cs.sample}</span>
+        {/* Caption sample — same scaled ASS-space layer as the hook, so font
+            size, margin and box style read exactly as libass will render them. */}
+        {includeCaptions && frameW > 0 && (
+          <div
+            className="absolute top-0 left-0 origin-top-left pointer-events-none"
+            style={{
+              width: CAPTION_RES[0],
+              height: CAPTION_RES[1],
+              transform: `scale(${frameW / CAPTION_RES[0]})`,
+            }}
+          >
+            <div className="absolute left-0 right-0 flex justify-center" style={captionPosStyle}>
+              <CaptionBox styleId={captionStyle} />
+            </div>
           </div>
         )}
 
@@ -1099,8 +810,13 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                         : 'border-forge-border hover:border-gray-500'
                     }`}
                   >
-                    <div className="h-8 flex items-center justify-center" style={{ background: cs.bg }}>
-                      <span style={cs.css} className="text-[11px] whitespace-nowrap leading-none">{cs.sample}</span>
+                    <div className="relative h-8 overflow-hidden bg-zinc-900">
+                      <div
+                        className="absolute left-1/2 top-1/2"
+                        style={{ transform: `translate(-50%, -50%) scale(${CAPTION_SWATCH_SCALE})` }}
+                      >
+                        <CaptionBox styleId={cs.id} maxWords={2} />
+                      </div>
                     </div>
                     <div className="text-[9px] text-gray-200 py-0.5 px-1 truncate bg-forge-card">{cs.label}</div>
                   </button>
@@ -1220,8 +936,14 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                             : 'border-forge-border hover:border-gray-500'
                         }`}
                       >
-                        <div className="h-8 flex items-center justify-center bg-zinc-900">
-                          <span style={{ ...hs.boxCss, ...hs.textCss, fontSize: '9px', padding: '4px 8px' }}>HOOK</span>
+                        <div className="relative h-8 overflow-hidden bg-zinc-900">
+                          {/* Same export-space box as the preview, shrunk to chip size. */}
+                          <div
+                            className="absolute left-1/2 top-1/2"
+                            style={{ transform: `translate(-50%, -50%) scale(${SWATCH_SCALE})` }}
+                          >
+                            <HookBox styleId={hs.id} text="HOOK" designWidth={1080} fontScale={1} />
+                          </div>
                         </div>
                         <div className="text-[9px] text-gray-200 py-0.5 px-1 truncate bg-forge-card">{hs.label}</div>
                       </button>

@@ -2,6 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Hook preview fonts ────────────────────────────────────────
+   Subset woff2 builds of the .ttf files the backend renders hook PNGs with.
+   Preview must use the identical faces or line breaks in the modal won't match
+   the exported clip — subsetting drops glyphs but never changes metrics.
+   Regenerate with clip_smart_ai_backend/scripts/build_preview_fonts.sh.
+   `font-weight: 100 900` on a single-weight face stops the browser from
+   synthesising a fake bold, which would widen glyphs and shift wrapping. */
+@font-face {
+  font-family: 'HookInter';
+  src: url('/fonts/Inter-Black.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HookAnton';
+  src: url('/fonts/Anton-Regular.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HookSerif';
+  src: url('/fonts/NotoSerif-Bold.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HookDevanagari';
+  src: url('/fonts/NotoSansDevanagari.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+/* Caption preview. libass renders captions in Noto Sans (or a per-language Noto
+   face — see editor.py _pick_font); Noto Sans Devanagari carries Noto Sans's
+   Latin glyphs, so this reuses the file above rather than shipping a second one.
+   Exact for Hindi, which is the most common job language. */
+@font-face {
+  font-family: 'CaptionNoto';
+  src: url('/fonts/NotoSansDevanagari.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 /* ── Dark theme (default) ──────────────────────────────────── */
 :root {
   --c-bg:            9 9 11;
