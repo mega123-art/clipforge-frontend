@@ -1,17 +1,7 @@
-import { useEffect, useState } from 'react'
 import { Coins, Plus } from 'lucide-react'
 import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
 import useStore from '../store'
-import api from '../api'
-
-interface CreditBreakdown {
-  subscription_credits: number
-  subscription_tier: string | null
-  subscription_status: string | null
-  topup_credits: number
-  total: number
-  next_billing_date: string | null
-}
+import { useCreditBreakdown } from '../hooks/useCreditBreakdown'
 
 interface CreditsBadgeProps {
   /** Called after a successful top-up payment (e.g. to refetch a job). */
@@ -21,15 +11,10 @@ interface CreditsBadgeProps {
 // Credits pill doubles as the top-up entry point — one control instead of two.
 export default function CreditsBadge({ onTopupSuccess }: CreditsBadgeProps) {
   const user = useStore((s) => s.user)
-  const [breakdown, setBreakdown] = useState<CreditBreakdown | null>(null)
   const { openTopup } = useSubscriptionModal((s) => ({ openTopup: s.openTopup }))
-
-  useEffect(() => {
-    if (!user) return
-    api.get('/api/subscriptions/breakdown')
-      .then((res) => setBreakdown(res.data))
-      .catch(() => {})
-  }, [user])
+  // Shared query key with PlanButton — both sit in the nav and used to fire
+  // their own request on every mount, so a page load hit this endpoint ~6 times.
+  const { data: breakdown } = useCreditBreakdown()
 
   if (!user) return null
 

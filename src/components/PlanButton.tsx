@@ -1,32 +1,13 @@
 import { Crown } from 'lucide-react'
 import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
 import useStore from '../store'
-import { useEffect, useState } from 'react'
-import api from '../api'
-
-interface SubscriptionInfo {
-  subscription_status: string | null
-  subscription_tier: string | null
-}
+import { useCreditBreakdown } from '../hooks/useCreditBreakdown'
 
 // Unsubscribed: the single solid-accent CTA in the nav. Subscribed: quiet ghost pill.
 export default function PlanButton() {
   const user = useStore((s) => s.user)
   const { openSubscription } = useSubscriptionModal()
-  const [subInfo, setSubInfo] = useState<SubscriptionInfo | null>(null)
-
-  useEffect(() => {
-    if (!user) return
-    api.get('/api/subscriptions/breakdown').catch(() => {})
-      .then((res) => {
-        if (res?.data) {
-          setSubInfo({
-            subscription_status: res.data.subscription_status,
-            subscription_tier: res.data.subscription_tier,
-          })
-        }
-      })
-  }, [user])
+  const { data: subInfo } = useCreditBreakdown()
 
   if (!user) return null
 
