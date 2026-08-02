@@ -435,16 +435,19 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
       return
     }
     let cancelled = false
+    const cacheBust = `_t=${Date.now()}`
     api.get<{ stream_url: string }>(`/api/clips/${clipId}/stream-url`)
       .then(({ data }) => {
         if (!cancelled) {
-          setExportedVideoUrl(`${API_BASE}${data.stream_url}`)
+          const sep = data.stream_url.includes('?') ? '&' : '?'
+          setExportedVideoUrl(`${API_BASE}${data.stream_url}${sep}${cacheBust}`)
           setActiveTab('preview')
         }
       })
       .catch(() => {
         if (!cancelled) {
-          setExportedVideoUrl(`${API_BASE}${downloadUrl}`)
+          const sep = downloadUrl.includes('?') ? '&' : '?'
+          setExportedVideoUrl(`${API_BASE}${downloadUrl}${sep}${cacheBust}`)
           setActiveTab('preview')
         }
       })
