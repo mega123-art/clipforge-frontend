@@ -26,6 +26,8 @@ export interface CaptionStyleOption {
   highlight: string
   /** Colour of the not-yet-spoken words. */
   dim: string
+  /** Per-word color palette for gradient styles. */
+  palette?: string[]
 }
 
 export const CAPTION_STYLES: CaptionStyleOption[] = [
@@ -99,7 +101,7 @@ export const CAPTION_STYLES: CaptionStyleOption[] = [
       "textShadow": "3px 3px 0 rgba(0, 0, 0, 0.498)"
     },
     "highlight": "rgba(255, 165, 0, 1.0)",
-    "dim": "rgba(255, 255, 0, 1.0)"
+    "dim": "rgba(255, 255, 0, 0.498)"
   },
   {
     "id": "bubble",
@@ -153,7 +155,14 @@ export const CAPTION_STYLES: CaptionStyleOption[] = [
       "textShadow": "2px 2px 0 rgba(0, 0, 0, 1.0)"
     },
     "highlight": "rgba(255, 255, 0, 1.0)",
-    "dim": "rgba(255, 255, 255, 0.498)"
+    "dim": "rgba(255, 255, 255, 0.498)",
+    "palette": [
+      "rgba(255, 0, 0, 1.0)",
+      "rgba(255, 128, 0, 1.0)",
+      "rgba(255, 255, 0, 1.0)",
+      "rgba(128, 255, 0, 1.0)",
+      "rgba(0, 255, 255, 1.0)"
+    ]
   },
   {
     "id": "subtitle_clean",
@@ -259,7 +268,14 @@ export const CAPTION_STYLES: CaptionStyleOption[] = [
       "textShadow": "2px 2px 0 rgba(0, 0, 0, 1.0)"
     },
     "highlight": "rgba(255, 165, 0, 1.0)",
-    "dim": "rgba(255, 255, 255, 0.498)"
+    "dim": "rgba(255, 255, 255, 0.498)",
+    "palette": [
+      "rgba(255, 0, 0, 1.0)",
+      "rgba(255, 64, 0, 1.0)",
+      "rgba(255, 128, 0, 1.0)",
+      "rgba(255, 160, 0, 1.0)",
+      "rgba(255, 255, 0, 1.0)"
+    ]
   },
   {
     "id": "spotify_green",
@@ -293,6 +309,6 @@ export const CAPTION_STYLES: CaptionStyleOption[] = [
       "textShadow": "8px 8px 0 rgba(214, 85, 0, 1.0)"
     },
     "highlight": "rgba(255, 165, 0, 1.0)",
-    "dim": "rgba(255, 255, 0, 1.0)"
+    "dim": "rgba(255, 255, 0, 0.498)"
   },
 ]

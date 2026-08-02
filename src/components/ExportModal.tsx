@@ -55,13 +55,15 @@ function CaptionBox({ styleId, maxWords = CAPTION_MAX_WORDS }: CaptionBoxProps) 
         textWrap: 'balance',
       }}
     >
-      {words.map((w, i) => (
-        // Second word stands in for the spoken one — per-word, karaoke and
-        // gradient animations all reduce to "one word lit, rest dim".
-        <span key={w} style={{ color: i === 1 ? cs.highlight : cs.dim }}>
-          {i ? ' ' : ''}{w}
-        </span>
-      ))}
+      {words.map((w, i) => {
+        const wordColor = cs.palette ? cs.palette[i % cs.palette.length] : (i === 1 ? cs.highlight : cs.textCss.color)
+        const finalColor = i > 1 ? cs.dim : wordColor
+        return (
+          <span key={w} style={{ color: finalColor }}>
+            {i ? ' ' : ''}{w}
+          </span>
+        )
+      })}
     </div>
   )
 }
