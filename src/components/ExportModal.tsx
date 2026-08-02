@@ -544,7 +544,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           continue // transient; keep polling
         }
         if (poll?.status === 'exported') {
-          setDownloadUrl(data.download_url || `/api/clips/${targetId}/download`)
+          setDownloadUrl(poll.download_url || `/api/clips/${targetId}/download`)
           return
         }
         if (poll?.status === 'failed') {
@@ -565,41 +565,39 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     if (!downloadUrl) return
     setDownloading(true)
     setError(null)
-    // Open blank window synchronously while user gesture is active.
-    // After the await the gesture context is gone — popup blockers would
-    // kill a.click()/_blank. We redirect this pre-approved window instead.
-    const win = window.open('', '_blank')
     try {
       const resp = await api.get(downloadUrl, { responseType: 'arraybuffer' })
       const contentType = (String(resp.headers['content-type'] || '')).toLowerCase()
 
+      let finalBlobUrl = ''
       if (contentType.includes('application/json')) {
         const text = new TextDecoder().decode(resp.data as ArrayBuffer)
         const parsed = JSON.parse(text) as { url?: string }
         if (!parsed.url) throw new Error('No download URL returned')
-        if (win) {
-          win.location.href = parsed.url
-        } else {
-          window.location.href = parsed.url
-        }
-        return
+
+        const videoResp = await fetch(parsed.url)
+        const blob = await videoResp.blob()
+        finalBlobUrl = URL.createObjectURL(blob)
+      } else {
+        const blob = new Blob([resp.data as ArrayBuffer], { type: 'video/mp4' })
+        finalBlobUrl = URL.createObjectURL(blob)
       }
 
-      // Local streaming fallback — blob download in same tab
-      if (win) win.close()
-      const blob = new Blob([resp.data as ArrayBuffer], { type: 'video/mp4' })
-      const blobUrl = URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = blobUrl
+      a.href = finalBlobUrl
       a.download = `clip_${clipId}.mp4`
       document.body.appendChild(a)
       a.click()
       a.remove()
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 30000)
+      setTimeout(() => URL.revokeObjectURL(finalBlobUrl), 30000)
     } catch (err) {
-      if (win) win.close()
-      const ax = err as AxiosError<{ detail?: string }>
-      setError(ax.response?.data?.detail || ax.message || 'Download failed.')
+      const a = document.createElement('a')
+      const targetUrl = downloadUrl.startsWith('http') ? downloadUrl : `${API_BASE}${downloadUrl}`
+      a.href = targetUrl
+      a.download = `clip_${clipId}.mp4`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
     } finally {
       setDownloading(false)
     }

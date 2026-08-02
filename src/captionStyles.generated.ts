@@ -52,20 +52,20 @@ export const CAPTION_STYLES: CaptionStyleOption[] = [
   {
     "id": "karaoke_pop",
     "label": "Karaoke pop",
-    "fontSize": 90,
+    "fontSize": 95,
     "marginV": 200,
     "boxCss": {},
     "textCss": {
       "color": "rgba(255, 255, 255, 1.0)",
       "fontFamily": "'CaptionNoto'",
       "fontWeight": 700,
-      "fontSize": "90px",
-      "WebkitTextStroke": "8px rgba(0, 0, 0, 1.0)",
+      "fontSize": "95px",
+      "WebkitTextStroke": "10px rgba(0, 0, 0, 1.0)",
       "paintOrder": "stroke fill",
-      "textShadow": "1px 1px 0 rgba(0, 0, 0, 1.0)"
+      "textShadow": "2px 2px 0 rgba(0, 0, 0, 1.0)"
     },
     "highlight": "rgba(255, 255, 0, 1.0)",
-    "dim": "rgba(255, 255, 255, 1.0)"
+    "dim": "rgba(255, 255, 255, 0.498)"
   },
   {
     "id": "neon_glow",
