@@ -152,6 +152,7 @@ interface PreviewPanelProps {
   hookStyle: string
   hookYPct: number | null
   sceneTemplate: SceneTemplate | null
+  exportedVideoUrl?: string | null
 }
 
 function PreviewPanel({
@@ -165,6 +166,7 @@ function PreviewPanel({
   hookStyle,
   hookYPct,
   sceneTemplate,
+  exportedVideoUrl,
 }: PreviewPanelProps) {
   // Frame width drives the export-space → preview scale factor.
   const frameRef = useRef<HTMLDivElement>(null)
@@ -186,6 +188,30 @@ function PreviewPanel({
         border: '1.5px solid rgba(255,255,255,0.1)', boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 20px 48px rgba(0,0,0,0.7)' }
     : { border: '1.5px solid rgba(255,255,255,0.1)', boxShadow: '0 0 0 1px rgba(0,0,0,0.5), 0 20px 48px rgba(0,0,0,0.7)' }
   const showSquareInVertical = aspectRatio === 'square_in_vertical' && !sceneTemplate
+
+  if (exportedVideoUrl) {
+    return (
+      <div className="shrink-0 w-full lg:w-64 flex flex-col items-center">
+        <div
+          className={`relative w-full sm:w-64 ${aspectClass} max-h-[62vh] rounded-2xl overflow-hidden bg-black border-2 border-emerald-500/50 shadow-2xl flex items-center justify-center`}
+          style={frameStyle}
+        >
+          <video
+            src={exportedVideoUrl}
+            controls
+            autoPlay
+            loop
+            playsInline
+            className="w-full h-full object-contain rounded-2xl"
+          />
+        </div>
+        <p className="mt-2 text-[9px] uppercase tracking-widest text-emerald-400 font-bold flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          Exported Video Preview
+        </p>
+      </div>
+    )
+  }
 
   // Caption placement mirrors _generate_ass: bottom keeps the style's own
   // margin_v, top forces CAPTION_TOP_MARGIN_V, middle centres with margin 0.
@@ -400,6 +426,30 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
+  const [exportedVideoUrl, setExportedVideoUrl] = useState<string | null>(null)
+
+  // Fetch authenticated stream URL when export completes
+  useEffect(() => {
+    if (!downloadUrl || !clipId) {
+      setExportedVideoUrl(null)
+      return
+    }
+    let cancelled = false
+    api.get<{ stream_url: string }>(`/api/clips/${clipId}/stream-url`)
+      .then(({ data }) => {
+        if (!cancelled) {
+          setExportedVideoUrl(`${API_BASE}${data.stream_url}`)
+          setActiveTab('preview')
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setExportedVideoUrl(`${API_BASE}${downloadUrl}`)
+          setActiveTab('preview')
+        }
+      })
+    return () => { cancelled = true }
+  }, [downloadUrl, clipId])
 
   // Reset per-clip state when navigating between clips.
   useEffect(() => {
@@ -635,6 +685,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               hookStyle={hookStyle}
               hookYPct={hookYPct}
               sceneTemplate={sceneTemplates.find((t) => t.id === sceneTemplateId) ?? null}
+              exportedVideoUrl={exportedVideoUrl}
             />
           </div>
 
