@@ -489,6 +489,9 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     if (!clipId) return
     setLoading(true)
     setError(null)
+    // Force null->url transition even if new export reuses same static
+    // download URL, else React bails on equal state and stale preview sticks.
+    setDownloadUrl(null)
     const targetId = clipId
     try {
       // Backend now dispatches asynchronously and returns 202 immediately
