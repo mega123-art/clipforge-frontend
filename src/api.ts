@@ -1,7 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from 'axios'
 
-// Trailing slash must be stripped: axios normalizes `host/` + `/api/x`, but the
-// raw `${API_BASE_URL}${path}` concats (video/stream/overlay src) would emit
+// Trailing slash must be stripped: axios normalizes `host/` + `/api/x`, but the // raw `${API_BASE_URL}${path}` concats (video/stream/overlay src) would emit
 // `host//api/x`, which FastAPI 404s.
 export const API_BASE_URL = (import.meta.env.VITE_APP_API_URL || 'http://localhost:8000').replace(/\/+$/, '')
 
