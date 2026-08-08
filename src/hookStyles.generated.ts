@@ -21,6 +21,8 @@ export interface HookStyleOption {
   textCss: CSSProperties
   /** Renderer applies a seeded slice/noise distort — preview approximates it. */
   glitch?: boolean
+  /** Per-style font size multiplier, applied on top of the user's font_scale. */
+  sizeMult?: number
 }
 
 /** Scanlines: 1px darkening every 4px, matching _apply_glitch_effect step 4. */
@@ -330,6 +332,86 @@ export const HOOK_STYLES: HookStyleOption[] = [
     "glitch": true
   },
   {
+    "id": "impact_glow_white",
+    "label": "Impact glow (white)",
+    "innerPad": 17,
+    "boxCss": {
+      "boxSizing": "border-box",
+      "padding": "31px 37px",
+      "borderRadius": "0px"
+    },
+    "textCss": {
+      "color": "rgba(255, 255, 255, 1.0)",
+      "fontFamily": "'HookAnton'",
+      "fontWeight": 400,
+      "textTransform": "uppercase",
+      "letterSpacing": "1px",
+      "WebkitTextStroke": "6px rgba(0, 0, 0, 1.0)",
+      "paintOrder": "stroke fill",
+      "textShadow": "0 0 28px rgba(255, 255, 255, 0.431), 0 0 14px rgba(255, 255, 255, 0.706)"
+    }
+  },
+  {
+    "id": "impact_glow_red",
+    "label": "Impact glow (red)",
+    "innerPad": 17,
+    "boxCss": {
+      "boxSizing": "border-box",
+      "padding": "31px 37px",
+      "borderRadius": "0px"
+    },
+    "textCss": {
+      "color": "rgba(255, 40, 40, 1.0)",
+      "fontFamily": "'HookAnton'",
+      "fontWeight": 400,
+      "textTransform": "uppercase",
+      "letterSpacing": "1px",
+      "WebkitTextStroke": "6px rgba(40, 0, 0, 1.0)",
+      "paintOrder": "stroke fill",
+      "textShadow": "0 0 28px rgba(255, 60, 0, 0.549), 0 0 14px rgba(255, 0, 0, 0.824)"
+    }
+  },
+  {
+    "id": "premium_glow_white",
+    "label": "Premium glow (white)",
+    "innerPad": 14,
+    "boxCss": {
+      "boxSizing": "border-box",
+      "padding": "28px 34px",
+      "borderRadius": "0px"
+    },
+    "textCss": {
+      "color": "rgba(255, 255, 255, 1.0)",
+      "fontFamily": "'HookSerif'",
+      "fontWeight": 400,
+      "textTransform": "uppercase",
+      "WebkitTextStroke": "4px rgba(0, 0, 0, 1.0)",
+      "paintOrder": "stroke fill",
+      "textShadow": "0 0 24px rgba(255, 255, 255, 0.392), 0 0 12px rgba(255, 255, 255, 0.667)"
+    },
+    "sizeMult": 1.35
+  },
+  {
+    "id": "premium_glow_red",
+    "label": "Premium glow (red)",
+    "innerPad": 14,
+    "boxCss": {
+      "boxSizing": "border-box",
+      "padding": "28px 34px",
+      "borderRadius": "0px"
+    },
+    "textCss": {
+      "color": "rgba(255, 50, 50, 1.0)",
+      "fontFamily": "'HookSerif'",
+      "fontWeight": 400,
+      "textTransform": "uppercase",
+      "WebkitTextStroke": "4px rgba(40, 0, 0, 1.0)",
+      "paintOrder": "stroke fill",
+      "textShadow": "0 0 24px rgba(255, 60, 0, 0.51), 0 0 12px rgba(255, 0, 0, 0.784)"
+    },
+    "sizeMult": 1.35
+  },
+  {
     "id": "memphis_pop",
     "label": "Memphis",
     "innerPad": 0,
@@ -355,7 +437,7 @@ export const HOOK_STYLES: HookStyleOption[] = [
  * Font size the backend will use, in export px.
  * Mirrors create_hook_image: int(int(w * BOX_FRAC) * FONT_FRAC) * scale.
  */
-export function hookFontSize(designWidth: number, fontScale: number): number {
+export function hookFontSize(designWidth: number, fontScale: number, sizeMult = 1): number {
   const base = Math.floor(Math.floor(designWidth * HOOK_BOX_WIDTH_FRAC) * HOOK_FONT_WIDTH_FRAC)
-  return Math.max(14, Math.floor(base * fontScale))
+  return Math.max(14, Math.floor(base * fontScale * sizeMult))
 }

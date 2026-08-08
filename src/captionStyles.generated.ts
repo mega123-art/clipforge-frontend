@@ -296,6 +296,23 @@ export const CAPTION_STYLES: CaptionStyleOption[] = [
     "dim": "rgba(255, 255, 255, 0.498)"
   },
   {
+    "id": "glow_fade_red",
+    "label": "Glow fade (red accent)",
+    "fontSize": 88,
+    "marginV": 200,
+    "boxCss": {},
+    "textCss": {
+      "color": "rgba(255, 255, 255, 1.0)",
+      "fontFamily": "'CaptionNoto'",
+      "fontWeight": 400,
+      "fontSize": "88px",
+      "WebkitTextStroke": "2px rgba(0, 0, 0, 1.0)",
+      "paintOrder": "stroke fill"
+    },
+    "highlight": "rgba(255, 255, 255, 1.0)",
+    "dim": "rgba(255, 255, 255, 1.0)"
+  },
+  {
     "id": "shadow_3d",
     "label": "3D shadow",
     "fontSize": 96,

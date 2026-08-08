@@ -108,7 +108,7 @@ function HookBox({ styleId, text, designWidth, fontScale }: HookBoxProps) {
         // The renderer can't track Devanagari without breaking conjuncts, so it
         // drops letter-spacing for the whole hook. Match, or wrapping diverges.
         ...(devanagari ? { letterSpacing: 'normal' } : null),
-        fontSize: `${hookFontSize(designWidth, fontScale)}px`,
+        fontSize: `${hookFontSize(designWidth, fontScale, hs.sizeMult)}px`,
         lineHeight: HOOK_LINE_HEIGHT,
         maxWidth: Math.floor(designWidth * HOOK_BOX_WIDTH_FRAC) + 2 * hs.innerPad,
         textAlign: 'center',
@@ -375,6 +375,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [captionStyle, setCaptionStyle] = useState<string>('word_highlight')
   const [captionPosition, setCaptionPosition] = useState<'top' | 'middle' | 'bottom'>('bottom')
   const [includeCaptions, setIncludeCaptions] = useState(true)
+  const [glowEffect, setGlowEffect] = useState(false)
   const [focusMode, setFocusMode] = useState<'none' | 'speaker' | 'center' | 'face'>('center')
   const [hookText, setHookText] = useState<string>('')
   const [hookPosition, setHookPosition] = useState<'top' | 'center' | 'bottom'>('top')
@@ -466,7 +467,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   useEffect(() => {
     setDownloadUrl(null)
     setError(null)
-  }, [aspectRatio, captionStyle, captionPosition, includeCaptions, focusMode,
+  }, [aspectRatio, captionStyle, captionPosition, includeCaptions, glowEffect, focusMode,
       hookText, hookPosition, hookFontScale, hookStyle, hookYPct,
       musicEnabled, musicTrackId, musicVolume, musicFadeIn, musicFadeOut, musicTrimStart, musicTrimEnd,
       sceneTemplateId])
@@ -524,6 +525,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           music_trim_start: musicTrimStart,
           music_trim_end: musicTrimEnd,
           scene_template_id: sceneTemplateId,
+          glow_effect: glowEffect,
         },
       )
       if (targetId !== clipId) return
@@ -832,6 +834,48 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                   position: 'absolute',
                   top: 2,
                   left: includeCaptions ? 22 : 2,
+                  width: 16,
+                  height: 16,
+                  borderRadius: 9999,
+                  background: '#fff',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                  transition: 'left 200ms',
+                  pointerEvents: 'none',
+                }}
+              />
+            </button>
+          </div>
+
+          {/* Glow effect toggle */}
+          <div className="flex items-center justify-between">
+            <label htmlFor="glow-toggle" className="text-sm text-gray-300 cursor-pointer">Glow effect (whole video)</label>
+            <button
+              id="glow-toggle"
+              type="button"
+              role="switch"
+              aria-checked={glowEffect}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setGlowEffect((v) => !v)
+              }}
+              style={{
+                width: 40,
+                height: 20,
+                borderRadius: 9999,
+                position: 'relative',
+                cursor: 'pointer',
+                transition: 'background-color 200ms',
+                backgroundColor: glowEffect ? '#7c3aed' : '#3f3f46',
+                border: 'none',
+                padding: 0,
+              }}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 2,
+                  left: glowEffect ? 22 : 2,
                   width: 16,
                   height: 16,
                   borderRadius: 9999,
