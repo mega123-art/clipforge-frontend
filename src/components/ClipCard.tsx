@@ -1,6 +1,6 @@
 import { useState, useEffect, MouseEvent } from 'react'
 import ReactPlayer from 'react-player'
-import api from '../api'
+import api, { API_BASE_URL as API_BASE } from '../api'
 import {
   Check, Scissors, Download, ChevronDown, ChevronUp,
   Flame, Zap, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen, AlertTriangle,
@@ -87,7 +87,6 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
   const typeClass = CLIP_TYPE_COLOR[clip.clip_type] || 'text-violet-500 bg-forge-accent/10 border-forge-accent/20'
   const TypeIcon: LucideIcon = CLIP_TYPE_ICON[clip.clip_type] || Zap
 
-  const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000'
 
   // Fetch expiry info for free clips
   useEffect(() => {

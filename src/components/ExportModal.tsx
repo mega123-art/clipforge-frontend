@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, CSSProperties } from 'react'
-import api from '../api'
+import api, { API_BASE_URL as API_BASE } from '../api'
 import { X, Download, Loader, Info, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import type { AxiosError } from 'axios'
 import type { ExportResponse } from '../types/api'
@@ -11,7 +11,6 @@ import {
   CAPTION_TOP_MARGIN_V,
 } from '../captionStyles.generated'
 
-const API_BASE = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000'
 
 interface SceneTemplate {
   id: string
@@ -376,6 +375,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [captionPosition, setCaptionPosition] = useState<'top' | 'middle' | 'bottom'>('bottom')
   const [includeCaptions, setIncludeCaptions] = useState(true)
   const [glowEffect, setGlowEffect] = useState(false)
+  const [retroEffect, setRetroEffect] = useState(false)
   const [focusMode, setFocusMode] = useState<'none' | 'speaker' | 'center' | 'face'>('center')
   const [hookText, setHookText] = useState<string>('')
   const [hookPosition, setHookPosition] = useState<'top' | 'center' | 'bottom'>('top')
@@ -467,7 +467,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   useEffect(() => {
     setDownloadUrl(null)
     setError(null)
-  }, [aspectRatio, captionStyle, captionPosition, includeCaptions, glowEffect, focusMode,
+  }, [aspectRatio, captionStyle, captionPosition, includeCaptions, glowEffect, retroEffect, focusMode,
       hookText, hookPosition, hookFontScale, hookStyle, hookYPct,
       musicEnabled, musicTrackId, musicVolume, musicFadeIn, musicFadeOut, musicTrimStart, musicTrimEnd,
       sceneTemplateId])
@@ -526,6 +526,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           music_trim_end: musicTrimEnd,
           scene_template_id: sceneTemplateId,
           glow_effect: glowEffect,
+          retro_effect: retroEffect,
         },
       )
       if (targetId !== clipId) return
@@ -876,6 +877,48 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                   position: 'absolute',
                   top: 2,
                   left: glowEffect ? 22 : 2,
+                  width: 16,
+                  height: 16,
+                  borderRadius: 9999,
+                  background: '#fff',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                  transition: 'left 200ms',
+                  pointerEvents: 'none',
+                }}
+              />
+            </button>
+          </div>
+
+          {/* Retro/VHS effect toggle */}
+          <div className="flex items-center justify-between">
+            <label htmlFor="retro-toggle" className="text-sm text-gray-300 cursor-pointer">Retro/VHS effect (whole video)</label>
+            <button
+              id="retro-toggle"
+              type="button"
+              role="switch"
+              aria-checked={retroEffect}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setRetroEffect((v) => !v)
+              }}
+              style={{
+                width: 40,
+                height: 20,
+                borderRadius: 9999,
+                position: 'relative',
+                cursor: 'pointer',
+                transition: 'background-color 200ms',
+                backgroundColor: retroEffect ? '#7c3aed' : '#3f3f46',
+                border: 'none',
+                padding: 0,
+              }}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 2,
+                  left: retroEffect ? 22 : 2,
                   width: 16,
                   height: 16,
                   borderRadius: 9999,
