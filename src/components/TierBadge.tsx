@@ -8,6 +8,12 @@ interface TierBadgeProps {
 }
 
 const TIER_CONFIG: Record<string, { icon: LucideIcon; color: string; bg: string; border: string }> = {
+  'Trial': {
+    icon: Zap,
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500/10',
+    border: 'border-emerald-500/30',
+  },
   'Starter': {
     icon: Zap,
     color: 'text-blue-400',

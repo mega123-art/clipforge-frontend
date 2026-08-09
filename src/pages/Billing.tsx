@@ -280,7 +280,7 @@ export default function BillingPage() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
               {tiers
-                .filter((t) => t.id > subscription.tier_id) // Only show higher tiers
+                .filter((t) => t.price_paise > subscription.price_paise) // Only show higher tiers
                 .map((tier) => (
                   <button
                     key={tier.id}
