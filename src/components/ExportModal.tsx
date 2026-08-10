@@ -515,7 +515,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           caption_position: captionPosition,
           include_captions: includeCaptions,
           focus_mode: effectiveFocusMode,
-          crop_rects: effectiveFocusMode === 'manual' ? (frameValue?.rects ?? null) : null,
+          frame_segments: effectiveFocusMode === 'manual' ? (frameValue?.segments ?? null) : null,
           output_format: 'mp4',
           hook_text: hookText.trim() || null,
           hook_position: hookPosition,

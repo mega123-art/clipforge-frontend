@@ -74,20 +74,6 @@ export function useRazorpay() {
         theme: {
           color: '#3b82f6',
         },
-        config: {
-          display: {
-            blocks: {
-              upi: {
-                name: 'Pay via UPI',
-                instruments: [
-                  { method: 'upi', flows: ['collect', 'intent', 'qr'] },
-                ],
-              },
-            },
-            sequence: ['block.upi'],
-            preferences: { show_default_blocks: true },
-          },
-        },
       }
 
       if (options.subscription_id) {
