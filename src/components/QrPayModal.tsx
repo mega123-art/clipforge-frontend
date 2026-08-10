@@ -82,7 +82,9 @@ export default function QrPayModal({
             <img
               src={qrImage}
               alt="Scan to pay via UPI"
-              className="w-full max-w-[340px] aspect-square rounded-xl bg-white p-4"
+              // h-auto, not aspect-square: Razorpay's QR image isn't square (it carries
+              // branding below the code), and a forced box stretches it via object-fit: fill.
+              className="w-full max-w-[340px] h-auto object-contain rounded-xl bg-white p-4"
             />
             <div className="text-3xl font-bold mt-6">₹{amount.toLocaleString('en-IN')}</div>
             <p className="text-sm text-forge-text-muted mt-2 text-center">
