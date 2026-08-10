@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { X, Zap, QrCode } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Zap } from 'lucide-react'
 import api from '../api'
 import { useRazorpay } from '../hooks/useRazorpay'
 
@@ -17,15 +17,6 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
   const [minAmount, setMinAmount] = useState(100)
   const [maxAmount, setMaxAmount] = useState(99999)
   const { openCheckout, loading: paying, error: razorpayError, setError: setRazorpayError } = useRazorpay()
-  const [qrImage, setQrImage] = useState<string | null>(null)
-  const [qrLoading, setQrLoading] = useState(false)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current)
-    }
-  }, [])
 
   // Fetch topup config from backend
   useEffect(() => {
@@ -92,49 +83,6 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Top-up failed')
     }
-  }
-
-  const handleShowQr = async () => {
-    if (displayAmount < minAmount) {
-      setError(`Minimum top-up amount is ₹${minAmount}`)
-      return
-    }
-    if (displayAmount > maxAmount) {
-      setError(`Maximum top-up amount is ₹${maxAmount}`)
-      return
-    }
-
-    setError(null)
-    setQrLoading(true)
-    try {
-      const amountPaise = Math.round(displayAmount * 100)
-      const res = await api.post('/api/payments/topup/qr', { amount_paise: amountPaise })
-      const { qr_code_id, image_url } = res.data
-      setQrImage(image_url)
-
-      pollRef.current = setInterval(async () => {
-        try {
-          const statusRes = await api.get(`/api/payments/topup/qr/${qr_code_id}/status`)
-          if (statusRes.data.status === 'success') {
-            if (pollRef.current) clearInterval(pollRef.current)
-            setQrImage(null)
-            onTopup?.()
-            onClose()
-          }
-        } catch {
-          // keep polling; a transient error shouldn't kill the flow
-        }
-      }, 3000)
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to generate QR code')
-    } finally {
-      setQrLoading(false)
-    }
-  }
-
-  const handleCancelQr = () => {
-    if (pollRef.current) clearInterval(pollRef.current)
-    setQrImage(null)
   }
 
   return (
@@ -205,49 +153,25 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
           </div>
         )}
 
-        {qrImage ? (
-          <div className="flex flex-col items-center gap-4">
-            <img src={qrImage} alt="Scan to pay via UPI" className="w-56 h-56 rounded-lg bg-white p-2" />
-            <p className="text-sm text-forge-text-muted">Scan with any UPI app to pay ₹{displayAmount.toLocaleString('en-IN')}</p>
-            <button
-              onClick={handleCancelQr}
-              className="px-4 py-2 rounded-lg border border-forge-border hover:bg-forge-border/20 transition-colors font-medium"
-            >
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="flex gap-4">
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-2 rounded-lg border border-forge-border hover:bg-forge-border/20 transition-colors font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleTopup}
-                disabled={displayAmount <= 0 || paying}
-                className="flex-1 px-4 py-2 rounded-lg bg-forge-accent hover:bg-forge-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-forge-bg"
-              >
-                {paying ? 'Processing...' : `Pay ₹${displayAmount.toLocaleString('en-IN')}`}
-              </button>
-            </div>
+        <div className="flex gap-4">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 rounded-lg border border-forge-border hover:bg-forge-border/20 transition-colors font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleTopup}
+            disabled={displayAmount <= 0 || paying}
+            className="flex-1 px-4 py-2 rounded-lg bg-forge-accent hover:bg-forge-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-forge-bg"
+          >
+            {paying ? 'Processing...' : `Pay ₹${displayAmount.toLocaleString('en-IN')}`}
+          </button>
+        </div>
 
-            <button
-              onClick={handleShowQr}
-              disabled={displayAmount <= 0 || qrLoading}
-              className="w-full flex items-center justify-center gap-2 mt-3 px-4 py-2 rounded-lg border border-forge-border hover:bg-forge-border/20 disabled:opacity-50 transition-colors text-sm font-medium"
-            >
-              <QrCode size={16} />
-              {qrLoading ? 'Generating QR...' : 'Pay via QR code'}
-            </button>
-
-            <p className="text-xs text-forge-text-muted text-center mt-4">
-              Credits expire based on your subscription status
-            </p>
-          </>
-        )}
+        <p className="text-xs text-forge-text-muted text-center mt-4">
+          Credits expire based on your subscription status
+        </p>
       </div>
     </div>
   )

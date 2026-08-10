@@ -280,9 +280,9 @@ export default function FrameEditor({ clipId, value, onChange }: Props) {
 
   const seek = (t: number) => {
     const v = videoRef.current
-    if (!v) return
-    v.currentTime = t
-    setTime(t)
+    if (!v || !Number.isFinite(v.duration)) return
+    v.currentTime = Math.min(Math.max(t, 0), v.duration)
+    setTime(v.currentTime)
     const i = segAt(valueRef.current?.segments ?? [], t)
     if (i >= 0) setSel(i)
   }
@@ -321,6 +321,8 @@ export default function FrameEditor({ clipId, value, onChange }: Props) {
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
         >
+          {/* onSeeked matters: timeupdate doesn't fire while paused, so without
+              it the scrub bar ignores a paused seek. */}
           {src && (
             <video
               ref={videoRef}
@@ -336,10 +338,14 @@ export default function FrameEditor({ clipId, value, onChange }: Props) {
                   if (i >= 0) setSel(i)
                 }
               }}
+              onSeeked={(e) => setTime(e.currentTarget.currentTime)}
+              onPlay={() => setPlaying(true)}
+              onPause={() => setPlaying(false)}
               onEnded={() => setPlaying(false)}
               loop
               muted
               playsInline
+              preload="auto"
               className="w-full block"
             />
           )}
