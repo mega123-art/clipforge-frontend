@@ -3,6 +3,7 @@ import api, { API_BASE_URL as API_BASE } from '../api'
 import { X, Download, Loader, Info, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import type { AxiosError } from 'axios'
 import type { ExportResponse } from '../types/api'
+import FrameEditor, { type FrameValue } from './FrameEditor'
 import {
   HOOK_STYLES, HOOK_BOX_WIDTH_FRAC, HOOK_LINE_HEIGHT, GLITCH_SCANLINES, hookFontSize,
 } from '../hookStyles.generated'
@@ -127,7 +128,7 @@ function HookBox({ styleId, text, designWidth, fontScale }: HookBoxProps) {
 }
 
 interface FocusModeOption {
-  id: 'none' | 'speaker' | 'center' | 'face'
+  id: 'none' | 'speaker' | 'center' | 'face' | 'manual'
   label: string
   desc: string
   comingSoon?: boolean
@@ -137,6 +138,7 @@ const FOCUS_MODES: FocusModeOption[] = [
   { id: 'face', label: 'Face Focus (Pro)', desc: 'TikTok-style: locks on face, ultra-smooth, no shake, max quality', comingSoon: true },
   { id: 'speaker', label: 'Speaker focus', desc: 'Auto-track active speaker (multi-speaker podcasts)', comingSoon: true },
   { id: 'center', label: 'Center crop', desc: 'Crop to center' },
+  { id: 'manual', label: 'Manual frame', desc: 'Drag the crop box yourself' },
   { id: 'none', label: 'Blurred BG', desc: 'Fit + blur background' },
 ]
 
@@ -376,7 +378,8 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [includeCaptions, setIncludeCaptions] = useState(true)
   const [glowEffect, setGlowEffect] = useState(false)
   const [retroEffect, setRetroEffect] = useState(false)
-  const [focusMode, setFocusMode] = useState<'none' | 'speaker' | 'center' | 'face'>('center')
+  const [focusMode, setFocusMode] = useState<'none' | 'speaker' | 'center' | 'face' | 'manual'>('center')
+  const [frameValue, setFrameValue] = useState<FrameValue | null>(null)
   const [hookText, setHookText] = useState<string>('')
   const [hookPosition, setHookPosition] = useState<'top' | 'center' | 'bottom'>('top')
   const [hookFontScale, setHookFontScale] = useState<number>(1.0)
@@ -460,6 +463,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
     setLoading(false)
     setError(null)
     setDownloadUrl(null)
+    setFrameValue(null)  // boxes are per-clip: different source, different framing
   }, [clipId])
 
   // Invalidate download when any export option changes — stale file would
@@ -467,7 +471,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   useEffect(() => {
     setDownloadUrl(null)
     setError(null)
-  }, [aspectRatio, captionStyle, captionPosition, includeCaptions, glowEffect, retroEffect, focusMode,
+  }, [aspectRatio, captionStyle, captionPosition, includeCaptions, glowEffect, retroEffect, focusMode, frameValue,
       hookText, hookPosition, hookFontScale, hookStyle, hookYPct,
       musicEnabled, musicTrackId, musicVolume, musicFadeIn, musicFadeOut, musicTrimStart, musicTrimEnd,
       sceneTemplateId])
@@ -511,6 +515,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           caption_position: captionPosition,
           include_captions: includeCaptions,
           focus_mode: effectiveFocusMode,
+          crop_rects: effectiveFocusMode === 'manual' ? (frameValue?.rects ?? null) : null,
           output_format: 'mp4',
           hook_text: hookText.trim() || null,
           hook_position: hookPosition,
@@ -802,6 +807,11 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
                   </button>
                 ))}
               </div>
+              {focusMode === 'manual' && clipId && (
+                <div className="mt-2">
+                  <FrameEditor clipId={clipId} value={frameValue} onChange={setFrameValue} />
+                </div>
+              )}
             </div>
           )}
 
