@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
-import { X, Crown, Check } from 'lucide-react'
+import { X, Crown, Check, QrCode } from 'lucide-react'
 import api from '../api'
 import { useRazorpay } from '../hooks/useRazorpay'
 import TierBadge from './TierBadge'
+import QrPayModal from './QrPayModal'
+
+const TRIAL_TIER = 'trial'
 
 export interface SubscriptionTier {
   id: number
@@ -27,14 +30,27 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { openCheckout, loading: paying, error: razorpayError, setError: setRazorpayError } = useRazorpay()
+  const [trialDays, setTrialDays] = useState(30)
+  const [showQr, setShowQr] = useState(false)
 
   useEffect(() => {
     const fetchTiers = async () => {
       try {
-        const res = await api.get('/api/subscriptions/tiers')
-        setTiers(res.data)
-        if (res.data.length > 0) {
-          setSelectedTierId(res.data[0].id)
+        // Trial is once per user, so hide it entirely for anyone who can't buy it.
+        const [tiersRes, trialRes] = await Promise.all([
+          api.get('/api/subscriptions/tiers'),
+          api.get('/api/subscriptions/trial/eligibility').catch(() => null),
+        ])
+
+        const trialEligible = trialRes?.data?.eligible ?? false
+        if (trialRes?.data?.days) setTrialDays(trialRes.data.days)
+
+        const visible = (tiersRes.data as SubscriptionTier[]).filter(
+          (t) => t.tier_name !== TRIAL_TIER || trialEligible,
+        )
+        setTiers(visible)
+        if (visible.length > 0) {
+          setSelectedTierId(visible[0].id)
         }
       } catch (err: any) {
         setError(err.response?.data?.detail || 'Failed to load tiers')
@@ -50,6 +66,24 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
 
     setError(null)
     setRazorpayError(null)
+
+    // Trial is a one-time order, not a mandate — different endpoint, no auto-renewal.
+    if (isTrialSelected) {
+      try {
+        const res = await api.post('/api/subscriptions/trial')
+        const { order_id, key_id, amount } = res.data
+        const success = await openCheckout({ key: key_id, order_id, amount }, 'trial')
+        if (success) {
+          onSubscribed?.()
+          onClose()
+        } else {
+          setError(razorpayError || 'Payment verification failed')
+        }
+      } catch (err: any) {
+        setError(err.response?.data?.detail || 'Could not start trial')
+      }
+      return
+    }
 
     try {
       const res = await api.post('/api/subscriptions/create', { tier_id: selectedTierId })
@@ -81,7 +115,23 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
   }
 
   const selectedTier = tiers.find((t) => t.id === selectedTierId)
+  const isTrialSelected = selectedTier?.tier_name === TRIAL_TIER
   const pricePerMonth = selectedTier ? (selectedTier.price_paise / 100).toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : '₹0'
+
+  if (showQr && selectedTier) {
+    return (
+      <QrPayModal
+        createPath="/api/subscriptions/trial/qr"
+        amount={selectedTier.price_paise / 100}
+        title="Scan to start trial"
+        onPaid={() => {
+          onSubscribed?.()
+          onClose()
+        }}
+        onClose={() => setShowQr(false)}
+      />
+    )
+  }
 
   if (loading) {
     return (
@@ -135,15 +185,21 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
                 <div className="text-2xl font-bold text-forge-accent">
                   ₹{(tier.price_paise / 100).toLocaleString('en-IN')}
                 </div>
-                <div className="text-xs text-forge-text-muted">/month</div>
+                <div className="text-xs text-forge-text-muted">
+                  {tier.tier_name === TRIAL_TIER ? `one-time · ${trialDays} days` : '/month'}
+                </div>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="font-semibold text-forge-accent">{tier.total_credits}</div>
-                  <span className="text-forge-text-muted">credits/month</span>
+                  <span className="text-forge-text-muted">
+                    {tier.tier_name === TRIAL_TIER ? 'credits' : 'credits/month'}
+                  </span>
                 </div>
                 <div className="text-xs text-forge-text-muted">
-                  {tier.base_credits} base + {tier.bonus_percent}% bonus
+                  {tier.tier_name === TRIAL_TIER
+                    ? 'Does not renew'
+                    : `${tier.base_credits} base + ${tier.bonus_percent}% bonus`}
                 </div>
               </div>
             </button>
@@ -159,13 +215,18 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
                 <span className="font-semibold">{selectedTier.display_name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-forge-text-muted">Monthly Price</span>
+                <span className="text-forge-text-muted">{isTrialSelected ? 'One-time Price' : 'Monthly Price'}</span>
                 <span className="font-semibold">{pricePerMonth}</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-forge-border">
-                <span className="text-forge-text-muted">Credits per Month</span>
+                <span className="text-forge-text-muted">{isTrialSelected ? 'Credits' : 'Credits per Month'}</span>
                 <span className="font-semibold text-forge-accent">{selectedTier.total_credits}</span>
               </div>
+              {isTrialSelected && (
+                <div className="text-xs text-forge-text-muted pt-2">
+                  Valid {trialDays} days. One-time purchase — it does not renew, and can only be bought once.
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -188,9 +249,20 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
             disabled={!selectedTierId || paying}
             className="flex-1 px-4 py-2 rounded-lg bg-forge-accent hover:bg-forge-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-forge-bg"
           >
-            {paying ? 'Processing...' : 'Subscribe Now'}
+            {paying ? 'Processing...' : isTrialSelected ? 'Start Trial' : 'Subscribe Now'}
           </button>
         </div>
+
+        {/* QR only for the trial: paid tiers are UPI mandates, which have no QR API. */}
+        {isTrialSelected && (
+          <button
+            onClick={() => setShowQr(true)}
+            className="w-full flex items-center justify-center gap-2 mt-3 px-4 py-2 rounded-lg border border-forge-border hover:bg-forge-border/20 transition-colors text-sm font-medium"
+          >
+            <QrCode size={16} />
+            Pay via QR code
+          </button>
+        )}
       </div>
     </div>
   )

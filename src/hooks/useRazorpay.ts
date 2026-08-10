@@ -15,7 +15,7 @@ interface PaymentResponse {
   razorpay_signature: string
 }
 
-type PaymentType = 'topup' | 'subscription'
+type PaymentType = 'topup' | 'subscription' | 'trial'
 
 export function useRazorpay() {
   const [loading, setLoading] = useState(false)
@@ -40,11 +40,15 @@ export function useRazorpay() {
             setLoading(true)
             setError(null)
 
-            // Verify payment with backend
+            // Verify payment with backend.
+            // Trial is a plain order, so it uses the generic verify route —
+            // /topup/verify rejects anything whose payment_type isn't "topup".
             const endpoint =
               paymentType === 'subscription'
                 ? '/api/subscriptions/verify'
-                : '/api/payments/topup/verify'
+                : paymentType === 'trial'
+                  ? '/api/payments/verify'
+                  : '/api/payments/topup/verify'
 
             const payload: any = {
               razorpay_payment_id: response.razorpay_payment_id,

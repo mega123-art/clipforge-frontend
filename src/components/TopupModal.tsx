@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { X, Zap } from 'lucide-react'
+import { X, Zap, QrCode } from 'lucide-react'
 import api from '../api'
 import { useRazorpay } from '../hooks/useRazorpay'
+import QrPayModal from './QrPayModal'
 
 interface TopupModalProps {
   onClose: () => void
@@ -17,6 +18,7 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
   const [minAmount, setMinAmount] = useState(100)
   const [maxAmount, setMaxAmount] = useState(99999)
   const { openCheckout, loading: paying, error: razorpayError, setError: setRazorpayError } = useRazorpay()
+  const [showQr, setShowQr] = useState(false)
 
   // Fetch topup config from backend
   useEffect(() => {
@@ -83,6 +85,34 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Top-up failed')
     }
+  }
+
+  const handleShowQr = () => {
+    if (displayAmount < minAmount) {
+      setError(`Minimum top-up amount is ₹${minAmount}`)
+      return
+    }
+    if (displayAmount > maxAmount) {
+      setError(`Maximum top-up amount is ₹${maxAmount}`)
+      return
+    }
+    setError(null)
+    setShowQr(true)
+  }
+
+  if (showQr) {
+    return (
+      <QrPayModal
+        createPath="/api/payments/topup/qr"
+        createBody={{ amount_paise: Math.round(displayAmount * 100) }}
+        amount={displayAmount}
+        onPaid={() => {
+          onTopup?.()
+          onClose()
+        }}
+        onClose={() => setShowQr(false)}
+      />
+    )
   }
 
   return (
@@ -168,6 +198,15 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
             {paying ? 'Processing...' : `Pay ₹${displayAmount.toLocaleString('en-IN')}`}
           </button>
         </div>
+
+        <button
+          onClick={handleShowQr}
+          disabled={displayAmount <= 0}
+          className="w-full flex items-center justify-center gap-2 mt-3 px-4 py-2 rounded-lg border border-forge-border hover:bg-forge-border/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+        >
+          <QrCode size={16} />
+          Pay via QR code
+        </button>
 
         <p className="text-xs text-forge-text-muted text-center mt-4">
           Credits expire based on your subscription status
