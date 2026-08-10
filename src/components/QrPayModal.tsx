@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { X } from 'lucide-react'
+import { X, CheckCircle2 } from 'lucide-react'
 import api from '../api'
 
 interface QrPayModalProps {
@@ -28,7 +28,9 @@ export default function QrPayModal({
 }: QrPayModalProps) {
   const [qrImage, setQrImage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [paid, setPaid] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const doneRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     let canceled = false
@@ -45,7 +47,9 @@ export default function QrPayModal({
             const statusRes = await api.get(`/api/payments/topup/qr/${qr_code_id}/status`)
             if (statusRes.data.status === 'success') {
               if (pollRef.current) clearInterval(pollRef.current)
-              onPaid()
+              // Confirm on screen before handing off — closing instantly reads as a failure.
+              setPaid(true)
+              doneRef.current = setTimeout(() => onPaid(), 1800)
             }
           } catch {
             // transient failures shouldn't kill the flow; keep polling
@@ -59,9 +63,23 @@ export default function QrPayModal({
     return () => {
       canceled = true
       if (pollRef.current) clearInterval(pollRef.current)
+      if (doneRef.current) clearTimeout(doneRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createPath])
+
+  if (paid) {
+    return (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="bg-forge-bg rounded-xl p-10 w-full max-w-md flex flex-col items-center text-center">
+          <CheckCircle2 size={64} className="text-emerald-400" />
+          <h2 className="text-2xl font-bold mt-6">Payment successful</h2>
+          <div className="text-3xl font-bold mt-2">₹{amount.toLocaleString('en-IN')}</div>
+          <p className="text-sm text-forge-text-muted mt-3">Your account has been updated.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
