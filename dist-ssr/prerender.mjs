@@ -87,7 +87,7 @@ const useStore = create((set, get) => ({
     const token = get().token;
     if (!token) return;
     try {
-      const api = (await import("./assets/api-FDYIXwpc.mjs")).default;
+      const api = (await import("./assets/api-D_9KfXzr.mjs")).default;
       const { data } = await api.get("/api/auth/me");
       localStorage.setItem("auth_user", JSON.stringify(data));
       set({ user: data });
