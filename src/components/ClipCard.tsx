@@ -236,7 +236,8 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
           <TrimHandle
             start={trimStart}
             end={trimEnd}
-            duration={clip.end_seconds - clip.start_seconds + 10}
+            min={Math.max(0, clip.start_seconds - 10)}
+            max={clip.end_seconds + 10}
             onStartChange={setTrimStart}
             onEndChange={setTrimEnd}
           />
