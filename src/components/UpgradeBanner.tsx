@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { Crown, X, TrendingUp, Zap, Star } from 'lucide-react'
 import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
 import useStore from '../store'
-import api from '../api'
+import { useCurrentSubscription } from '../hooks/queries'
 
 type Tier = 'none' | 'Starter' | 'Pro' | 'Professional' | 'Enterprise'
 
@@ -69,7 +69,6 @@ const isSnoozed = () => {
 }
 
 export default function UpgradeBanner() {
-  const [tier, setTier] = useState<Tier | null>(null)  // null = loading
   const [dismissed, setDismissed] = useState(isSnoozed)
   const [settled, setSettled] = useState(false)  // don't pop over first paint
   const { openSubscription } = useSubscriptionModal()
@@ -81,23 +80,17 @@ export default function UpgradeBanner() {
     return () => window.clearTimeout(t)
   }, [])
 
-  useEffect(() => {
-    if (!token) return
-    const check = async () => {
-      try {
-        const res = await api.get('/api/subscriptions/current')
-        const name = res.data?.tier_name as string | undefined
-        if (name === 'Starter' || name === 'Pro' || name === 'Professional' || name === 'Enterprise') {
-          setTier(name)
-        } else {
-          setTier('none')
-        }
-      } catch {
-        setTier('none')
-      }
-    }
-    check()
-  }, [token])
+  // Same cache entry Billing reads — the banner costs no extra request, and an
+  // upgrade elsewhere invalidates it so the banner reacts without a reload.
+  const { data: subscription, isPending, isError } = useCurrentSubscription()
+
+  const name = subscription?.tier_name as string | undefined
+  const tier: Tier | null =
+    isPending && !isError
+      ? null  // still loading
+      : name === 'Starter' || name === 'Pro' || name === 'Professional' || name === 'Enterprise'
+        ? name
+        : 'none'
 
   // logged out, marketing/auth page, still loading, Enterprise, dismissed, or too early
   if (!token || HIDDEN_PATHS.includes(pathname) || tier === null || tier === 'Enterprise' || dismissed || !settled) return null

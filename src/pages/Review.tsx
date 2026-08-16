@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient, Query } from '@tanstack/react-query'
 import api from '../api'
+import { qk } from '../lib/queryKeys'
 import { Scissors, Download, Plus, SplitSquareHorizontal } from 'lucide-react'
 import VibeClipLogo from '../components/VibeClipLogo'
 import ThemeToggle from '../components/ThemeToggle'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
+import MyClipsButton from '../components/MyClipsButton'
 import PlanButton from '../components/PlanButton'
 import ClipCard from '../components/ClipCard'
 import ClipCardSkeleton from '../components/ClipCardSkeleton'
@@ -37,7 +39,7 @@ export default function Review() {
   }
 
   const { data: job, isLoading, error } = useQuery<JobOut>({
-    queryKey: ['job', jobId],
+    queryKey: qk.jobs.detail(jobId),
     queryFn: () => api.get<JobOut>(`/api/jobs/${jobId}`).then((r) => r.data),
     refetchInterval: (query: Query<JobOut>) => {
       const data = query.state.data
@@ -71,7 +73,7 @@ export default function Review() {
     mutationFn: (options: MoreClipsOptions) => api.post(`/api/jobs/${jobId}/more-clips`, options),
     onSuccess: () => {
       setShowMoreClipsModal(false)
-      queryClient.removeQueries({ queryKey: ['job', jobId] })
+      queryClient.removeQueries({ queryKey: qk.jobs.detail(jobId) })
       navigate(`/processing/${jobId}`, { state: { moreClips: true } })
     },
   })
@@ -204,8 +206,9 @@ export default function Review() {
           )}
 
           <div className="flex items-center gap-1.5 sm:gap-2 ml-auto lg:ml-0">
+            <MyClipsButton />
             <div className="hidden sm:block">
-              <CreditsBadge onTopupSuccess={() => queryClient.invalidateQueries({ queryKey: ['job', jobId] })} />
+              <CreditsBadge onTopupSuccess={() => queryClient.invalidateQueries({ queryKey: qk.jobs.detail(jobId) })} />
             </div>
             <div className="hidden sm:block">
               <PlanButton />
@@ -236,7 +239,7 @@ export default function Review() {
             jobId={jobId}
             onCreated={() => {
               setShowManualClipper(false)
-              queryClient.invalidateQueries({ queryKey: ['job', jobId] })
+              queryClient.invalidateQueries({ queryKey: qk.jobs.detail(jobId) })
             }}
           />
         </div>
@@ -263,7 +266,7 @@ export default function Review() {
                     isSelected={selectedClipId === clip.id}
                     onSelect={() => setSelectedClipId(clip.id)}
                     onExport={() => startExport([clip.id])}
-                    onUpdate={() => queryClient.invalidateQueries({ queryKey: ['job', jobId] })}
+                    onUpdate={() => queryClient.invalidateQueries({ queryKey: qk.jobs.detail(jobId) })}
                   />
                 </div>
               )

@@ -6,7 +6,17 @@ import './index.css'
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, refetchOnWindowFocus: false },
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      // Remounting a screen within 30s reuses the cache instead of refetching.
+      // Individual queries raise this (catalogues) or lower it (live job state).
+      staleTime: 30_000,
+      // Cache survives 10min of the screen being unmounted, so back-navigation
+      // renders instantly from cache and revalidates behind the scenes.
+      gcTime: 10 * 60_000,
+      refetchOnReconnect: true,
+    },
   },
 })
 

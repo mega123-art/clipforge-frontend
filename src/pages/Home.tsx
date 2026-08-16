@@ -17,10 +17,11 @@ import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
 import ThemeToggle from '../components/ThemeToggle'
 import UserMenu from '../components/UserMenu'
 import CreditsBadge from '../components/CreditsBadge'
+import MyClipsButton from '../components/MyClipsButton'
 import PlanButton from '../components/PlanButton'
 import TierBadge from '../components/TierBadge'
-import api from '../api'
-import type { AspectRatio, ReferralInfo } from '../types/api'
+import { useReferral, useInvalidateJobs } from '../hooks/queries'
+import type { AspectRatio } from '../types/api'
 
 interface ClipTypeDef {
   id: string
@@ -64,8 +65,14 @@ interface HomeLocationState {
 }
 
 const DURATION_SLIDERS: DurationSliderDef[] = [
-  { key: 'min_clip_duration', label: 'Min duration', min: 10, max: 60 },
-  { key: 'max_clip_duration', label: 'Max duration', min: 30, max: 180 },
+  { key: 'min_clip_duration', label: 'Shortest clip', min: 10, max: 60 },
+  { key: 'max_clip_duration', label: 'Longest clip', min: 30, max: 180 },
+]
+
+const ASPECT_RATIOS: { id: AspectRatio; hint: string }[] = [
+  { id: '9:16', hint: 'TikTok · Reels · Shorts' },
+  { id: '1:1',  hint: 'Feed posts' },
+  { id: '16:9', hint: 'YouTube · X' },
 ]
 
 // ── Main component ─────────────────────────────────────────────
@@ -76,7 +83,7 @@ export default function Home() {
   const { getRecentJobs, addRecentJob, refreshUser, user } = useStore()
   const { openSubscription } = useSubscriptionModal()
   const locationState = (location.state as HomeLocationState | null) ?? null
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(true)
   const [clipMode, setClipMode] = useState<ClipMode>('quick')
   const [customPrompt, setCustomPrompt] = useState('')
   const [skipRanges, setSkipRanges] = useState<SkipRange[]>([])
@@ -95,8 +102,10 @@ export default function Home() {
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [preferredInput, setPreferredInput] = useState<'file' | 'url'>(locationState?.preferredInput ?? 'url')
   const [showUploadFallbackNotice, setShowUploadFallbackNotice] = useState(Boolean(locationState?.downloadServiceDown))
-  const [referral, setReferral] = useState<ReferralInfo | null>(null)
   const [refCopied, setRefCopied] = useState(false)
+  // Shared cache entry with UserMenu — one request, not one per component.
+  const { data: referral } = useReferral()
+  const invalidateJobs = useInvalidateJobs()
 
   useEffect(() => {
     if (!locationState) return
@@ -104,13 +113,6 @@ export default function Home() {
     if (locationState.downloadServiceDown) setShowUploadFallbackNotice(true)
     navigate(location.pathname, { replace: true, state: null })
   }, [location.pathname, locationState, navigate])
-
-  useEffect(() => {
-    if (!user) return
-    api.get<ReferralInfo>('/api/auth/referral')
-      .then((res) => setReferral(res.data))
-      .catch(() => {})
-  }, [user])
 
   const referralCode = referral?.referral_code || user?.referral_code || ''
   const referralLink = referralCode
@@ -181,6 +183,8 @@ export default function Home() {
       }
 
       refreshUser()
+      // New job must appear in My Clips / the active-job banner immediately.
+      invalidateJobs()
       navigate(`/processing/${res.job_id}`)
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>
@@ -202,6 +206,7 @@ export default function Home() {
           <span className="text-lg font-black tracking-tight text-forge-text">VibeClip</span>
         </div>
         <div className="flex items-center gap-2 min-w-0">
+          <MyClipsButton />
           <CreditsBadge />
           <div className="hidden sm:block">
             <PlanButton />
@@ -305,39 +310,61 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Advanced toggle */}
-              <button
-                type="button"
-                onClick={() => setShowAdvanced((s) => !s)}
-                className={`relative flex items-center gap-1.5 text-sm transition-colors mt-4 ml-1 cursor-pointer group
-                  ${showAdvanced ? 'text-forge-accent' : 'text-forge-muted hover:text-forge-text'}`}
-              >
-                {!showAdvanced && (
-                  <span className="absolute -inset-1.5 rounded-lg bg-forge-accent/10 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
-                )}
-                {showAdvanced && (
-                  <span className="absolute -inset-1.5 rounded-lg bg-forge-accent/15 blur-sm animate-pulse" />
-                )}
-                <span className="relative flex items-center gap-1.5">
-                  {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  <span>{showAdvanced ? 'Hide' : 'Show'} advanced options</span>
-                  {!showAdvanced && (
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-forge-accent shadow-[0_0_6px_2px_rgba(6,182,212,0.6)] animate-pulse" />
-                  )}
-                </span>
-              </button>
+              {/* Clip direction — core control surface, not an "advanced" afterthought */}
+              <div className="glass-card rounded-2xl mt-4 border border-forge-border overflow-hidden">
+                <div className="flex items-start justify-between gap-3 px-5 sm:px-6 py-4">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-forge-text">Direct the AI</p>
+                      <p className="mt-0.5 text-xs leading-5 text-forge-muted">
+                        You decide what counts as a good moment — angle, length, format. Most tools just guess.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvanced((s) => !s)}
+                    className="flex shrink-0 items-center gap-1 text-xs font-semibold text-forge-muted hover:text-forge-text transition-colors cursor-pointer"
+                  >
+                    {showAdvanced ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                    {showAdvanced ? 'Collapse' : 'Edit'}
+                  </button>
+                </div>
 
-              {showAdvanced && (
-                <div className="glass-card rounded-2xl p-6 mt-3 space-y-6 border border-forge-border animate-fade-in">
+                {/* Collapsed: settings stay visible as a summary, never hidden entirely */}
+                {!showAdvanced && (
+                  <div className="flex flex-wrap gap-1.5 px-5 sm:px-6 pb-4">
+                    {[
+                      `${options.max_clips} clip${options.max_clips > 1 ? 's' : ''}`,
+                      `${options.min_clip_duration}–${options.max_clip_duration}s`,
+                      clipMode === 'custom'
+                        ? 'Custom prompt'
+                        : `${options.clip_types.length} angle${options.clip_types.length === 1 ? '' : 's'}`,
+                      String(options.target_aspect_ratio),
+                      ...(skipRanges.length ? [`${skipRanges.length} skipped`] : []),
+                    ].map((chip) => (
+                      <span
+                        key={chip}
+                        className="px-2.5 py-1 rounded-full text-xs font-medium bg-forge-surface border border-forge-border text-forge-subtext"
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {showAdvanced && (
+                <div className="px-5 sm:px-6 pb-6 pt-1 space-y-6 border-t border-forge-border animate-fade-in">
 
                   {/* Max clips */}
-                  <div>
-                    <div className="flex justify-between items-center mb-3">
-                      <label className="text-sm font-semibold text-forge-text">Max clips</label>
+                  <div className="pt-5">
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-sm font-semibold text-forge-text">Clips per video</label>
                       <span className="text-sm font-bold text-forge-accent bg-forge-accent/10 px-2.5 py-0.5 rounded-full border border-forge-accent/20">
                         {options.max_clips}
                       </span>
                     </div>
+                    <p className="text-xs text-forge-dim mb-3">Only the strongest moments make the cut.</p>
                     <input
                       type="range" min={1} max={10} value={options.max_clips}
                       onChange={(e) => setOptions((o) => ({ ...o, max_clips: +e.target.value }))}
@@ -346,28 +373,39 @@ export default function Home() {
                   </div>
 
                   {/* Duration sliders */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                    {DURATION_SLIDERS.map(({ key, label, min, max }) => (
-                      <div key={key}>
-                        <div className="flex justify-between items-center mb-3">
-                          <label className="text-sm font-semibold text-forge-text">{label}</label>
-                          <span className="text-sm font-bold text-forge-accent bg-forge-accent/10 px-2.5 py-0.5 rounded-full border border-forge-accent/20">
-                            {options[key]}s
-                          </span>
+                  <div>
+                    <label className="block text-sm font-semibold text-forge-text mb-1">Clip length</label>
+                    <p className="text-xs text-forge-dim mb-3">Match the pacing each platform rewards.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                      {DURATION_SLIDERS.map(({ key, label, min, max }) => (
+                        <div key={key}>
+                          <div className="flex justify-between items-center mb-3">
+                            <label className="text-xs font-medium text-forge-subtext">{label}</label>
+                            <span className="text-sm font-bold text-forge-accent bg-forge-accent/10 px-2.5 py-0.5 rounded-full border border-forge-accent/20">
+                              {options[key]}s
+                            </span>
+                          </div>
+                          <input
+                            type="range" min={min} max={max} value={options[key]}
+                            onChange={(e) => setOptions((o) => ({ ...o, [key]: +e.target.value }))}
+                            className="w-full h-1.5 cursor-pointer"
+                          />
                         </div>
-                        <input
-                          type="range" min={min} max={max} value={options[key]}
-                          onChange={(e) => setOptions((o) => ({ ...o, [key]: +e.target.value }))}
-                          className="w-full h-1.5 cursor-pointer"
-                        />
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
 
                   {/* Clip mode toggle */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-semibold text-forge-text">Clip selection</label>
+                      <div>
+                        <label className="text-sm font-semibold text-forge-text">What the AI hunts for</label>
+                        <p className="text-xs text-forge-dim mt-0.5">
+                          {clipMode === 'quick'
+                            ? 'Pick the angles that fit your audience.'
+                            : 'Describe it in your own words — or paste exact timestamps.'}
+                        </p>
+                      </div>
                       <div className="flex gap-1 p-0.5 bg-forge-surface rounded-lg border border-forge-border">
                         <button
                           type="button"
@@ -434,7 +472,7 @@ export default function Home() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-sm font-semibold text-forge-text">
-                        Skip timestamps <span className="text-forge-muted font-normal">(optional)</span>
+                        Never clip from <span className="text-forge-muted font-normal">(optional)</span>
                       </label>
                       <button
                         type="button"
@@ -475,26 +513,29 @@ export default function Home() {
 
                   {/* Aspect ratio */}
                   <div>
-                    <label className="block text-sm font-semibold text-forge-text mb-3">Aspect ratio</label>
+                    <label className="block text-sm font-semibold text-forge-text mb-1">Output format</label>
+                    <p className="text-xs text-forge-dim mb-3">Reframed and rendered for the platform you post on.</p>
                     <div className="flex gap-2">
-                      {(['9:16', '1:1', '16:9'] as AspectRatio[]).map((ar) => (
+                      {ASPECT_RATIOS.map(({ id, hint }) => (
                         <button
-                          key={ar}
+                          key={id}
                           type="button"
-                          onClick={() => setOptions((o) => ({ ...o, target_aspect_ratio: ar }))}
-                          className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all duration-200 cursor-pointer ${
-                            options.target_aspect_ratio === ar
+                          onClick={() => setOptions((o) => ({ ...o, target_aspect_ratio: id }))}
+                          className={`flex-1 py-2.5 px-2 rounded-xl border transition-all duration-200 cursor-pointer ${
+                            options.target_aspect_ratio === id
                               ? 'bg-forge-accent/15 border-forge-accent/50 text-forge-accent'
                               : 'border-forge-border text-forge-muted hover:border-forge-border-bright hover:text-forge-text'
                           }`}
                         >
-                          {ar}
+                          <span className="block text-sm font-semibold">{id}</span>
+                          <span className="block text-[10px] leading-4 opacity-70 truncate">{hint}</span>
                         </button>
                       ))}
                     </div>
                   </div>
                 </div>
-              )}
+                )}
+              </div>
 
               {error && (
                 <div className="mt-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/22 text-red-400 text-sm">

@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, User as UserIcon, Coins, ShieldCheck, CreditCard, Gift, Copy, Check } from 'lucide-react'
+import { LogOut, Coins, ShieldCheck, CreditCard, Gift, Copy, Check } from 'lucide-react'
 import useStore from '../store'
-import api from '../api'
-import type { ReferralInfo } from '../types/api'
+import { useReferral } from '../hooks/queries'
 
 export default function UserMenu() {
   const { user, logout } = useStore()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
-  const [referral, setReferral] = useState<ReferralInfo | null>(null)
   const [copied, setCopied] = useState(false)
+  // Only fetched once the menu is opened; shared with Home's referral card.
+  const { data: referral } = useReferral({ enabled: open })
   const ref = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -20,13 +20,6 @@ export default function UserMenu() {
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
-
-  useEffect(() => {
-    if (!open || !user) return
-    api.get<ReferralInfo>('/api/auth/referral')
-      .then((res) => setReferral(res.data))
-      .catch(() => {})
-  }, [open, user])
 
   if (!user) return null
 
@@ -117,15 +110,8 @@ export default function UserMenu() {
             )}
           </div>
           <button
-            onClick={() => { setOpen(false); navigate('/clips') }}
-            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-forge-subtext hover:bg-forge-card-hover hover:text-forge-text transition-colors cursor-pointer"
-          >
-            <UserIcon size={14} />
-            My Clips
-          </button>
-          <button
             onClick={() => { setOpen(false); navigate('/billing') }}
-            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-forge-subtext hover:bg-forge-card-hover hover:text-forge-text transition-colors cursor-pointer border-t border-forge-border"
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-forge-subtext hover:bg-forge-card-hover hover:text-forge-text transition-colors cursor-pointer"
           >
             <CreditCard size={14} />
             Billing

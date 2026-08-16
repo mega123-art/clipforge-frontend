@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X, Zap, QrCode } from 'lucide-react'
 import api from '../api'
 import { useRazorpay } from '../hooks/useRazorpay'
+import { useTopupConfig, useInvalidateBilling } from '../hooks/queries'
 import QrPayModal from './QrPayModal'
 
 interface TopupModalProps {
@@ -13,24 +14,16 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
   const [amount, setAmount] = useState(0)
   const [customAmount, setCustomAmount] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [creditPrice, setCreditPrice] = useState(99.99)
-  const [presets, setPresets] = useState<number[]>([100, 500, 1000, 2000, 5000])
-  const [minAmount, setMinAmount] = useState(100)
-  const [maxAmount, setMaxAmount] = useState(99999)
   const { openCheckout, loading: paying, error: razorpayError, setError: setRazorpayError } = useRazorpay()
   const [showQr, setShowQr] = useState(false)
+  const invalidateBilling = useInvalidateBilling()
 
-  // Fetch topup config from backend
-  useEffect(() => {
-    api.get('/api/payments/topup/config')
-      .then((res) => {
-        if (res?.data?.presets) setPresets(res.data.presets)
-        if (res?.data?.credit_price_inr) setCreditPrice(res.data.credit_price_inr)
-        if (res?.data?.min_amount_paise) setMinAmount(Math.floor(res.data.min_amount_paise / 100))
-        if (res?.data?.max_amount_paise) setMaxAmount(Math.floor(res.data.max_amount_paise / 100))
-      })
-      .catch(() => {})
-  }, [])
+  // Pricing config is static per deploy — cached, so reopening the modal is free.
+  const { data: config } = useTopupConfig()
+  const creditPrice: number = config?.credit_price_inr ?? 99.99
+  const presets: number[] = config?.presets ?? [100, 500, 1000, 2000, 5000]
+  const minAmount: number = config?.min_amount_paise ? Math.floor(config.min_amount_paise / 100) : 100
+  const maxAmount: number = config?.max_amount_paise ? Math.floor(config.max_amount_paise / 100) : 99999
 
   const displayAmount = customAmount ? parseInt(customAmount) : amount
   const credits = displayAmount > 0 ? Math.floor((displayAmount * 100) / (creditPrice * 100)) : 0
@@ -77,6 +70,7 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
       )
 
       if (success) {
+        invalidateBilling()
         onTopup?.()
         onClose()
       } else {
@@ -107,6 +101,7 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
         createBody={{ amount_paise: Math.round(displayAmount * 100) }}
         amount={displayAmount}
         onPaid={() => {
+          invalidateBilling()
           onTopup?.()
           onClose()
         }}

@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useLocation } from 'react-router-dom'
 import api from '../api'
 import useStore from '../store'
-import type { JobOut } from '../types/api'
+import { qk } from '../lib/queryKeys'
+import type { JobSummary, JobListOut } from '../types/api'
 
 const ACTIVE = new Set(['pending', 'downloading', 'transcribing', 'diarizing', 'analyzing', 'clipping'])
 
@@ -20,9 +21,12 @@ export default function ActiveJobBanner() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
 
-  const { data } = useQuery<JobOut[]>({
-    queryKey: ['jobs-banner'],
-    queryFn: () => api.get<JobOut[]>('/api/jobs').then((r) => r.data),
+  const { data } = useQuery<JobSummary[]>({
+    queryKey: qk.jobs.active,
+    queryFn: () =>
+      api
+        .get<JobListOut>('/api/jobs', { params: { page: 1, page_size: 20 } })
+        .then((r) => (Array.isArray(r.data) ? (r.data as JobSummary[]) : (r.data?.items ?? []))),
     refetchInterval: 15000,
     enabled: !!token,
   })

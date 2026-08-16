@@ -1,10 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Crown, Zap, Calendar, AlertCircle, ArrowUp, ArrowLeft, Receipt, CheckCircle, XCircle, Clock } from 'lucide-react'
 import api from '../api'
 import useStore from '../store'
 import { useSubscriptionModal } from '../hooks/useSubscriptionModal'
 import { useRazorpay } from '../hooks/useRazorpay'
+import { useCreditBreakdown } from '../hooks/useCreditBreakdown'
+import {
+  useCurrentSubscription,
+  useSubscriptionTiers,
+  usePaymentHistory,
+  useInvalidateBilling,
+} from '../hooks/queries'
 import TierBadge from '../components/TierBadge'
 import type { SubscriptionTier } from '../components/SubscriptionModal'
 
@@ -43,60 +50,38 @@ interface PaymentRecord {
 }
 
 export default function BillingPage() {
-  const user = useStore((s) => s.user)
   const refreshUser = useStore((s) => s.refreshUser)
   const navigate = useNavigate()
   const { openSubscription, openTopup } = useSubscriptionModal()
-  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null)
-  const [breakdown, setBreakdown] = useState<CreditBreakdown | null>(null)
-  const [tiers, setTiers] = useState<SubscriptionTier[]>([])
   const [selectedUpgradeTierId, setSelectedUpgradeTierId] = useState<number | null>(null)
-  const [payments, setPayments] = useState<PaymentRecord[]>([])
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
   const { openCheckout, error: razorpayError, setError: setRazorpayError } = useRazorpay()
 
+  // Four cached queries, each shared with the components that also need them
+  // (nav credits badge, upgrade banner, subscription modal). They fire in
+  // parallel and any of them already warm renders from cache immediately.
+  const subscriptionQuery = useCurrentSubscription()
+  const breakdownQuery = useCreditBreakdown()
+  const tiersQuery = useSubscriptionTiers()
+  const paymentsQuery = usePaymentHistory()
+  const invalidateBilling = useInvalidateBilling()
+
+  const subscription = (subscriptionQuery.data ?? null) as SubscriptionInfo | null
+  const breakdown = (breakdownQuery.data ?? null) as CreditBreakdown | null
+  const tiers = (tiersQuery.data ?? []) as SubscriptionTier[]
+  const payments = (paymentsQuery.data ?? []) as PaymentRecord[]
+  const loading =
+    subscriptionQuery.isPending ||
+    breakdownQuery.isPending ||
+    tiersQuery.isPending ||
+    paymentsQuery.isPending
+
+  /** After any billing action: drop the cached billing state and resync the user. */
   const fetchData = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      const [subRes, breakdownRes, tiersRes, paymentsRes] = await Promise.allSettled([
-        api.get('/api/subscriptions/current'),
-        api.get('/api/subscriptions/breakdown'),
-        api.get('/api/subscriptions/tiers'),
-        api.get('/api/payments/history'),
-      ])
-
-      if (subRes.status === 'fulfilled') {
-        setSubscription(subRes.value.data)
-      }
-
-      if (breakdownRes.status === 'fulfilled') {
-        setBreakdown(breakdownRes.value.data)
-      }
-
-      if (tiersRes.status === 'fulfilled') {
-        setTiers(tiersRes.value.data)
-      }
-
-      if (paymentsRes.status === 'fulfilled') {
-        setPayments(paymentsRes.value.data)
-      }
-
-      // Sync user profile / credits in navbar/menu
-      await refreshUser()
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to load billing info')
-    } finally {
-      setLoading(false)
-    }
+    invalidateBilling()
+    await refreshUser()
   }
-
-  useEffect(() => {
-    fetchData()
-  }, [])
 
   const handleCancelSubscription = async () => {
     const isPending = subscription?.status === 'pending'
@@ -175,8 +160,6 @@ export default function BillingPage() {
 
     setActionLoading(true)
     setError(null)
-
-    const { openCheckout, loading: paying, error: razorpayError, setError: setRazorpayError } = useRazorpay()
 
     try {
       // Create subscription in backend

@@ -6,6 +6,8 @@ import {
   Flame, Zap, MessageSquare, XCircle, TrendingUp, Heart, MessageCircle, BookOpen, AlertTriangle,
   LucideIcon,
 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { qk } from '../lib/queryKeys'
 import TrimHandle from './TrimHandle'
 import type { ClipOut } from '../types/api'
 
@@ -82,24 +84,18 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
   const [trimStart, setTrimStart] = useState<number>(clip.user_start_seconds ?? clip.start_seconds)
   const [trimEnd, setTrimEnd] = useState<number>(clip.user_end_seconds ?? clip.end_seconds)
   const [saving, setSaving] = useState(false)
-  const [expiryInfo, setExpiryInfo] = useState<ExpiryInfo | null>(null)
+  // Cached per clip id — the review grid remounts cards constantly while
+  // filtering, and this used to refetch on every remount.
+  const { data: expiryInfo = null } = useQuery<ExpiryInfo | null>({
+    queryKey: qk.clips.expiry(clip.id),
+    queryFn: () =>
+      api.get<ExpiryInfo>(`/api/clips/${clip.id}/expiry-info`).then((r) => r.data).catch(() => null),
+    staleTime: 60_000,
+  })
 
   const typeClass = CLIP_TYPE_COLOR[clip.clip_type] || 'text-violet-500 bg-forge-accent/10 border-forge-accent/20'
   const TypeIcon: LucideIcon = CLIP_TYPE_ICON[clip.clip_type] || Zap
 
-
-  // Fetch expiry info for free clips
-  useEffect(() => {
-    let cancelled = false
-    api.get<ExpiryInfo>(`/api/clips/${clip.id}/expiry-info`)
-      .then(({ data }) => {
-        if (!cancelled) setExpiryInfo(data)
-      })
-      .catch(() => {
-        if (!cancelled) setExpiryInfo(null)
-      })
-    return () => { cancelled = true }
-  }, [clip.id, clip.credit_type])
 
   // Fetch a time-limited, HMAC-signed stream URL from the authenticated
   // /stream-url endpoint. <video> tags can't send Authorization headers,

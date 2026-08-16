@@ -69,6 +69,34 @@ export interface JobOut {
   completed_at?: string | null
 }
 
+/** Lightweight row returned by the paginated GET /api/jobs list (no clips array). */
+export interface JobSummary {
+  job_id: string
+  status: JobStatus
+  stage_progress: number
+  source_filename?: string | null
+  source_type?: SourceType | null
+  detected_language?: string | null
+  detected_topic?: string | null
+  video_duration_seconds?: number | null
+  video_title?: string | null
+  thumbnail_url?: string | null
+  error_message?: string | null
+  clip_count: number
+  exported_count: number
+  top_score?: number | null
+  created_at: string
+  completed_at?: string | null
+}
+
+export interface JobListOut {
+  items: JobSummary[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+}
+
 export interface JobCreate {
   source_url?: string
   max_clips: number

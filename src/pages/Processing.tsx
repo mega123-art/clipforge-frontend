@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery, Query } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import api, { API_BASE_URL } from '../api'
+import { qk } from '../lib/queryKeys'
 import {
   Scissors, CheckCircle2, Wand2, Zap,
   Download, Mic, Users, Brain, AlertCircle, Clock, LucideIcon, Upload,
@@ -248,7 +249,7 @@ export default function Processing() {
   const prevStatus = useRef<string | null>(null)
 
   const { data: job, error } = useQuery<JobOut>({
-    queryKey: ['job', jobId],
+    queryKey: qk.jobs.detail(jobId),
     queryFn: () => api.get<JobOut>(`/api/jobs/${jobId}`).then((r) => r.data),
     refetchInterval: (query: Query<JobOut>) => {
       const data = query.state.data
@@ -265,7 +266,7 @@ export default function Processing() {
     elapsedSeconds > 60
 
   const { data: debugHealth } = useQuery<DebugHealth>({
-    queryKey: ['debug-health'],
+    queryKey: qk.system.debugHealth,
     queryFn: () => api.get<DebugHealth>('/api/debug/health').then((r) => r.data),
     enabled: showDebug,
     refetchInterval: showDebug ? 10000 : false,

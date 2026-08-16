@@ -4,6 +4,7 @@ import { X, Download, Loader, Info, ChevronLeft, ChevronRight, Sparkles } from '
 import type { AxiosError } from 'axios'
 import type { ExportResponse } from '../types/api'
 import FrameEditor, { type FrameValue } from './FrameEditor'
+import { useHookTemplates } from '../hooks/queries'
 import {
   HOOK_STYLES, HOOK_BOX_WIDTH_FRAC, HOOK_LINE_HEIGHT, GLITCH_SCANLINES, hookFontSize,
 } from '../hookStyles.generated'
@@ -401,15 +402,9 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
   const [loadingTracks, setLoadingTracks] = useState(false)
   const [activeTab, setActiveTab] = useState<'preview' | 'settings' | 'export'>('preview')
   const [sceneTemplateId, setSceneTemplateId] = useState<string | null>(null)
-  const [sceneTemplates, setSceneTemplates] = useState<SceneTemplate[]>([])
-
-  useEffect(() => {
-    let cancelled = false
-    api.get<SceneTemplate[]>('/api/hook-templates').then(({ data }) => {
-      if (!cancelled) setSceneTemplates(data)
-    }).catch(() => {})
-    return () => { cancelled = true }
-  }, [])
+  // Template catalogue never changes at runtime: fetched once per session and
+  // reused by every clip's export modal.
+  const { data: sceneTemplates = [] } = useHookTemplates<SceneTemplate[]>()
 
   const handleGenerateHook = async () => {
     if (!clipId) return

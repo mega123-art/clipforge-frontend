@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '../api'
 import useStore from '../store'
+import { qk } from '../lib/queryKeys'
 
 export interface CreditBreakdown {
   subscription_credits: number
@@ -21,7 +22,7 @@ export interface CreditBreakdown {
 export function useCreditBreakdown() {
   const user = useStore((s) => s.user)
   return useQuery<CreditBreakdown>({
-    queryKey: ['credit-breakdown', user?.id],
+    queryKey: qk.billing.breakdown(user?.id),
     queryFn: () => api.get<CreditBreakdown>('/api/subscriptions/breakdown').then((r) => r.data),
     enabled: !!user,
     staleTime: 60_000,

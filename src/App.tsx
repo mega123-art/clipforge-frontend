@@ -1,7 +1,8 @@
 import { useEffect, type ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { qk } from './lib/queryKeys'
 import Home from './pages/Home'
 import Landing from './pages/Landing'
 import Processing from './pages/Processing'
@@ -16,6 +17,7 @@ import Down from './pages/Down'
 import ProtectedRoute from './components/ProtectedRoute'
 import SubscriptionModalProvider from './components/SubscriptionModalProvider'
 import ActiveJobBanner from './components/ActiveJobBanner'
+import ScrollToTop from './components/ScrollToTop'
 import useStore from './store'
 import api from './api'
 import type { AppStatus, AuthOut } from './types/api'
@@ -24,6 +26,14 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
 function AuthHydrator(): null {
   const { token, refreshUser, setAuth } = useStore()
+  const queryClient = useQueryClient()
+
+  // Signing out must drop every cached response — user-scoped keys alone are
+  // not enough, since a cached page would still render before the refetch.
+  useEffect(() => {
+    if (!token) queryClient.clear()
+  }, [token, queryClient])
+
   useEffect(() => {
     if (token) {
       refreshUser()
@@ -55,7 +65,7 @@ function MaintenanceGate({ children }: { children: ReactNode }) {
   const location = useLocation()
   const user = useStore((s) => s.user)
   const { data } = useQuery<AppStatus>({
-    queryKey: ['app-status'],
+    queryKey: qk.system.status,
     queryFn: () => api.get<AppStatus>('/api/system/status').then((r) => r.data),
     refetchInterval: 30000,
     retry: 1,
@@ -78,6 +88,7 @@ export default function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <BrowserRouter>
+        <ScrollToTop />
         <AuthHydrator />
         <SubscriptionModalProvider />
         <div className="min-h-screen bg-forge-bg text-forge-text">

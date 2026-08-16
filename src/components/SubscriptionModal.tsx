@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { X, Crown, Check, QrCode } from 'lucide-react'
 import api from '../api'
 import { useRazorpay } from '../hooks/useRazorpay'
+import { useSubscriptionTiers, useTrialEligibility, useInvalidateBilling } from '../hooks/queries'
 import TierBadge from './TierBadge'
 import QrPayModal from './QrPayModal'
 
@@ -25,41 +26,35 @@ interface SubscriptionModalProps {
 }
 
 export default function SubscriptionModal({ onClose, onSubscribed }: SubscriptionModalProps) {
-  const [tiers, setTiers] = useState<SubscriptionTier[]>([])
   const [selectedTierId, setSelectedTierId] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { openCheckout, loading: paying, error: razorpayError, setError: setRazorpayError } = useRazorpay()
-  const [trialDays, setTrialDays] = useState(30)
   const [showQr, setShowQr] = useState(false)
 
+  // Cached: the tier catalogue is shared with Billing and survives modal
+  // open/close, so reopening the modal renders instantly.
+  const tiersQuery = useSubscriptionTiers()
+  const trialQuery = useTrialEligibility()
+  const invalidateBilling = useInvalidateBilling()
+
+  const loading = tiersQuery.isPending || trialQuery.isPending
+  const trialDays = trialQuery.data?.days ?? 30
+
+  // Trial is once per user, so hide it entirely for anyone who can't buy it.
+  const trialEligible = trialQuery.data?.eligible ?? false
+  const tiers = useMemo(
+    () => (tiersQuery.data ?? []).filter((t) => t.tier_name !== TRIAL_TIER || trialEligible),
+    [tiersQuery.data, trialEligible],
+  )
+
   useEffect(() => {
-    const fetchTiers = async () => {
-      try {
-        // Trial is once per user, so hide it entirely for anyone who can't buy it.
-        const [tiersRes, trialRes] = await Promise.all([
-          api.get('/api/subscriptions/tiers'),
-          api.get('/api/subscriptions/trial/eligibility').catch(() => null),
-        ])
+    if (tiersQuery.isError) setError('Failed to load tiers')
+  }, [tiersQuery.isError])
 
-        const trialEligible = trialRes?.data?.eligible ?? false
-        if (trialRes?.data?.days) setTrialDays(trialRes.data.days)
-
-        const visible = (tiersRes.data as SubscriptionTier[]).filter(
-          (t) => t.tier_name !== TRIAL_TIER || trialEligible,
-        )
-        setTiers(visible)
-        if (visible.length > 0) {
-          setSelectedTierId(visible[0].id)
-        }
-      } catch (err: any) {
-        setError(err.response?.data?.detail || 'Failed to load tiers')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchTiers()
-  }, [])
+  // Default to the first visible tier once the catalogue lands.
+  useEffect(() => {
+    if (selectedTierId === null && tiers.length > 0) setSelectedTierId(tiers[0].id)
+  }, [tiers, selectedTierId])
 
   const handleSubscribe = async () => {
     if (!selectedTierId) return
@@ -74,6 +69,7 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
         const { order_id, key_id, amount } = res.data
         const success = await openCheckout({ key: key_id, order_id, amount }, 'trial')
         if (success) {
+          invalidateBilling()
           onSubscribed?.()
           onClose()
         } else {
@@ -99,6 +95,7 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
         )
 
         if (success) {
+          invalidateBilling()
           onSubscribed?.()
           onClose()
         } else {
@@ -106,6 +103,7 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
         }
       } else {
         // Direct success / upgraded path
+        invalidateBilling()
         onSubscribed?.()
         onClose()
       }
@@ -125,6 +123,7 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
         amount={selectedTier.price_paise / 100}
         title="Scan to start trial"
         onPaid={() => {
+          invalidateBilling()
           onSubscribed?.()
           onClose()
         }}
