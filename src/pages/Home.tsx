@@ -171,7 +171,7 @@ export default function Home() {
         Object.entries(jobOptions).forEach(([k, v]) =>
           form.append(k, Array.isArray(v) ? v.join(',') : String(v))
         )
-        const r = await api.post('/api/jobs', form)
+        const r = await api.post('/api/jobs', form, { silent: true })
         res = { job_id: r.data.job_id }
         addRecentJob({ job_id: res.job_id, video_title: youtubeUrl })
       } else {
@@ -538,7 +538,7 @@ export default function Home() {
               </div>
 
               {error && (
-                <div className="mt-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/22 text-red-400 text-sm">
+                <div className="mt-3 px-4 py-3 rounded-xl bg-forge-gold/10 border border-forge-gold/25 text-forge-gold text-sm">
                   {error}
                 </div>
               )}

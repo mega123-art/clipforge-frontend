@@ -92,7 +92,7 @@ export default function QrPayModal({
         </div>
 
         {error ? (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-sm text-red-400 w-full text-center">
+          <div className="bg-forge-gold/10 border border-forge-gold/30 rounded-lg p-4 text-sm text-forge-gold w-full text-center">
             {error}
           </div>
         ) : qrImage ? (

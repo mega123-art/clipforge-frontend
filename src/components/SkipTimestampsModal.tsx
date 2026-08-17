@@ -177,7 +177,7 @@ export default function SkipTimestampsModal({ initialRanges, onConfirm, onClose 
                 key={r.id}
                 className={`rounded-xl border px-3 py-2.5 ${
                   invalid
-                    ? 'border-red-500/40 bg-red-500/5'
+                    ? 'border-forge-gold/40 bg-forge-gold/5'
                     : r.needsReview
                       ? 'border-amber-500/40 bg-amber-500/5'
                       : 'border-forge-border bg-forge-surface/50'

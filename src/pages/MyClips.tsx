@@ -47,7 +47,7 @@ function StatusBadge({ status }: { status: string }) {
   const tone = SUCCESS_STATUSES.has(key)
     ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
     : FAILURE_STATUSES.has(key)
-      ? 'border-red-500/30 bg-red-500/10 text-red-400'
+      ? 'border-forge-gold/30 bg-forge-gold/10 text-forge-gold'
       : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
   const inProgress = !SUCCESS_STATUSES.has(key) && !FAILURE_STATUSES.has(key)
 
@@ -161,7 +161,7 @@ export default function MyClips() {
         </div>
 
         {error && (
-          <p className="text-center text-red-400 py-20">{error}</p>
+          <p className="text-center text-forge-gold py-20">{error}</p>
         )}
 
         {showSearch && (
@@ -289,7 +289,7 @@ export default function MyClips() {
                           )}
 
                           {isFailed && job.error_message && (
-                            <p className="mt-1.5 text-xs text-red-400/80 truncate">{job.error_message}</p>
+                            <p className="mt-1.5 text-xs text-forge-gold/80 truncate">{job.error_message}</p>
                           )}
                         </div>
 

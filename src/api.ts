@@ -1,4 +1,22 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from 'axios'
+import { toast } from './components/Toast'
+
+// Requests that show their own inline error state opt out of the global
+// toast by setting `{ silent: true }` in the axios config.
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    silent?: boolean
+  }
+}
+
+function messageFor(err: AxiosError): string {
+  const data = err.response?.data as { detail?: string; message?: string } | undefined
+  if (typeof data?.detail === 'string') return data.detail
+  if (typeof data?.message === 'string') return data.message
+  if (!err.response) return 'Network error — check your connection and try again.'
+  if (err.response.status >= 500) return 'Something went wrong on our end. Please try again.'
+  return 'Something went wrong. Please try again.'
+}
 
 // Trailing slash must be stripped: axios normalizes `host/` + `/api/x`, but the // raw `${API_BASE_URL}${path}` concats (video/stream/overlay src) would emit
 // `host//api/x`, which FastAPI 404s.
@@ -41,6 +59,8 @@ api.interceptors.response.use(
         }
         window.location.href = '/signin'
       }
+    } else if (!err.config?.silent) {
+      toast.error(messageFor(err))
     }
     return Promise.reject(err)
   }

@@ -288,7 +288,7 @@ export default function FrameEditor({ clipId, value, onChange }: Props) {
   }
 
   if (status === 'error') {
-    return <p className="text-xs text-red-400">Couldn’t load the source video for framing.</p>
+    return <p className="text-xs text-forge-gold">Couldn’t load the source video for framing.</p>
   }
 
   return (

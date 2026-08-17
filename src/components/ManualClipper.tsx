@@ -300,7 +300,7 @@ export default function ManualClipper({ duration, jobId, onCreated }: ManualClip
       </div>
 
       {error && (
-        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+        <p className="text-xs text-forge-gold bg-forge-gold/10 border border-forge-gold/20 rounded-lg px-3 py-2">
           {error}
         </p>
       )}

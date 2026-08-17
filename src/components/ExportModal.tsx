@@ -543,9 +543,9 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
       while (Date.now() < deadline) {
         await new Promise((r) => setTimeout(r, 3000))
         if (targetId !== clipId) return
-        let poll: { status?: string; error_message?: string } | null = null
+        let poll: { status?: string; error_message?: string; download_url?: string } | null = null
         try {
-          const r = await api.get<{ status?: string; error_message?: string }>(
+          const r = await api.get<{ status?: string; error_message?: string; download_url?: string }>(
             `/api/clips/${targetId}`,
           )
           poll = r.data
@@ -1027,7 +1027,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
               className="w-full px-3 py-2 rounded-lg bg-forge-bg border border-forge-border text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-pink-400"
             />
             {hookGenError && (
-              <p role="alert" className="text-xs text-red-400 mt-1">{hookGenError}</p>
+              <p role="alert" className="text-xs text-forge-gold mt-1">{hookGenError}</p>
             )}
             {hookSuggestions.length > 0 && (
               <div className="mt-2 space-y-1">
@@ -1302,7 +1302,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           {/* Export button — sticky at bottom of settings column */}
           <div className="pt-3 mt-1 border-t border-forge-border space-y-2">
             {error && (
-              <p role="alert" className="text-red-400 text-xs">{error}</p>
+              <p role="alert" className="text-forge-gold text-xs">{error}</p>
             )}
             {downloadUrl ? (
               <div className="space-y-2">

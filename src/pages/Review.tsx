@@ -112,7 +112,7 @@ export default function Review() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md px-4">
-          <p className="text-red-400">{msg}</p>
+          <p className="text-forge-gold">{msg}</p>
           {httpStatus ? <p className="text-zinc-500 text-xs mt-1">HTTP {httpStatus}</p> : null}
           <button onClick={() => navigate('/app')} className="mt-3 text-forge-accent hover:underline text-sm cursor-pointer">
             Go home

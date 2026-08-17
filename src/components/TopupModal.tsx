@@ -173,7 +173,7 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
         )}
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 text-sm text-red-400">
+          <div className="bg-forge-gold/10 border border-forge-gold/30 rounded-lg p-4 mb-6 text-sm text-forge-gold">
             {error}
           </div>
         )}

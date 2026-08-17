@@ -94,7 +94,7 @@ function AdminPasswordGate({ onUnlock }: AdminPasswordGateProps) {
             </div>
 
             {error && (
-              <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/22 text-red-400 text-xs">
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-forge-gold/10 border border-forge-gold/22 text-forge-gold text-xs">
                 <AlertCircle size={14} className="shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -564,7 +564,7 @@ export default function Admin() {
             </div>
           )}
           {error && (
-            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-forge-gold/10 border border-forge-gold/30 text-forge-gold text-sm">
               <AlertCircle size={15} className="shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -734,7 +734,7 @@ export default function Admin() {
             </div>
           )}
           {cleanupError && (
-            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-forge-gold/10 border border-forge-gold/30 text-forge-gold text-sm">
               <AlertCircle size={15} className="shrink-0 mt-0.5" />
               <span>{cleanupError}</span>
             </div>
@@ -782,7 +782,7 @@ export default function Admin() {
             </div>
           )}
           {preserveError && (
-            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-forge-gold/10 border border-forge-gold/30 text-forge-gold text-sm">
               <AlertCircle size={15} className="shrink-0 mt-0.5" />
               <span>{preserveError}</span>
             </div>
@@ -838,7 +838,7 @@ export default function Admin() {
           </form>
 
           {templateError && (
-            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+            <div className="mt-4 flex items-start gap-2 px-3 py-2.5 rounded-xl bg-forge-gold/10 border border-forge-gold/30 text-forge-gold text-sm">
               <AlertCircle size={15} className="shrink-0 mt-0.5" />
               <span>{templateError}</span>
             </div>

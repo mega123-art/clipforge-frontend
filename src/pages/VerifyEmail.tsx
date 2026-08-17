@@ -153,8 +153,8 @@ export default function VerifyEmail() {
               </>
             ) : (
               <>
-                <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/25 flex items-center justify-center mb-5">
-                  <XCircle size={32} className="text-red-400" />
+                <div className="w-16 h-16 rounded-full bg-forge-gold/10 border border-forge-gold/25 flex items-center justify-center mb-5">
+                  <XCircle size={32} className="text-forge-gold" />
                 </div>
                 <h1 className="text-2xl font-black text-forge-text mb-2">Verification Failed</h1>
                 <p className="text-sm text-forge-muted mb-6 px-2">{verifyError}</p>
@@ -224,7 +224,7 @@ export default function VerifyEmail() {
             <div className={`flex items-start gap-2 text-left px-3 py-2.5 rounded-xl mb-4 text-xs ${
               resendStatus.type === 'success' 
                 ? 'bg-green-500/10 border border-green-500/22 text-green-400' 
-                : 'bg-red-500/10 border border-red-500/22 text-red-400'
+                : 'bg-forge-gold/10 border border-forge-gold/22 text-forge-gold'
             }`}>
               {resendStatus.type === 'success' ? <CheckCircle2 size={14} className="shrink-0 mt-0.5" /> : <XCircle size={14} className="shrink-0 mt-0.5" />}
               <span>{resendStatus.message}</span>

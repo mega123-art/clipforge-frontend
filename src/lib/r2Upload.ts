@@ -109,7 +109,7 @@ export async function uploadAndCreateJob(
     filename: file.name,
     content_type: file.type || 'video/mp4',
     size_bytes: file.size,
-  })
+  }, { silent: true })
 
   // 2. Upload parts in parallel batches
   const total = presign.parts.length
@@ -168,7 +168,7 @@ export async function uploadAndCreateJob(
     parts: completed.map((p) => ({ part_number: p.part_number, etag: p.etag })),
     filename: file.name,
     ...job,
-  })
+  }, { silent: true })
 
   onProgress?.(100)
   return { job_id: created.job_id }

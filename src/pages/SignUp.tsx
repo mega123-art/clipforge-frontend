@@ -60,7 +60,7 @@ export default function SignUp() {
         password,
         name: name || undefined,
         referral_code: referralCode.trim() || undefined,
-      })
+      }, { silent: true })
       setAuth(data)
       navigate('/', { replace: true })
     } catch (err) {
@@ -83,7 +83,7 @@ export default function SignUp() {
         const { data } = await api.post<AuthOut>('/api/auth/google', {
           access_token: tokenResponse.access_token,
           referral_code: referralCode.trim() || undefined,
-        })
+        }, { silent: true })
         setAuth(data)
         navigate('/', { replace: true })
       } catch (err) {
@@ -195,7 +195,7 @@ export default function SignUp() {
             </div>
 
             {error && (
-              <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/22 text-red-400 text-xs">
+              <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-forge-gold/10 border border-forge-gold/25 text-forge-gold text-xs">
                 <AlertCircle size={14} className="shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>

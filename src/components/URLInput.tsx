@@ -115,7 +115,7 @@ export default function URLInput({ onFileSelect, uploadedFile, onYoutubeUrl, you
               </button>
             )}
           </div>
-          {urlError && <p className="text-xs text-red-400 px-1 mt-2">{urlError}</p>}
+          {urlError && <p className="text-xs text-forge-gold px-1 mt-2">{urlError}</p>}
 
           {/* Quality indicator */}
           <div className="flex items-center justify-between mt-2.5 px-1">
@@ -193,7 +193,7 @@ export default function URLInput({ onFileSelect, uploadedFile, onYoutubeUrl, you
               />
             </div>
           )}
-          {sizeError && <p className="text-xs text-red-400 px-1 mt-2">{sizeError}</p>}
+          {sizeError && <p className="text-xs text-forge-gold px-1 mt-2">{sizeError}</p>}
         </>
       )}
     </div>

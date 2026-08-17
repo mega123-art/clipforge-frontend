@@ -133,6 +133,10 @@ export interface ExportRequest {
   music_fade_out?: number
   music_trim_start?: number
   music_trim_end?: number
+  /** 'v1' = single-take render. 'v2' = auto-edit (camera moves, shot cuts, punch zooms). */
+  engine?: 'v1' | 'v2'
+  /** v2 only: drop dead air inside the clip. Shortens the output. */
+  remove_silence?: boolean
 }
 
 export interface ExportResponse {

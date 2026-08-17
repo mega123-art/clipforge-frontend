@@ -222,7 +222,7 @@ const StageVisual = memo(({ icon: Icon, status, active }: {
               size={30}
               className={
                 isDone ? 'text-emerald-400'
-                : isFailed ? 'text-red-400'
+                : isFailed ? 'text-forge-gold'
                 : 'text-forge-accent'
               }
             />
@@ -341,7 +341,7 @@ export default function Processing() {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center">
         <div className="text-center max-w-md px-4">
-          <p className="text-red-400 text-lg">{msg}</p>
+          <p className="text-forge-gold text-lg">{msg}</p>
           {httpStatus ? <p className="text-forge-dim text-xs mt-1">HTTP {httpStatus}</p> : null}
           <button onClick={() => navigate('/app')} className="mt-4 text-forge-accent hover:underline cursor-pointer">
             Go back
@@ -501,11 +501,11 @@ export default function Processing() {
 
             {/* Failed */}
             {status === 'failed' && (
-              <div className="mt-6 p-5 bg-red-500/10 border border-red-500/30 rounded-2xl">
-                <p className="text-red-400 font-bold text-sm mb-1">{failureCopy.title}</p>
-                <p className="text-xs text-red-200/80 leading-relaxed">{failureCopy.description}</p>
+              <div className="mt-6 p-5 bg-forge-gold/10 border border-forge-gold/30 rounded-2xl">
+                <p className="text-forge-gold font-bold text-sm mb-1">{failureCopy.title}</p>
+                <p className="text-xs text-forge-gold/70 leading-relaxed">{failureCopy.description}</p>
                 {failureCopy.detail && (
-                  <p className="mt-2 text-[11px] text-red-300/55 break-words">{failureCopy.detail}</p>
+                  <p className="mt-2 text-[11px] text-forge-gold/50 break-words">{failureCopy.detail}</p>
                 )}
                 <button
                   onClick={() => {

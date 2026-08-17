@@ -16,6 +16,7 @@ import VerifyEmail from './pages/VerifyEmail'
 import Down from './pages/Down'
 import ProtectedRoute from './components/ProtectedRoute'
 import SubscriptionModalProvider from './components/SubscriptionModalProvider'
+import { ToastProvider } from './components/Toast'
 import ActiveJobBanner from './components/ActiveJobBanner'
 import ScrollToTop from './components/ScrollToTop'
 import useStore from './store'
@@ -88,28 +89,30 @@ export default function App() {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <BrowserRouter>
-        <ScrollToTop />
-        <AuthHydrator />
-        <SubscriptionModalProvider />
-        <div className="min-h-screen bg-forge-bg text-forge-text">
-          <MaintenanceGate>
-            <ActiveJobBanner />
-            <Routes>
-              <Route path="/signin" element={<SignIn />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/down" element={<Down />} />
-              <Route path="/" element={<LandingRoute />} />
-              <Route path="/app" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-              <Route path="/processing/:jobId" element={<ProtectedRoute><Processing /></ProtectedRoute>} />
-              <Route path="/review/:jobId" element={<ProtectedRoute><Review /></ProtectedRoute>} />
-              <Route path="/clips" element={<ProtectedRoute><MyClips /></ProtectedRoute>} />
-              <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </MaintenanceGate>
-        </div>
+        <ToastProvider>
+          <ScrollToTop />
+          <AuthHydrator />
+          <SubscriptionModalProvider />
+          <div className="min-h-screen bg-forge-bg text-forge-text">
+            <MaintenanceGate>
+              <ActiveJobBanner />
+              <Routes>
+                <Route path="/signin" element={<SignIn />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/down" element={<Down />} />
+                <Route path="/" element={<LandingRoute />} />
+                <Route path="/app" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                <Route path="/processing/:jobId" element={<ProtectedRoute><Processing /></ProtectedRoute>} />
+                <Route path="/review/:jobId" element={<ProtectedRoute><Review /></ProtectedRoute>} />
+                <Route path="/clips" element={<ProtectedRoute><MyClips /></ProtectedRoute>} />
+                <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </MaintenanceGate>
+          </div>
+        </ToastProvider>
       </BrowserRouter>
     </GoogleOAuthProvider>
   )

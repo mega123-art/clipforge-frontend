@@ -224,9 +224,9 @@ export default function BillingPage() {
         <p className="text-forge-text-muted mb-8">Manage your subscription and credits</p>
 
         {(error || razorpayError) && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-8 flex items-start gap-3">
-            <AlertCircle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-red-400">{error || razorpayError}</div>
+          <div className="bg-forge-gold/10 border border-forge-gold/30 rounded-lg p-4 mb-8 flex items-start gap-3">
+            <AlertCircle size={20} className="text-forge-gold flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-forge-gold">{error || razorpayError}</div>
           </div>
         )}
 
@@ -479,7 +479,7 @@ export default function BillingPage() {
                             <CheckCircle size={13} /> Paid
                           </span>
                         ) : p.status === 'failed' ? (
-                          <span className="inline-flex items-center gap-1 text-red-400 text-xs font-semibold">
+                          <span className="inline-flex items-center gap-1 text-forge-gold text-xs font-semibold">
                             <XCircle size={13} /> Failed
                           </span>
                         ) : (

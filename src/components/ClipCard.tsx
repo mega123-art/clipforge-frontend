@@ -183,7 +183,7 @@ export default function ClipCard({ clip, isSelected, onSelect, onExport, onUpdat
         {expiryInfo && expiryInfo.credit_type === 'free' && expiryInfo.days_left !== undefined && (
           <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
             expiryInfo.days_left <= 1
-              ? 'bg-red-500/10 border-red-500/30 text-red-400'
+              ? 'bg-forge-gold/10 border-forge-gold/30 text-forge-gold'
               : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
           }`}>
             <AlertTriangle size={14} />
