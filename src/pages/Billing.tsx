@@ -93,7 +93,7 @@ export default function BillingPage() {
 
     setActionLoading(true)
     try {
-      await api.post('/api/subscriptions/cancel')
+      await api.post('/api/subscriptions/cancel', undefined, { silent: true })
       fetchData()
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to cancel subscription')
@@ -134,7 +134,7 @@ export default function BillingPage() {
 
     setActionLoading(true)
     try {
-      await api.post('/api/subscriptions/pause')
+      await api.post('/api/subscriptions/pause', undefined, { silent: true })
       fetchData()
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to pause subscription')
@@ -146,7 +146,7 @@ export default function BillingPage() {
   const handleResumeSubscription = async () => {
     setActionLoading(true)
     try {
-      await api.post('/api/subscriptions/resume')
+      await api.post('/api/subscriptions/resume', undefined, { silent: true })
       fetchData()
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to resume subscription')
@@ -163,7 +163,7 @@ export default function BillingPage() {
 
     try {
       // Create subscription in backend
-      const res = await api.post('/api/subscriptions/create', { tier_id: selectedUpgradeTierId })
+      const res = await api.post('/api/subscriptions/create', { tier_id: selectedUpgradeTierId }, { silent: true })
       const { razorpay_subscription_id, razorpay_key_id } = res.data
 
       if (!razorpay_subscription_id) {

@@ -199,7 +199,7 @@ export default function ManualClipper({ duration, jobId, onCreated }: ManualClip
       await api.post(`/api/jobs/${jobId}/manual-clip`, {
         start_seconds: parseFloat(start.toFixed(2)),
         end_seconds: parseFloat(end.toFixed(2)),
-      })
+      }, { silent: true })
       onCreated()
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>

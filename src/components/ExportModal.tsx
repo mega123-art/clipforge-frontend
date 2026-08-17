@@ -528,6 +528,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
           glow_effect: glowEffect,
           retro_effect: retroEffect,
         },
+        { silent: true },
       )
       if (targetId !== clipId) return
 
@@ -547,6 +548,7 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
         try {
           const r = await api.get<{ status?: string; error_message?: string; download_url?: string }>(
             `/api/clips/${targetId}`,
+            { silent: true },
           )
           poll = r.data
         } catch {
@@ -564,7 +566,11 @@ export default function ExportModal({ clipIds, index = 0, onIndexChange, onClose
       setError('Export timed out after 20 minutes. Try a shorter clip or simpler options.')
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>
-      setError(ax.response?.data?.detail || 'Export failed.')
+      // 402 (out of credits) already gets a friendlier global toast with a
+      // Top Up action — showing the raw backend detail here too is noise.
+      if (ax.response?.status !== 402) {
+        setError(ax.response?.data?.detail || 'Export failed.')
+      }
     } finally {
       setLoading(false)
     }

@@ -4,26 +4,32 @@ import { CheckCircle2, AlertTriangle, Info, X } from 'lucide-react'
 
 type ToastKind = 'success' | 'error' | 'info'
 
+interface ToastAction {
+  label: string
+  onClick: () => void
+}
+
 interface ToastItem {
   id: number
   kind: ToastKind
   message: string
+  action?: ToastAction
 }
 
 interface ToastContextValue {
-  push: (kind: ToastKind, message: string) => void
+  push: (kind: ToastKind, message: string, action?: ToastAction) => void
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null)
 
 // Lets non-component code (axios interceptor) raise a toast without a hook.
 // Set once ToastProvider mounts; calls before that (rare) are dropped.
-let globalPush: ((kind: ToastKind, message: string) => void) | null = null
+let globalPush: ((kind: ToastKind, message: string, action?: ToastAction) => void) | null = null
 
 export const toast = {
-  success: (message: string) => globalPush?.('success', message),
-  error: (message: string) => globalPush?.('error', message),
-  info: (message: string) => globalPush?.('info', message),
+  success: (message: string, action?: ToastAction) => globalPush?.('success', message, action),
+  error: (message: string, action?: ToastAction) => globalPush?.('error', message, action),
+  info: (message: string, action?: ToastAction) => globalPush?.('info', message, action),
 }
 
 const ICONS: Record<ToastKind, typeof Info> = {
@@ -48,10 +54,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const push = useCallback(
-    (kind: ToastKind, message: string) => {
+    (kind: ToastKind, message: string, action?: ToastAction) => {
       const id = nextId.current++
-      setItems((prev) => [...prev, { id, kind, message }])
-      window.setTimeout(() => dismiss(id), 5000)
+      setItems((prev) => [...prev, { id, kind, message, action }])
+      // Actionable toasts (e.g. "Top up") stay until the user deals with them.
+      if (!action) window.setTimeout(() => dismiss(id), 5000)
     },
     [dismiss]
   )
@@ -82,7 +89,21 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 className="flex items-start gap-2.5 rounded-xl bg-forge-card border border-forge-border shadow-card px-4 py-3 text-sm text-forge-text"
               >
                 <Icon size={18} className={`shrink-0 mt-0.5 ${ACCENTS[t.kind]}`} />
-                <p className="flex-1 leading-snug">{t.message}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="leading-snug">{t.message}</p>
+                  {t.action && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        t.action?.onClick()
+                        dismiss(t.id)
+                      }}
+                      className="mt-1.5 text-xs font-semibold text-forge-accent hover:text-forge-accent-light transition-colors cursor-pointer"
+                    >
+                      {t.action.label}
+                    </button>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => dismiss(t.id)}
@@ -104,8 +125,8 @@ export function useToast() {
   const ctx = useContext(ToastContext)
   if (!ctx) throw new Error('useToast must be used within ToastProvider')
   return {
-    success: (message: string) => ctx.push('success', message),
-    error: (message: string) => ctx.push('error', message),
-    info: (message: string) => ctx.push('info', message),
+    success: (message: string, action?: ToastAction) => ctx.push('success', message, action),
+    error: (message: string, action?: ToastAction) => ctx.push('error', message, action),
+    info: (message: string, action?: ToastAction) => ctx.push('info', message, action),
   }
 }

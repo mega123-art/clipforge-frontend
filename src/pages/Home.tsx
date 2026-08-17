@@ -21,6 +21,7 @@ import MyClipsButton from '../components/MyClipsButton'
 import PlanButton from '../components/PlanButton'
 import TierBadge from '../components/TierBadge'
 import { useReferral, useInvalidateJobs } from '../hooks/queries'
+import { useToast } from '../components/Toast'
 import type { AspectRatio } from '../types/api'
 
 interface ClipTypeDef {
@@ -82,6 +83,7 @@ export default function Home() {
   const location = useLocation()
   const { getRecentJobs, addRecentJob, refreshUser, user } = useStore()
   const { openSubscription } = useSubscriptionModal()
+  const toast = useToast()
   const locationState = (location.state as HomeLocationState | null) ?? null
   const [showAdvanced, setShowAdvanced] = useState(true)
   const [clipMode, setClipMode] = useState<ClipMode>('quick')
@@ -127,6 +129,7 @@ export default function Home() {
       window.setTimeout(() => setRefCopied(false), 1600)
     } catch {
       setRefCopied(false)
+      toast.error("Couldn't copy the link — copy it manually instead.")
     }
   }
 
@@ -188,7 +191,11 @@ export default function Home() {
       navigate(`/processing/${res.job_id}`)
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>
-      setError(ax.response?.data?.detail || (err as Error).message || 'Failed to start job.')
+      // 402 (out of credits) already gets a friendlier global toast with a
+      // Top Up action — showing the raw backend detail here too is noise.
+      if (ax.response?.status !== 402) {
+        setError(ax.response?.data?.detail || (err as Error).message || 'Failed to start job.')
+      }
     } finally {
       setLoading(false)
     }

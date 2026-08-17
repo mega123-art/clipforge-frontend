@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { LogOut, Coins, ShieldCheck, CreditCard, Gift, Copy, Check } from 'lucide-react'
 import useStore from '../store'
 import { useReferral } from '../hooks/queries'
+import { useToast } from './Toast'
 
 export default function UserMenu() {
   const { user, logout } = useStore()
   const navigate = useNavigate()
+  const toast = useToast()
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   // Only fetched once the menu is opened; shared with Home's referral card.
@@ -35,6 +37,7 @@ export default function UserMenu() {
       window.setTimeout(() => setCopied(false), 1600)
     } catch {
       setCopied(false)
+      toast.error("Couldn't copy the link — copy it manually instead.")
     }
   }
 

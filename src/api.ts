@@ -59,6 +59,16 @@ api.interceptors.response.use(
         }
         window.location.href = '/signin'
       }
+    } else if (err.response?.status === 402) {
+      // Backend detail is a debug-oriented breakdown ("need X, have Y...") —
+      // not something to show mid-task, and too important to suppress even
+      // on `silent` calls that already have their own inline error UI.
+      toast.error("You're out of credits — top up to keep going.", {
+        label: 'Top Up',
+        onClick: () => {
+          window.location.href = '/billing'
+        },
+      })
     } else if (!err.config?.silent) {
       toast.error(messageFor(err))
     }

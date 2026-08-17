@@ -36,7 +36,7 @@ export default function QrPayModal({
     let canceled = false
 
     api
-      .post(createPath, createBody ?? {})
+      .post(createPath, createBody ?? {}, { silent: true })
       .then((res) => {
         if (canceled) return
         const { qr_code_id, image_url } = res.data
@@ -44,7 +44,7 @@ export default function QrPayModal({
 
         pollRef.current = setInterval(async () => {
           try {
-            const statusRes = await api.get(`/api/payments/topup/qr/${qr_code_id}/status`)
+            const statusRes = await api.get(`/api/payments/topup/qr/${qr_code_id}/status`, { silent: true })
             if (statusRes.data.status === 'success') {
               if (pollRef.current) clearInterval(pollRef.current)
               // Confirm on screen before handing off — closing instantly reads as a failure.

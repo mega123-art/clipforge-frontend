@@ -65,7 +65,7 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
     // Trial is a one-time order, not a mandate — different endpoint, no auto-renewal.
     if (isTrialSelected) {
       try {
-        const res = await api.post('/api/subscriptions/trial')
+        const res = await api.post('/api/subscriptions/trial', undefined, { silent: true })
         const { order_id, key_id, amount } = res.data
         const success = await openCheckout({ key: key_id, order_id, amount }, 'trial')
         if (success) {
@@ -82,7 +82,7 @@ export default function SubscriptionModal({ onClose, onSubscribed }: Subscriptio
     }
 
     try {
-      const res = await api.post('/api/subscriptions/create', { tier_id: selectedTierId })
+      const res = await api.post('/api/subscriptions/create', { tier_id: selectedTierId }, { silent: true })
       const { razorpay_subscription_id, razorpay_key_id } = res.data
 
       if (razorpay_subscription_id && razorpay_key_id) {

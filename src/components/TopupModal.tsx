@@ -56,7 +56,7 @@ export default function TopupModal({ onClose, onTopup }: TopupModalProps) {
 
     try {
       const amountPaise = Math.round(displayAmount * 100)
-      const res = await api.post('/api/payments/topup', { amount_paise: amountPaise })
+      const res = await api.post('/api/payments/topup', { amount_paise: amountPaise }, { silent: true })
       const { order_id, key_id, amount } = res.data
 
       // Open Razorpay checkout

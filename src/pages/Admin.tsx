@@ -53,7 +53,7 @@ function AdminPasswordGate({ onUnlock }: AdminPasswordGateProps) {
     setLoading(true)
     setError(null)
     try {
-      const { data } = await api.post<AuthOut>('/api/admin/unlock', { password })
+      const { data } = await api.post<AuthOut>('/api/admin/unlock', { password }, { silent: true })
       onUnlock(data)
     } catch (err) {
       const ax = err as AxiosError<{ detail?: string }>
@@ -216,7 +216,7 @@ export default function Admin() {
 
   const grantMutation = useMutation<GrantCreditsResponse, AxiosError<{ detail?: string }>, GrantPayload>({
     mutationFn: (body) =>
-      api.post<GrantCreditsResponse>('/api/admin/credits/grant', body).then((r) => r.data),
+      api.post<GrantCreditsResponse>('/api/admin/credits/grant', body, { silent: true }).then((r) => r.data),
     onSuccess: (data) => {
       setFlash(`Granted ${data.granted} credits to ${data.user_email}. New balance: ${data.new_balance}`)
       setError(null)
@@ -237,7 +237,7 @@ export default function Admin() {
 
   const cleanupMutation = useMutation<CleanupOut, AxiosError<{ detail?: string }>, boolean>({
     mutationFn: (sync) =>
-      api.post<CleanupOut>('/api/admin/cleanup-expired', null, { params: { sync } }).then((r) => r.data),
+      api.post<CleanupOut>('/api/admin/cleanup-expired', null, { params: { sync }, silent: true }).then((r) => r.data),
     onSuccess: (data) => {
       setCleanupResult(data)
       setCleanupError(null)
@@ -252,7 +252,7 @@ export default function Admin() {
 
   const preserveMutation = useMutation<PreserveClipsOut, AxiosError<{ detail?: string }>, string>({
     mutationFn: (email) =>
-      api.post<PreserveClipsOut>('/api/admin/preserve-clips', { user_email: email }).then((r) => r.data),
+      api.post<PreserveClipsOut>('/api/admin/preserve-clips', { user_email: email }, { silent: true }).then((r) => r.data),
     onSuccess: (data) => {
       setPreserveResult(data)
       setPreserveError(null)
@@ -272,6 +272,7 @@ export default function Admin() {
       form.append('file', file)
       return api.post<TemplateItem>('/api/admin/templates', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        silent: true,
       }).then((r) => r.data)
     },
     onSuccess: () => {

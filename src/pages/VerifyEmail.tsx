@@ -30,7 +30,7 @@ export default function VerifyEmail() {
 
     const verifyToken = async () => {
       try {
-        const { data } = await api.post<User>(`/api/auth/verify-email?token=${encodeURIComponent(token)}`)
+        const { data } = await api.post<User>(`/api/auth/verify-email?token=${encodeURIComponent(token)}`, undefined, { silent: true })
         // Update user state in Zustand store
         useStore.setState({ user: data })
         setSuccess(true)
@@ -74,7 +74,7 @@ export default function VerifyEmail() {
     setResending(true)
     setResendStatus(null)
     try {
-      await api.post('/api/auth/resend-verification')
+      await api.post('/api/auth/resend-verification', undefined, { silent: true })
       setResendStatus({
         type: 'success',
         message: 'Verification link resent successfully! Check your inbox (and spam folder).'
